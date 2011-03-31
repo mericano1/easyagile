@@ -17,10 +17,22 @@
 					var args = Array.prototype.slice.call(arguments);
 					var data = null;
 					var self = this;
-					var initialized = false;
+					self.append($("<div class='left-panel'/>")).append($("<div class='right-panel'/>"));
 					if (args.length == 1 && typeof(args[0]) == "object") {
-						data = args[0];
-						if (!initialized) {_init.call(this);}
+						loadData(args[0]);
+						_init.call(this);
+					}
+					
+					function loadData(prmdata){
+					        data = prmdata;
+					        $(data).each(function(index,story){
+					                if (story.tasks && story.tasks.length > 0){
+					                        var totalPoints = 0;
+					                        $(story.tasks).each(function(index, task) {totalPoints +=task.points});
+					                        story.points = totalPoints;
+					                }
+					        });
+					        
 					}
 										
 					function getStory(object){
@@ -104,7 +116,14 @@
 							displayStoryForm(story);
 						});
 						$(".ui-icon-triangle-1-e",storyDiv).button().click(function(){
-							alert("Displaying Tasks");
+						        var taskListDiv = $(".right-panel",block.parent());
+						        taskListDiv.html("");
+							$(story.tasks).each(function(index, task){
+							        addStory(task,taskListDiv,index);
+							
+							});
+							makeElementsSortable(taskListDiv);
+							taskListDiv.toggle(500);
 						});
 						story.div = storyDiv;
 						printData();
@@ -112,45 +131,60 @@
 					
 					function _init() {
 						$(self).each (function () {
-							var block = this;
-							$(block).css("width", "50%");
+						        //styling the two blocks
+							var block = $(this).children(".left-panel");
+							$(block).css("width", "49.5%")
+							        .css("display", "inline-block")
+							        .css("vertical-align", "top");
+							//$(block).css("padding", "0 5px");
+							
+							var leftBlock = $(this).children(".right-panel");
+							$(leftBlock).css("width", "49.5%")
+							        .css("display", "inline-block")
+							        .css("vertical-align", "top")
+							        .css("float", "right");
+							//$(leftBlock).css("padding", "0 5px");
+							
 							$(data).each(function(index, story){
 								addStory(story,block,index);
 							});
+							makeElementsSortable(block);
 							
-							$(block).sortable({
-								stop: function(event, ui) {
-									var item = ui.item;
-									var newIndex = $(item).parent().children().index(item);
-									var story = item.data("story");
-									var prevIndex = story.index;
-									//update story indexes
-									if (prevIndex == newIndex){return;}
-									if (prevIndex > newIndex ) { //drag up
-										for (i=newIndex; i < prevIndex; i++){
-											data[i].index++;
-											currentDiv = data[i].div;
-											$(".priority", currentDiv).text(data[i].index + 1);
-										}
-									}
-									//prevIndex is still the moved object
-									if (prevIndex < newIndex ) { //drag down
-										for (i= (prevIndex + 1); i <= newIndex; i++){
-											data[i].index--;
-											currentDiv = data[i].div;
-											$(".priority", currentDiv).text(data[i].index + 1);
-										}
-									}
-									story.index = newIndex;
-									sortData();
-									story.setDisplayPriority(newIndex + 1);
-									printData();
-								}
-							});
-						
 						});
 						
 						initialized = true;
+					}
+					
+					function makeElementsSortable(block){
+					        $(block).sortable({
+							stop: function(event, ui) {
+								var item = ui.item;
+								var newIndex = $(item).parent().children().index(item);
+								var story = item.data("story");
+								var prevIndex = story.index;
+								//update story indexes
+								if (prevIndex == newIndex){return;}
+								if (prevIndex > newIndex ) { //drag up
+									for (i=newIndex; i < prevIndex; i++){
+										data[i].index++;
+										currentDiv = data[i].div;
+										$(".priority", currentDiv).text(data[i].index + 1);
+									}
+								}
+								//prevIndex is still the moved object
+								if (prevIndex < newIndex ) { //drag down
+									for (i= (prevIndex + 1); i <= newIndex; i++){
+										data[i].index--;
+										currentDiv = data[i].div;
+										$(".priority", currentDiv).text(data[i].index + 1);
+									}
+								}
+								story.index = newIndex;
+								sortData();
+								story.setDisplayPriority(newIndex + 1);
+								printData();
+							}
+						});
 					}
 					
 					return {
@@ -259,8 +293,15 @@
 			
 			
 			var stories = [
-					{name:"Story 1", description:"Story one short description", points:12} ,
-					{name:"Story 2", description:"Story two short description", points:2} ,
+					{name:"Story 1", description:"Story one short description", points:12, tasks:[
+						{name:"task1", description:"task1 story1", points:12},
+						{name:"task2", description:"task2 story1", points:4}
+					]} ,
+					{name:"Story 2", description:"Story two short description", points:2, tasks:[
+						{name:"task56", description:"task1 story2", points:8},
+						{name:"task34", description:"task2 story2", points:9},
+						{name:"task4", description:"task2 story3", points:6}
+					]} ,
 					{name:"Story 3", description:"Story three short description", points:3} ,
 					{name:"Story 4", description:"Story four short description", points:5} ,
 					{name:"Story 5", description:"Story five short description", points:7} ,
@@ -311,8 +352,9 @@
 			
 		<!-- Highlight / Error -->
 		<h2 class="demoHeaders">Backlog</h2>
-		<button id="addStory">Add Story</button>
-		
+		<div class="headerButtons">
+		        <button id="addStory">Add Story</button>
+		</div>
 		<div class="backlogWrapper">
 		</div>
 		
