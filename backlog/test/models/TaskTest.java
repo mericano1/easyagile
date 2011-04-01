@@ -57,7 +57,7 @@ public class TaskTest extends UnitTest {
 		task1.save();
 		task2.save();
 		task3.save();
-		List<Task> list = Task.findAllByStory(story.id).list();
+		List<Task> list = Task.findAllByStory(story.id);
 		assertNotNull("Task list is null", list);
 		assertEquals("Task size is wrong", 3, list.size());
 	}

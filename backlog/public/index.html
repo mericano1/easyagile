@@ -26,6 +26,15 @@
 						loadData(args[0]);
 						_init.call(this);
 					}
+
+					//url load
+					if (args.length == 1 && typeof(args[0]) == "string") {
+						$.getJSON(args[0], function (data) { 
+							loadData(data);
+							_init.call(this);
+						});
+					}
+					
 					
 					function loadData(prmdata){
 					        data = prmdata;
@@ -123,6 +132,9 @@
 							
 						} else { //populates it
 							clearRightPanel().css("display","block");
+							$.getJSON("@{Tasks.byStory()}?storyId=" + story.id, function (data) {
+								story.tasks = data;
+							});
 							if (story.tasks && story.tasks.length>0){
 								$(story.tasks).each(function(index, task){
 										addStoryOrTask(task,rightPanel,index, true);
@@ -345,24 +357,8 @@
 			
 			
 			
-			var stories = [
-					{name:"Story 1", description:"Story one short description", points:12, tasks:[
-						{name:"task1", description:"task1 story1", points:12},
-						{name:"task2", description:"task2 story1", points:4}
-					]} ,
-					{name:"Story 2", description:"Story two short description", points:2, tasks:[
-						{name:"task56", description:"task1 story2", points:8},
-						{name:"task34", description:"task2 story2", points:9},
-						{name:"task4", description:"task2 story3", points:6}
-					]} ,
-					{name:"Story 3", description:"Story three short description", points:3} ,
-					{name:"Story 4", description:"Story four short description", points:5} ,
-					{name:"Story 5", description:"Story five short description", points:7} ,
-					{name:"Story 6", description:"Story six short description", points:3} ,
-					{name:"Story 7", description:"Story seven short description", points:8} 
-				];
 			$(document).ready(function() {
-				var board = $(".backlogWrapper").backlogBoard(stories);
+				var board = $(".backlogWrapper").backlogBoard(@{Stories.getall()});
 				$("#addStory").button(/*{icons: {primary: "ui-icon-plusthick"}}*/).click(function() {
 					board.showStoryDialog();
 				});
