@@ -1,0 +1,8 @@
+play-framework-objectify/
+.metadata/
+.classpath/
+.project
+.classpath
+eclipse/
+test-result/
+tmp/
