@@ -10,14 +10,18 @@
 				/*
 				
 				Arguments: 
-					stories 	-> Array of objects [ {name:string, description:string, points:integer} ]
+					stories 	-> Array of objects [ {name:string, description:string, points:integer, 
+															tasks: [{name:string, description:string, points:integer}]} 
+													]
 				
 				*/
 				$.fn.backlogBoard = function(){
 					var args = Array.prototype.slice.call(arguments);
 					var data = null;
 					var self = this;
-					self.append($("<div class='left-panel'/>")).append($("<div class='right-panel'/>"));
+					var leftPanel = $("<div class='left-panel'/>");
+					var rightPanel = $("<div class='right-panel'/>");
+					self.append(leftPanel).append(rightPanel);
 					if (args.length == 1 && typeof(args[0]) == "object") {
 						loadData(args[0]);
 						_init.call(this);
@@ -25,7 +29,7 @@
 					
 					function loadData(prmdata){
 					        data = prmdata;
-					        $(data).each(function(index,story){
+					        $(data).each(function(index, story){
 					                if (story.tasks && story.tasks.length > 0){
 					                        var totalPoints = 0;
 					                        $(story.tasks).each(function(index, task) {totalPoints +=task.points});
@@ -52,81 +56,92 @@
 						
 					}
 					
-					function deleteStory(story){
-						data.splice(story.index, 1);
-						var storyDiv=story.div;
+					function deleteStoryOrTask(storyOrTask, dataSet){
+						if (!dataSet) {dataSet = data;}
+						dataSet.splice(storyOrTask.index, 1);
+						var storyDiv=storyOrTask.div;
 						storyDiv.remove();
 						printData();
 					}
 					
 					function printData(){
-						var text = "";
-						$(data).each(function(index, story){
-								text+="[index:" + story.index 
-									+ ",name:" + story.name
-									+ ",desc:" + story.description
-									+ ",points:" + story.points
-									+ "]<br/>";
+						var getItemText = function(element){
+							var text = "";
+							$(element).each(function(index, storyOrTask){
+								text +="[index:" + storyOrTask.index 
+									+ ",name:" + storyOrTask.name
+									+ ",desc:" + storyOrTask.description
+									+ ",points:" + storyOrTask.points
+									+ "]" + (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
+									+ "<br/>" ;
 							});
-						$("#data").html(text);
+							return text;
+						};
+						
+						$("#data").html(getItemText(data));
 					}
 					
 					
-					function addStory(story, block, index){
+					function addStoryOrTask(storyOrTask, block, index, isTask){
 						if (index == 'undefined') {index = data.length;}
 						if (!block) {
 							block = $(self).first();
 						}
-						story.index = index;
-						var storyDiv = $("<div class=\"ui-widget storySummary\">").append(
-							"<div class=\"ui-state-highlight ui-corner-all\" style=\"padding: 0 .7em;\">" + 
-							"<p><span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
-							"<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>" + 
-							"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
-							"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
-							
-							"<strong class=\"story-name\" style=\"display:block\">"+ story.name +"</strong>" +
-							"<span class=\"story-description\">" + story.description +"</span>" +
-							 "</p>" +
-							 "<div class=\"card-info\"><span class=\"priority\">" + (index + 1) + "</span>" +
-							 "<span class=\"points\">" + story.points + "</span>" + 
-							 "<div style=\"clear:both;\"/>" + 
-							 "</div>" +
-							"</div>" +
-							"</div>").data("story", story);
+						storyOrTask.index = index;
+						var storyDiv = $(storyOrTaskHtml(storyOrTask, index, isTask)).data("storyOrTask", storyOrTask);
+						
 						$(block).append(storyDiv);
-						story.setDisplayPoints = function(points) {
+						storyOrTask.setDisplayPoints = function(points) {
 							$(".points",storyDiv).text(points);
 						};
 						
-						story.setDisplayName = function(name) {
-							$(".story-name",storyDiv).text(name);
+						storyOrTask.setDisplayName = function(name) {
+							$(".storyOrTask-name",storyDiv).text(name);
 						};
 						
-						story.setDisplayDescription = function(description) {
-							$(".story-description",storyDiv).text(description);
+						storyOrTask.setDisplayDescription = function(description) {
+							$(".storyOrTask-description",storyDiv).text(description);
 						};
 						
-						story.setDisplayPriority = function(priority) {
+						storyOrTask.setDisplayPriority = function(priority) {
 							$(".priority",storyDiv).text(priority);
 						};
 						
-						$(".ui-icon-trash",storyDiv).button().click(function(){deleteStory(storyDiv.data("story"));});
-						$(".ui-icon-pencil",storyDiv).button().click(function(){
-							displayStoryForm(story);
-						});
-						$(".ui-icon-triangle-1-e",storyDiv).button().click(function(){
-						        var taskListDiv = $(".right-panel",block.parent());
-						        taskListDiv.html("");
-							$(story.tasks).each(function(index, task){
-							        addStory(task,taskListDiv,index);
-							
-							});
-							makeElementsSortable(taskListDiv);
-							taskListDiv.toggle(500);
-						});
-						story.div = storyDiv;
+						//Bind storyOrTask buttons
+						$(".ui-icon-trash",storyDiv).button({icons:{primary:"ui-icon-trash"}}).click(function(){deleteStoryOrTask(storyDiv.data("storyOrTask"), (isTask?storyDiv.data("storyOrTask"):null));});
+						$(".ui-icon-pencil",storyDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryForm(storyOrTask);});
+						if (!isTask){
+							$(".ui-icon-triangle-1-e",storyDiv).button().click(function(){showStoryTasks(storyOrTask)});
+						}
+						storyOrTask.div = storyDiv;
 						printData();
+					}
+					
+					function showStoryTasks(story){
+						if (rightPanel.data("storyId") == story.index){//just hide it
+							rightPanel.toggle();
+							
+						} else { //populates it
+							clearRightPanel().css("display","block");
+							if (story.tasks && story.tasks.length>0){
+								$(story.tasks).each(function(index, task){
+										addStoryOrTask(task,rightPanel,index, true);
+								});
+							} else {
+								rightPanel.append(noTasksHtml());
+							}
+							makeElementsSortable(rightPanel, story.tasks);
+							
+						}
+						rightPanel.data("storyId",story.index);
+					}
+					
+					/**
+					* Clears the task panel and returns it
+					*/
+					function clearRightPanel(){
+						rightPanel.html("");
+						return rightPanel;
 					}
 					
 					function _init() {
@@ -146,43 +161,46 @@
 							//$(leftBlock).css("padding", "0 5px");
 							
 							$(data).each(function(index, story){
-								addStory(story,block,index);
+								addStoryOrTask(story,block,index);
 							});
-							makeElementsSortable(block);
+							makeElementsSortable(block, data, clearRightPanel);
 							
 						});
 						
 						initialized = true;
 					}
 					
-					function makeElementsSortable(block){
+					function makeElementsSortable(block, dataSet, onStart){
 					        $(block).sortable({
 							stop: function(event, ui) {
 								var item = ui.item;
 								var newIndex = $(item).parent().children().index(item);
-								var story = item.data("story");
-								var prevIndex = story.index;
-								//update story indexes
+								var storyOrTask = item.data("storyOrTask");
+								var prevIndex = storyOrTask.index;
+								//update storyOrTask indexes
 								if (prevIndex == newIndex){return;}
 								if (prevIndex > newIndex ) { //drag up
 									for (i=newIndex; i < prevIndex; i++){
-										data[i].index++;
-										currentDiv = data[i].div;
-										$(".priority", currentDiv).text(data[i].index + 1);
+										dataSet[i].index++;
+										currentDiv = dataSet[i].div;
+										$(".priority", currentDiv).text(dataSet[i].index + 1);
 									}
 								}
 								//prevIndex is still the moved object
 								if (prevIndex < newIndex ) { //drag down
 									for (i= (prevIndex + 1); i <= newIndex; i++){
-										data[i].index--;
-										currentDiv = data[i].div;
-										$(".priority", currentDiv).text(data[i].index + 1);
+										dataSet[i].index--;
+										currentDiv = dataSet[i].div;
+										$(".priority", currentDiv).text(dataSet[i].index + 1);
 									}
 								}
-								story.index = newIndex;
+								storyOrTask.index = newIndex;
 								sortData();
-								story.setDisplayPriority(newIndex + 1);
+								storyOrTask.setDisplayPriority(newIndex + 1);
 								printData();
+							},
+							start: function(event, ui){
+								if (onStart) { onStart();}
 							}
 						});
 					}
@@ -190,19 +208,19 @@
 					return {
 						addStory: addStoryAndUpdateData,
 						getStory: getStory,
-						deleteStory: deleteStory,
+						deleteStory: deleteStoryOrTask,
 						showStoryDialog: displayStoryForm,
-						editStory: editStory
+						editStory: editStoryOrTask
 					}
 					
-					function editStory(index, story){
-						previousStory = data[index];
-						previousStory.name = story.name;
-						previousStory.description = story.description;
-						previousStory.points = story.points;
-						previousStory.setDisplayPoints(story.points);
-						previousStory.setDisplayDescription(story.description);
-						previousStory.setDisplayName(story.name);
+					function editStoryOrTask(index, storyOrTask){
+						curStoryOrTask = data[index];
+						curStoryOrTask.name = storyOrTask.name;
+						curStoryOrTask.description = storyOrTask.description;
+						curStoryOrTask.points = storyOrTask.points;
+						curStoryOrTask.setDisplayPoints(storyOrTask.points);
+						curStoryOrTask.setDisplayDescription(storyOrTask.description);
+						curStoryOrTask.setDisplayName(storyOrTask.name);
 						printData();
 						
 					}
@@ -210,18 +228,20 @@
 					function addStoryAndUpdateData(story){
 						index = data.length;
 						data.push(story);
-						return addStory(story, $(self).first(), index);
+						return addStoryOrTask(story, leftPanel, index);
 					}
 					
 					//sorts the data array
 					function sortData(){
-						data.sort(function (a,b) {
+						var sortFunction = function (a,b) {
+							if (a.tasks) {a.tasks.sort(sortFunction);}
 							return  (a.index < b.index) ? -1 : (a.index > b.index) ? 1 : 0;
-						});
+						};
+						data.sort(sortFunction);
 					}
 					
-					//display the dialog. If story is null an empty form will show.
-					function displayStoryForm(story){
+					//display the dialog. If storyOrTask is null an empty form will show.
+					function displayStoryForm(storyOrTask){
 						var form = null;
 						if ($("#dialog-form").length == 0){
 							form = $(getFormHtml());
@@ -234,10 +254,10 @@
 						description = $( "#description", form  ),
 						points = $( "#points", form ),
 						allFields = $( [] ).add( name ).add( description ).add( points );
-						if (story){
-							name.val(story.name);
-							description.val(story.description);
-							points.val(story.points);
+						if (storyOrTask){
+							name.val(storyOrTask.name);
+							description.val(storyOrTask.description);
+							points.val(storyOrTask.points);
 						}
 						$(form).dialog({
 							autoOpen: true,
@@ -251,8 +271,8 @@
 									if (isNaN(points.val())){
 										points.addClass( "ui-state-error" );
 									} else {
-										if(story){//edit
-											editStory(story.index, {name:name.val() ,description: description.val(), points:points.val()});
+										if(storyOrTask){//edit
+											editStoryOrTask(storyOrTask.index, {name:name.val() ,description: description.val(), points:points.val()});
 										} else {//add
 											addStoryAndUpdateData({name:name.val() ,description: description.val(), points:points.val()});
 										}
@@ -285,6 +305,39 @@
 						"</div>";
 					}
 					
+					function storyOrTaskReturn(storyReturn, taskReturn, isTask){
+						if (!isTask){ return storyReturn; }
+						else { return taskReturn; }
+					}
+					
+					function storyOrTaskHtml(object, index, isTask){
+						taskBg = "url(\"images/ui-bg_highlight-soft_100_eeeeee_1x100.png\") repeat-x scroll 50% top #EEEEEE";
+						return "<div class=\"ui-widget storySummary\">" +
+						
+								"<div class=\"" + storyOrTaskReturn("ui-state-highlight","ui-widget-content", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
+									"<p>" +
+									"<span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
+									storyOrTaskReturn("<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
+									"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
+									"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
+									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ object.name +"</strong>" +
+									"<span class=\"storyOrTask-description\">" + object.description +"</span>" +
+									 "</p>" +
+									 "<div class=\"card-info\"><span class=\"priority\">" + (isNaN(index)? "" : (index + 1) ) + "</span>" +
+									 "<span class=\"points\">" + object.points + "</span>" + 
+									 "<div style=\"clear:both;\"/>" + 
+									 "</div>" +
+									"</div>" +
+								"</div>" +
+							"</div>";
+					}
+					
+					
+					function noTasksHtml(){
+						html = storyOrTaskHtml({name:"No Tasks are available", description:"Click on \"Add Task\" to add one", points:""},"",true);
+						return html;
+					}
+					
 				}
 				
 				
@@ -313,6 +366,8 @@
 				$("#addStory").button(/*{icons: {primary: "ui-icon-plusthick"}}*/).click(function() {
 					board.showStoryDialog();
 				});
+				$("#addTask").button();
+				$("#saveStories").button();
 				
 				
 					
@@ -354,6 +409,8 @@
 		<h2 class="demoHeaders">Backlog</h2>
 		<div class="headerButtons">
 		        <button id="addStory">Add Story</button>
+				<button id="addTask">Add Task</button>
+				<button id="saveStories">Save Session</button>
 		</div>
 		<div class="backlogWrapper">
 		</div>
