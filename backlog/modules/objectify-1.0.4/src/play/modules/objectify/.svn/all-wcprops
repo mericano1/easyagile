@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/69/trunk/src/play/modules/objectify
+END
+ObjectifyModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/63/trunk/src/play/modules/objectify/ObjectifyModel.java
+END
+ObjectifyService.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/56/trunk/src/play/modules/objectify/ObjectifyService.java
+END
+Utils.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/67/trunk/src/play/modules/objectify/Utils.java
+END
+ObjectifyBinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/57/trunk/src/play/modules/objectify/ObjectifyBinder.java
+END
+Datastore.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/4/trunk/src/play/modules/objectify/Datastore.java
+END
+ObjectifyFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/67/trunk/src/play/modules/objectify/ObjectifyFactory.java
+END
+ObjectifyModelLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/69/trunk/src/play/modules/objectify/ObjectifyModelLoader.java
+END
+ManagedBy.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/63/trunk/src/play/modules/objectify/ManagedBy.java
+END
+ObjectifyFixtures.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/33/trunk/src/play/modules/objectify/ObjectifyFixtures.java
+END
+ObjectifyPlugin.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/63/trunk/src/play/modules/objectify/ObjectifyPlugin.java
+END

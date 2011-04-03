@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/70/trunk/samples/showcase/war/WEB-INF
+END
+appengine-web.xml
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/13/trunk/samples/showcase/war/WEB-INF/appengine-web.xml
+END
+datastore-indexes.xml
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/70/trunk/samples/showcase/war/WEB-INF/datastore-indexes.xml
+END

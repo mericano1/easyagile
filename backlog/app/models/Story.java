@@ -28,7 +28,7 @@ public class Story extends ObjectifyModel<Story>{
     }
     
     public static List<Story> findAll() {
-        return Datastore.query(Story.class).list();
+        return Datastore.query(Story.class).order("index").list();
     }
     
     

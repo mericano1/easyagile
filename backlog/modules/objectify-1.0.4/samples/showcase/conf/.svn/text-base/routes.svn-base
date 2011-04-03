@@ -1,0 +1,43 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /                                                                   Application.index
+
+# Flights
+
+GET     /flights                                                            Flights.index
+GET     /flights/create                                                     Flights.create
+GET     /flights/{<[0-9]+>id}                                               Flights.edit
+POST    /flights/create                                                     Flights.save
+POST    /flights/{<[0-9]+>id}                                               Flights.save
+DELETE  /flights/{<[0-9]+>id}                                               Flights.delete
+
+# Passengers
+
+GET     /flights/{<[0-9]+>flightId}/passengers                              Passengers.index
+GET     /passengers                                                         Passengers.index
+GET     /flights/{<[0-9]+>flightId}/passengers/create                       Passengers.create
+GET     /passengers/create                                                  Passengers.create
+GET     /flights/{<[0-9]+>flightId}/passengers/{<[0-9]+>id}                 Passengers.edit
+POST    /passengers/create                                                  Passengers.save
+POST    /flights/{<[0-9]+>flightId}/passengers/create                       Passengers.save
+POST    /flights/{<[0-9]+>flightId}/passengers/{<[0-9]+>id}                 Passengers.save
+DELETE  /flights/{<[0-9]+>flightId}/passengers/{<[0-9]+>id}                 Passengers.delete
+
+# Admin (crud)
+
+*       /admin                                                              module:crud
+
+# Security
+
+GET     /login                                                              Application.login
+GET     /logout                                                             Application.logout                   
+
+# Static
+
+GET     /public/                                                            staticDir:public
+
+# Catch all
+
+*       /{controller}/{action}                                              {controller}.{action}

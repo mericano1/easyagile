@@ -1,0 +1,2 @@
+#{form _arg, id:_id, style:'display:none'}#{authenticityToken/}#{/form}
+<a href="javascript:$('#${_id}').submit()">#{doBody/}</a>

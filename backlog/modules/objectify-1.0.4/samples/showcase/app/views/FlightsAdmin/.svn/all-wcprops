@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/72/trunk/samples/showcase/app/views/FlightsAdmin
+END
+show.html
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/59/trunk/samples/showcase/app/views/FlightsAdmin/show.html
+END
+blank.html
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/70/trunk/samples/showcase/app/views/FlightsAdmin/blank.html
+END
+list.html
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/72/trunk/samples/showcase/app/views/FlightsAdmin/list.html
+END

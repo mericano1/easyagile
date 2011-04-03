@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/72/trunk/samples/showcase/app/views/Weathers
+END
+show.html
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/50/trunk/samples/showcase/app/views/Weathers/show.html
+END
+blank.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/50/trunk/samples/showcase/app/views/Weathers/blank.html
+END
+list.html
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/72/trunk/samples/showcase/app/views/Weathers/list.html
+END

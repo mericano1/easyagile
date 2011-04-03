@@ -1,0 +1,32 @@
+Flight(Bob):
+  pilot:            Bob
+  origin:           AUCKLAND
+  destination:      LONDON
+  stopovers:        [SAN_FRANCISCO,PARIS]
+  price:            200
+  note.text:        This is a note
+  note.internal:    true
+  owner:            test_1@somewhere.com
+
+Passenger(BobFirstPassenger):
+  firstName:        Bob Passenger
+  lastName:         1
+  flight:           Bob
+  owner:            test_1@somewhere.com
+
+Passenger(BobSecondPassenger):
+  firstName:        Bob Passenger
+  lastName:         2
+  flight:           Bob
+  owner:            test_1@somewhere.com
+
+Weather(Weather):
+  date:             2010-01-01
+  description:      Sunny
+  city:             AUCKLAND
+  temperature:      15
+  safeToFly:        true
+  note.text:        This is a note
+  note.internal:    true
+  affectedFlights:  [Bob]
+  owner:            test_1@somewhere.com

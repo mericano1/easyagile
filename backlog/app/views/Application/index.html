@@ -7,6 +7,7 @@
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
 		<script type="text/javascript">
 			(function () {
+				
 				/*
 				
 				Arguments: 
@@ -22,6 +23,7 @@
 					var leftPanel = $("<div class='left-panel'/>");
 					var rightPanel = $("<div class='right-panel'/>");
 					self.append(leftPanel).append(rightPanel);
+					addBusyLoadingElement();
 					if (args.length == 1 && typeof(args[0]) == "object") {
 						loadData(args[0]);
 						_init.call(this);
@@ -33,6 +35,19 @@
 							loadData(data);
 							_init.call(this);
 						});
+					}
+					
+					function addBusyLoadingElement(){
+					 // Setup the ajax indicator
+		              var winH = $(window).height();
+                      var winW = $(window).width();
+		              $('body').append('<div id="ajaxBusy"><p><img src="images/loading.gif"></p></div>');
+		              $('#ajaxBusy').css({
+		                display:"none",
+		                top:winH/$(this).height()/2,
+		                left:winH/$(this).width()/2,
+		                 width:"auto"
+		              });
 					}
 					
 					
@@ -56,6 +71,9 @@
 								}
 							}
 						}
+						if (object.id){
+                            return getByProperty("id", object.id);
+                        }
 						if (object.index){
 							return getByProperty("index", object.index);
 						}
@@ -67,7 +85,7 @@
 					
 					function deleteStoryOrTask(storyOrTask, dataSet){
 						if (!dataSet) {dataSet = data;}
-						dataSet.splice(storyOrTask.index, 1);
+						dataSet[storyOrTask.index].deleted = true;
 						var storyDiv=storyOrTask.div;
 						storyDiv.remove();
 						printData();
@@ -77,11 +95,7 @@
 						var getItemText = function(element){
 							var text = "";
 							$(element).each(function(index, storyOrTask){
-								text +="[index:" + storyOrTask.index 
-									+ ",name:" + storyOrTask.name
-									+ ",desc:" + storyOrTask.description
-									+ ",points:" + storyOrTask.points
-									+ "]" + (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
+								text +=JSON.stringify(storyOrTask) + (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
 									+ "<br/>" ;
 							});
 							return text;
@@ -91,38 +105,39 @@
 					}
 					
 					
-					function addStoryOrTask(storyOrTask, block, index, isTask){
+					function addStoryOrTask(storyOrTask, block, index, isTask, parentStory){
 						if (index == 'undefined') {index = data.length;}
 						if (!block) {
 							block = $(self).first();
 						}
 						storyOrTask.index = index;
-						var storyDiv = $(storyOrTaskHtml(storyOrTask, index, isTask)).data("storyOrTask", storyOrTask);
+						var storyOrTaskDiv = $(storyOrTaskHtml(storyOrTask, index, isTask)).data("storyOrTask", storyOrTask);
 						
-						$(block).append(storyDiv);
+						$(block).append(storyOrTaskDiv);
 						storyOrTask.setDisplayPoints = function(points) {
-							$(".points",storyDiv).text(points);
+							$(".points",storyOrTaskDiv).text(points);
 						};
 						
 						storyOrTask.setDisplayName = function(name) {
-							$(".storyOrTask-name",storyDiv).text(name);
+							$(".storyOrTask-name",storyOrTaskDiv).text(name);
 						};
 						
 						storyOrTask.setDisplayDescription = function(description) {
-							$(".storyOrTask-description",storyDiv).text(description);
+							$(".storyOrTask-description",storyOrTaskDiv).text(description);
 						};
 						
 						storyOrTask.setDisplayPriority = function(priority) {
-							$(".priority",storyDiv).text(priority);
+							$(".priority",storyOrTaskDiv).text(priority);
 						};
 						
 						//Bind storyOrTask buttons
-						$(".ui-icon-trash",storyDiv).button({icons:{primary:"ui-icon-trash"}}).click(function(){deleteStoryOrTask(storyDiv.data("storyOrTask"), (isTask?storyDiv.data("storyOrTask"):null));});
-						$(".ui-icon-pencil",storyDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryForm(storyOrTask);});
+						$(".ui-icon-trash",storyOrTaskDiv).button({icons:{primary:"ui-icon-trash"}}).click(function(){deleteStoryOrTask(storyOrTaskDiv.data("storyOrTask"), (isTask ? parentStory.tasks : null));});
+						$(".ui-icon-pencil",storyOrTaskDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryForm(storyOrTask, isTask);});
 						if (!isTask){
-							$(".ui-icon-triangle-1-e",storyDiv).button().click(function(){showStoryTasks(storyOrTask)});
+							$(".ui-icon-triangle-1-e",storyOrTaskDiv).button().click(function(){showStoryTasks(storyOrTask)});
+							$(".ui-icon-plusthick",storyOrTaskDiv).button().click(function(){displayStoryForm.call(storyOrTask, null, true)});
 						}
-						storyOrTask.div = storyDiv;
+						storyOrTask.div = storyOrTaskDiv;
 						printData();
 					}
 					
@@ -132,12 +147,20 @@
 							
 						} else { //populates it
 							clearRightPanel().css("display","block");
-							$.getJSON("@{Tasks.byStory()}?storyId=" + story.id, function (data) {
-								story.tasks = data;
-							});
-							if (story.tasks && story.tasks.length>0){
+						
+							//load tasks, the first time it is called
+							if (story.tasks == undefined){ 
+								$.ajax("@{Tasks.byStory()}?storyId=" + story.id,  
+										{ async: false,
+								          dataType: 'json',
+										  success: function (data) {
+											   story.tasks = data;
+										  }
+								});
+							}
+							if (story.tasks && story.tasks.length > 0){
 								$(story.tasks).each(function(index, task){
-										addStoryOrTask(task,rightPanel,index, true);
+										addStoryOrTask(task,rightPanel,index, true, story);
 								});
 							} else {
 								rightPanel.append(noTasksHtml());
@@ -219,10 +242,12 @@
 					
 					return {
 						addStory: addStoryAndUpdateData,
+						addTaskToStory: addTaskToStory,
 						getStory: getStory,
 						deleteStory: deleteStoryOrTask,
 						showStoryDialog: displayStoryForm,
-						editStory: editStoryOrTask
+						editStory: editStoryOrTask,
+						getData: function(){return data;}
 					}
 					
 					function editStoryOrTask(index, storyOrTask){
@@ -243,6 +268,17 @@
 						return addStoryOrTask(story, leftPanel, index);
 					}
 					
+					function addTaskToStory(story, task){
+						dataStory = getStory(story);
+						if (dataStory.tasks == undefined){
+							dataStory.tasks = [];
+						}
+						index = dataStory.tasks.length;
+						showStoryTasks(story)
+						dataStory.tasks.push(task);
+                        return addStoryOrTask(task, rightPanel, index, true);
+					}
+					
 					//sorts the data array
 					function sortData(){
 						var sortFunction = function (a,b) {
@@ -253,10 +289,11 @@
 					}
 					
 					//display the dialog. If storyOrTask is null an empty form will show.
-					function displayStoryForm(storyOrTask){
+					function displayStoryForm(storyOrTask, isTask){
+						var callingElement = this;
 						var form = null;
 						if ($("#dialog-form").length == 0){
-							form = $(getFormHtml());
+							form = $(getFormHtml(isTask));
 							$(document).append(form);
 						}else {
 							form = $("#dialog-form");
@@ -270,6 +307,10 @@
 							name.val(storyOrTask.name);
 							description.val(storyOrTask.description);
 							points.val(storyOrTask.points);
+						} else {
+							name.val("");
+                            description.val("");
+                            points.val("");
 						}
 						$(form).dialog({
 							autoOpen: true,
@@ -286,7 +327,11 @@
 										if(storyOrTask){//edit
 											editStoryOrTask(storyOrTask.index, {name:name.val() ,description: description.val(), points:points.val()});
 										} else {//add
-											addStoryAndUpdateData({name:name.val() ,description: description.val(), points:points.val()});
+											if (isTask){
+												addTaskToStory(callingElement, {name:name.val() ,description: description.val(), points:points.val()});	
+											}else {
+											    addStoryAndUpdateData({name:name.val() ,description: description.val(), points:points.val()});
+											}
 										}
 										$( this ).dialog( "close" );
 									}
@@ -301,8 +346,8 @@
 						
 					}
 					
-					function getFormHtml(object){
-						return "<div id=\"dialog-form\" title=\"Story details\"> " +
+					function getFormHtml(isTask){
+						return "<div id=\"dialog-form\" title=\"" + storyOrTaskReturn("Story","Task", isTask)+ " details\"> " +
 							"<p class=\"validateTips\">All form fields are required.</p>" + 
 							"<form>" + 
 							"<fieldset>" + 
@@ -326,12 +371,13 @@
 						taskBg = "url(\"images/ui-bg_highlight-soft_100_eeeeee_1x100.png\") repeat-x scroll 50% top #EEEEEE";
 						return "<div class=\"ui-widget storySummary\">" +
 						
-								"<div class=\"" + storyOrTaskReturn("ui-state-highlight","ui-widget-content", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
+								"<div class=\"" + storyOrTaskReturn("ui-state-highlight","ui-state-highlight", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
 									"<p>" +
 									"<span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
 									"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
 									"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
+									storyOrTaskReturn("<span class=\"ui-icon ui-icon-plusthick\" title=\"Add task\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
 									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ object.name +"</strong>" +
 									"<span class=\"storyOrTask-description\">" + object.description +"</span>" +
 									 "</p>" +
@@ -358,12 +404,20 @@
 			
 			
 			$(document).ready(function() {
+				// Ajax activity indicator bound to ajax start/stop document events
+	            $(document).ajaxStart(function(){
+	              $('#ajaxBusy').show();
+	            }).ajaxStop(function(){
+	              $('#ajaxBusy').hide();
+	            });
 				var board = $(".backlogWrapper").backlogBoard("@{Stories.getall()}");
 				$("#addStory").button().click(function() {
 					board.showStoryDialog();
 				});
 				$("#addTask").button();
-				$("#saveStories").button();
+				$("#saveStories").button().click(function(){
+	                $.post("@{Stories.save()}",{json: JSON.stringify(board.getData())});
+				});
 				
 				
 					
@@ -405,7 +459,6 @@
 		<h2 class="demoHeaders">Backlog</h2>
 		<div class="headerButtons">
 		        <button id="addStory">Add Story</button>
-				<button id="addTask">Add Task</button>
 				<button id="saveStories">Save Session</button>
 		</div>
 		<div class="backlogWrapper">

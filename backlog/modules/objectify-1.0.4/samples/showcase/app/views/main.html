@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <title>#{get 'title' /}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="shortcut icon" type="image/png" href="@{'/public/images/favicon.png'}">
+        <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/main.css'}">
+        #{get 'moreStyles' /}
+        <script src="@{'/public/javascripts/jquery-1.4.2.min.js'}" type="text/javascript" charset="utf-8"></script>
+        #{get 'moreScripts' /}
+    </head>
+
+    <body>
+
+        <div id="nav">
+            <div class="wrap">
+                <a href="@{Application.index}"><h1>Play Framework - Objectify Module Showcase</h1></a>
+                <ul>
+                    <li><a href="@{Flights.index}">Flights</a></li>
+                    <li><a href="@{Passengers.index}">Passengers</a></li>
+                    <li><a href="@{CRUD.index}">Admin</a></li>
+                    #{if !user}<li><a href="@{Application.login}">Login</a></li>#{/if}
+                    #{if user}<li><a href="@{Application.logout}">Logout</a></li>#{/if}
+                    #{if user}<li>${user}</li>#{/if}
+                </ul>
+            </div>
+        </div>
+
+        <div id="banner">
+            <div class="wrap">
+                <h1>#{get 'title' /}</h1>
+            </div>
+        </div>
+
+        <div id="content">
+
+            <div class="wrap">
+
+                #{if flash.msg}
+                    <div id="flashMsg">
+                        ${flash.msg}<a href="#" onclick="$('#flashMsg').fadeOut(); return false;">Hide message</a>
+                    </div>
+                #{/if}
+
+                #{if errors}
+                    <div id="errors">
+                        <ul>
+                        #{list errors, as:'error'}
+                            #{if error.message != 'validation.object'}
+                                <li>${error.message(error.key)}</li>
+                            #{/if}
+                        #{/list}
+                        </ul>
+                    </div>
+                #{/if}
+
+                #{doLayout /}
+
+            </div>
+
+        </div>
+
+        <div id="footer">
+            <div class="wrap">
+                Built using the Play Framework - Objectify Module
+                <ul>
+                    <li><a href="http://code.google.com/p/play-framework-objectify/" target="_blank">Project Home on Google Code</a></li>
+                    <li><a href="http://groups.google.com/group/play-framework" target="_blank">Discussions on Google Groups</a></li>
+                </ul>
+            </div>
+        </div>
+
+    </body>
+
+</html>

@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/68/trunk/samples/showcase/app/views/PassengersAdmin
+END
+show.html
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/59/trunk/samples/showcase/app/views/PassengersAdmin/show.html
+END
+blank.html
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/64/trunk/samples/showcase/app/views/PassengersAdmin/blank.html
+END
+list.html
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/68/trunk/samples/showcase/app/views/PassengersAdmin/list.html
+END

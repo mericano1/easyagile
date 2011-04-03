@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/56/trunk/samples/showcase/test
+END
+TestModelBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/27/trunk/samples/showcase/test/TestModelBuilder.java
+END
+PassengerTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/31/trunk/samples/showcase/test/PassengerTest.java
+END
+FixturesTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/56/trunk/samples/showcase/test/FixturesTest.java
+END
+FlightTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/31/trunk/samples/showcase/test/FlightTest.java
+END

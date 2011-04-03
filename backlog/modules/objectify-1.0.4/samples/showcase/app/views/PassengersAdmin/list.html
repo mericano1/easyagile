@@ -1,0 +1,35 @@
+#{extends 'CRUD/layout.html' /}
+
+<div id="crudList" class="${type.name}">
+
+	<h2 id="crudListTitle">&{'crud.list.title', type.name}</h2>
+
+	<div id="crudListSearch">
+		#{crud.search /}
+	</div>
+
+  <div id="crudListSearchHelp" style="color:#999; font-size:.8em; margin:5px 0 20px 0;">
+    Format is fieldName:fieldValue
+    <br/><br/>
+    eg
+    <a href="passengersadmin?search=firstName:Bob">firstName:Bob</a> or
+    <a href="passengersadmin?search=lastName:Brown">lastName:Brown</a>
+  </div>
+
+	<div id="crudListTable">
+		#{crud.table fields:['id', 'firstName', 'lastName', 'flight'], sort:['id', 'firstName', 'lastName']}
+      #{crud.custom 'flight'}
+        ${object.flight.fetch()}
+      #{/crud.custom}
+    #{/crud.table}
+	</div>
+
+	<div id="crudListPagination">
+		#{crud.pagination /}
+	</div>
+
+	<p id="crudListAdd">
+		<a href="@{blank()}">&{'crud.add', type.modelName}</a>
+	</p>
+
+</div>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<datastore-indexes autoGenerate="true">
+
+  <!--Flight-->
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="pilot" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="pilot" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="origin" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="origin" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="destination" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="destination" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="note.text" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Flight" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="note.text" direction="desc"/>
+  </datastore-index>
+
+  <!--Passenger-->
+
+  <datastore-index kind="Passenger" ancestor="true" source="auto">
+    <property name="lastName" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="firstName" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="firstName" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="lastName" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Passenger" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="lastName" direction="desc"/>
+  </datastore-index>
+
+  <!--Weather-->
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="id" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="date" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="date" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="city" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="city" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="description" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="description" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="temperature" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="temperature" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="safeToFly" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="safeToFly" direction="desc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="note.text" direction="asc"/>
+  </datastore-index>
+
+  <datastore-index kind="Weather" ancestor="false" source="auto">
+    <property name="owner" direction="asc"/>
+    <property name="note.text" direction="desc"/>
+  </datastore-index>
+
+</datastore-indexes>

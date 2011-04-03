@@ -1,0 +1,86 @@
+10
+
+dir
+72
+http://play-framework-objectify.googlecode.com/svn/trunk/samples/showcase/app/views
+http://play-framework-objectify.googlecode.com/svn
+
+
+
+2010-10-18T10:22:15.733645Z
+72
+davecheong.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3338eb23-2888-ec43-313d-5b5b9a36c142
+
+Flights
+dir
+
+Weathers
+dir
+
+PassengersAdmin
+dir
+
+Application
+dir
+
+main.html
+file
+
+
+
+
+2011-04-02T21:56:08.702579Z
+ce1acb7044bf092b0e5bea8dfd86b53e
+2010-10-12T10:36:21.943891Z
+29
+davecheong.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2646
+
+FlightsAdmin
+dir
+
+Passengers
+dir
+
+errors
+dir
+
+tags
+dir
+

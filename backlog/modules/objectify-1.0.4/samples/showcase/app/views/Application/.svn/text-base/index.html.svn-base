@@ -1,0 +1,17 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+<h1>Welcome to the Play Framework - Objectify Module Showcase application</h1>
+
+<p>This application is a simple demonstration of the Play Framework integration with
+    Objectify for use on the Google App Engine/J platform.</p>
+
+<p>For more information, please visit the <a href="http://code.google.com/p/play-framework-objectify/" target="_blank">project home</a>.</p>
+
+<form action="@{Flights.index}">
+
+    #{authenticityToken /}
+
+    <input type="submit" value="Start application"/>
+    
+</form>

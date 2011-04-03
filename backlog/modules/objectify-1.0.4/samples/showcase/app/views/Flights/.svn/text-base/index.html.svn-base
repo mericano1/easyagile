@@ -1,0 +1,32 @@
+#{extends 'main.html' /}
+#{set title:'All Flights' /}
+
+<table class="data">
+    <tr>
+        <th width="50">&{'flight.id'}</th>
+        <th>&{'flight.pilot'}</th>
+        <th width="100">&{'flight.origin'}</th>
+        <th width="110">&{'flight.destination'}</th>
+        <th width="80">&{'flight.price'}</th>
+        <th width="80">&{'flight.note'}</th>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+    </tr>
+    #{list flights, as:'flight'}
+    <tr>
+        <td>${flight.id}</td>
+        <td>${flight.pilot}</td>
+        <td>${flight.origin?.label}</td>
+        <td>${flight.destination?.label}</td>
+        <td>${flight.price?.format('###,###.00')}</td>
+        <td>#{if flight.note?.text}${flight.note?.internal ? messages.get('flight.note.internal') : messages.get('flight.note.public')}#{/if}</td>
+        <td class="edit">#{a @Passengers.index(flight.id)}&{'flight.passengers'}#{/a}</td>
+        <td class="edit"><a href="@{edit(flight.id)}">&{'edit'}</a></td>
+        <td class="delete">#{delete @delete(flight.id), id:'delete_'+flight.id}&{'delete'}#{/delete}</td>
+    </tr>
+    #{/list}
+</table>
+
+<br/>
+<a href="@{create()}">Add</a>

@@ -1,0 +1,33 @@
+# You can specialize this file for each language.
+# For exemple, for french create a messages.fr file
+#
+validation.required=%s is required
+validation.invalid=%s is invalid
+
+edit=Edit
+delete=Delete
+save=Save
+cancel=Cancel
+notSpecified=Not Specified
+
+city.label=Label
+
+flight.id=Id
+flight.pilot=Pilot
+flight.origin=Origin
+flight.destination=Destination
+flight.stopovers=Stopovers
+flight.price=Price
+flight.note=Note
+flight.noteInternalUseOnly=Is this for internal use only?
+flight.note.internal=Internal
+flight.note.public=Public
+flight.passengers=Passengers
+flight.save=Save Flight
+
+passenger.id=Id
+passenger.firstName=First Name
+passenger.lastName=Last Name
+passenger.flight=Flight
+passenger.save=Save Passenger
+

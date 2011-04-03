@@ -1,0 +1,102 @@
+#{extends 'main.html' /}
+#{set title:'Flight' /}
+
+<form method="post">
+
+    #{authenticityToken /}
+
+    <input type="hidden" name="flight.id" value="${flight.id}"/>
+
+    <div class="fields">
+
+        <table>
+
+            #{field 'flight.pilot'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="pilot">&{'flight.pilot'}:</label></td>
+                    <td class="field"><input id="pilot" type="text" name="${field.name}" value="${flight.pilot}" class="large"/></td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.origin'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="origin">&{'flight.origin'}:</label></td>
+                    <td class="field">
+                        <select id="origin" name="${field.name}">
+                            <option value="" ${flight.origin == null ? 'selected' : ''}>Not specified</option>
+                            #{list cities, as:'city'}
+                            <option value="${city}" ${flight.origin == city ? 'selected' : ''}>${city.label}</option>
+                            #{/list}
+                        </select>
+                    </td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.destination'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="destination">&{'flight.destination'}:</label></td>
+                    <td class="field">
+                        <select id="destination" name="${field.name}">
+                            <option value="" ${flight.destination == null ? 'selected' : ''}>Not specified</option>
+                            #{list cities, as:'city'}
+                            <option value="${city}" ${flight.destination == city ? 'selected' : ''}>${city.label}</option>
+                            #{/list}
+                        </select>
+                    </td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.stopovers'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="stopovers">&{'flight.stopovers'}:</label></td>
+                    <td class="field">
+                        <select id="stopovers" name="${field.name}" multiple="multiple" class="multiple large">
+                            #{list cities, as:'city'}
+                            <option value="${city}" ${flight.stopovers?.contains(city) ? 'selected' : ''}>${city.label}</option>
+                            #{/list}
+                        </select>
+                    </td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.price'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="price">&{'flight.price'}:</label></td>
+                    <td class="field"><input id="price" type="text" name="${field.name}" value="${flight.price}"/></td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.note.text'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label"><label for="note">&{'flight.note'}:</label></td>
+                    <td class="field"><textarea id="note" name="${field.name}" rows="5" cols="50" class="large">${flight.note?.text}</textarea></td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+    
+            #{field 'flight.note.internal'}
+                <tr class="field ${field.errorClass}">
+                    <td class="label">&nbsp;</td>
+                    <td class="field">
+                        <input id="noteInternal" type="checkbox" name="${field.name}" ${flight.note?.internal ? 'checked' : ''}/>
+                        <label for="noteInternal">&{'flight.noteInternalUseOnly'}</label>
+                    </td>
+                    <td>#{ifError field.name}<span class="error">${field.error}</span>#{/ifError}</td>
+                </tr>
+            #{/field}
+            
+        </table>
+
+    </div>
+
+    <div>
+        <input type="submit" value="&{'flight.save'}" />
+        <a href="@{index()}">&{'cancel'}</a>
+    </div>
+
+</form>
