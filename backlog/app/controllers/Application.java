@@ -3,6 +3,7 @@ package controllers;
 import java.util.Date;
 
 import models.User;
+import play.modules.gae.GAE;
 import play.mvc.Before;
 import play.mvc.Controller;
 
@@ -12,7 +13,7 @@ public class Application extends Controller {
 	@Before
     static void checkConnected() {
         if(Auth.getUser() == null) {
-            Application.login();
+        	GAE.login("Application.index");
         } else {
             renderArgs.put("user", Auth.getEmail());
         }
@@ -26,22 +27,12 @@ public class Application extends Controller {
                 user.email = Auth.getEmail();
                 user.created = new Date();
                 user.save();
-                return;
             }
             render();
         }
     	//login();
     }
-    
-    
-    public static void login() {
-        Auth.login("Application.index");
-    }
- 
-    public static void logout() {
-        Auth.logout("Application.index");
-    }
-    
+        
     
 
 }

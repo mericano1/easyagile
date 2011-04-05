@@ -41,12 +41,13 @@
 					 // Setup the ajax indicator
 		              var winH = $(window).height();
                       var winW = $(window).width();
-		              $('body').append('<div id="ajaxBusy"><p><img src="images/loading.gif"></p></div>');
+                      $('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
 		              $('#ajaxBusy').css({
 		                display:"none",
-		                top:winH/$(this).height()/2,
-		                left:winH/$(this).width()/2,
-		                 width:"auto"
+		                top:winH/2,
+		                left:winW/2,
+		                width:"auto",
+		                position:"absolute" 
 		              });
 					}
 					
@@ -168,6 +169,7 @@
 							makeElementsSortable(rightPanel, story.tasks);
 							
 						}
+						updateStoryPoints(story);
 						rightPanel.data("storyId",story.index);
 					}
 					
@@ -250,8 +252,7 @@
 						getData: function(){return data;}
 					}
 					
-					function editStoryOrTask(index, storyOrTask){
-						curStoryOrTask = data[index];
+					function editStoryOrTask(curStoryOrTask, storyOrTask){
 						curStoryOrTask.name = storyOrTask.name;
 						curStoryOrTask.description = storyOrTask.description;
 						curStoryOrTask.points = storyOrTask.points;
@@ -270,13 +271,26 @@
 					
 					function addTaskToStory(story, task){
 						dataStory = getStory(story);
+						showStoryTasks(story);
 						if (dataStory.tasks == undefined){
 							dataStory.tasks = [];
 						}
 						index = dataStory.tasks.length;
-						showStoryTasks(story)
+						if (index == 0){
+							clearRightPanel().css("display","block");
+						}
 						dataStory.tasks.push(task);
+						updateStoryPoints(dataStory);
                         return addStoryOrTask(task, rightPanel, index, true);
+					}
+					
+					function updateStoryPoints(story){
+						points = 0;
+						$(story.tasks).each(function(index, value){
+							points +=parseInt(value.points);
+						});
+		                story.points = points;
+		                story.setDisplayPoints(points);
 					}
 					
 					//sorts the data array
@@ -325,7 +339,7 @@
 										points.addClass( "ui-state-error" );
 									} else {
 										if(storyOrTask){//edit
-											editStoryOrTask(storyOrTask.index, {name:name.val() ,description: description.val(), points:points.val()});
+											editStoryOrTask(storyOrTask, {name:name.val() ,description: description.val(), points:points.val()});
 										} else {//add
 											if (isTask){
 												addTaskToStory(callingElement, {name:name.val() ,description: description.val(), points:points.val()});	
@@ -392,7 +406,8 @@
 					
 					
 					function noTasksHtml(){
-						html = storyOrTaskHtml({name:"No Tasks are available", description:"Click on \"Add Task\" to add one", points:""},"",true);
+						html = $(storyOrTaskHtml({name:"No Tasks are available", description:"Click on \"Add Task\" to add one", points:""},"",true));
+						$(".ui-icon, .points, .priority", html).remove();
 						return html;
 					}
 					

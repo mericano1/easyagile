@@ -37,6 +37,8 @@ public class User extends ObjectifyModel<User> {
         return Datastore.put(this);
     }
 
+	public User() {}
+	
 	public User(String email) {
 		this.email = email;
 	}
