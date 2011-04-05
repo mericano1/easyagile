@@ -11,45 +11,112 @@
 				/*
 				
 				Arguments: 
-					stories 	-> Array of objects [ {name:string, description:string, points:integer, 
-															tasks: [{name:string, description:string, points:integer}]} 
-													]
-				
-				*/
+					backlogBoard([stories])  
+							stories 	-> Array of objects [{name:string, description:string, id:integer, points:integer, tasks:[tasks]}]
+							tasks		-> Array of objects [{name:string, description:string, id:integer, points:integer}]
+					
+					backlogBoard(url, options)
+					        url: String -> The get stories url,
+					        options: Object {
+					        	tasksUrl: String -> The url to retrieve tasks. If null assumes the previous url retrieves everythings,
+					        }
+					        
+		        */
 				$.fn.backlogBoard = function(){
 					var args = Array.prototype.slice.call(arguments);
 					var data = null;
 					var self = this;
-					var leftPanel = $("<div class='left-panel'/>");
-					var rightPanel = $("<div class='right-panel'/>");
-					self.append(leftPanel).append(rightPanel);
-					addBusyLoadingElement();
+					var header = null;
+					var leftPanel = null;
+					var rightPanel = null;
+					
+					//default settings
+					var settings = {
+						convertJsonFields : ["id", "name", "description", "points", "index", "tasks", "deleted", "completed"]
+					};
+					
 					if (args.length == 1 && typeof(args[0]) == "object") {
 						loadData(args[0]);
 						_init.call(this);
 					}
 
 					//url load
-					if (args.length == 1 && typeof(args[0]) == "string") {
+					if (typeof(args[0]) == "string") {
 						$.getJSON(args[0], function (data) { 
 							loadData(data);
 							_init.call(this);
 						});
+						if(args.length == 2){
+							settings = jQuery.extend(true, settings, args[1]);
+						}
 					}
 					
-					function addBusyLoadingElement(){
-					 // Setup the ajax indicator
-		              var winH = $(window).height();
-                      var winW = $(window).width();
-                      $('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
-		              $('#ajaxBusy').css({
-		                display:"none",
-		                top:winH/2,
-		                left:winW/2,
-		                width:"auto",
-		                position:"absolute" 
-		              });
+					
+					function _init() {
+						(function addHtmlToElement(element){
+							header = $("<div class='headerButtons'>");
+							header.append($("<button id='addStory'>Add Story</button>"));					
+							header.append($("<button id='saveStories'>Save Session</button>"));
+							
+							leftPanel = $("<div class='left-panel'/>");
+							rightPanel = $("<div class='right-panel'/>");
+							self.append(header).append(leftPanel).append(rightPanel);
+							
+							//addBusyLoadingElement();
+							var winH = $(window).height();
+							var winW = $(window).width();
+							$('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
+							$('#ajaxBusy').css({
+							  display:"none",
+							  top:winH/2,
+							  left:winW/2,
+							  width:"auto",
+							  position:"absolute" 
+							});
+							
+							//main header buttons
+							$("#addStory").button().click(function() {
+								displayStoryOrTaskForm();
+							});
+							$("#saveStories").button().click(function(){
+				                $.post("@{Stories.save()}",{json: JSON.stringify(data, settings.convertJsonFields)});
+							});
+						})($(this));
+						
+						$(self).each (function () {
+					        //styling the two blocks
+						var block = $(self).children(".left-panel");
+						$(block).css("width", "49.5%")
+						        .css("display", "inline-block")
+						        .css("vertical-align", "top")
+						        .css("float", "left");;
+						//$(block).css("padding", "0 5px");
+						
+						var leftBlock = $(self).children(".right-panel");
+						$(leftBlock).css("width", "49.5%")
+						        .css("display", "inline-block")
+						        .css("vertical-align", "top")
+						        .css("float", "right");
+						//$(leftBlock).css("padding", "0 5px");
+						
+						$(data).each(function(index, story){
+							addStoryOrTask(story,block,index);
+						});
+						makeElementsSortable(block, data, clearRightPanel);
+						
+					});
+						
+						// Setup the ajax indicator
+						$(document).ajaxStart(function(){
+				        	$('#ajaxBusy').show();
+				        }).ajaxStop(function(){
+							$('#ajaxBusy').hide();
+				        });
+						
+						initialized = true;
 					}
+					
+					
 					
 					
 					function loadData(prmdata){
@@ -96,7 +163,8 @@
 						var getItemText = function(element){
 							var text = "";
 							$(element).each(function(index, storyOrTask){
-								text +=JSON.stringify(storyOrTask) + (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
+								text +=JSON.stringify(storyOrTask, settings.convertJsonFields) 
+								+ (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
 									+ "<br/>" ;
 							});
 							return text;
@@ -133,25 +201,34 @@
 						
 						//Bind storyOrTask buttons
 						$(".ui-icon-trash",storyOrTaskDiv).button({icons:{primary:"ui-icon-trash"}}).click(function(){deleteStoryOrTask(storyOrTaskDiv.data("storyOrTask"), (isTask ? parentStory.tasks : null));});
-						$(".ui-icon-pencil",storyOrTaskDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryForm(storyOrTask, isTask);});
+						$(".ui-icon-pencil",storyOrTaskDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryOrTaskForm(storyOrTask, isTask);});
 						if (!isTask){
 							$(".ui-icon-triangle-1-e",storyOrTaskDiv).button().click(function(){showStoryTasks(storyOrTask)});
-							$(".ui-icon-plusthick",storyOrTaskDiv).button().click(function(){displayStoryForm.call(storyOrTask, null, true)});
+							$(".ui-icon-plusthick",storyOrTaskDiv).button().click(function(){displayStoryOrTaskForm.call(storyOrTask, null, true)});
+						}else {
+							$(".ui-icon-circle-check",storyOrTaskDiv).button().click(function(){markStoryOrTaskCompleted(storyOrTask)});
 						}
 						storyOrTask.div = storyOrTaskDiv;
 						printData();
 					}
 					
-					function showStoryTasks(story){
-						if (rightPanel.data("storyId") == story.index){//just hide it
+					function markStoryOrTaskCompleted(storyOrTask, isTask){
+						storyOrTask.completed = true
+						storyOrTask.div.switchClass("taskSummary","taskSummary-completed");
+						printData();
+					}
+					
+					function showStoryTasks(story, toggle){
+						if (toggle == undefined){toggle = true;}
+						if (rightPanel.data("storyId") == story.index && toggle){//just hide it
 							rightPanel.toggle();
 							
 						} else { //populates it
-							clearRightPanel().css("display","block");
+							clearRightPanel();
 						
 							//load tasks, the first time it is called
-							if (story.tasks == undefined){ 
-								$.ajax("@{Tasks.byStory()}?storyId=" + story.id,  
+							if (story.tasks == undefined && story.id != undefined && settings.tasksUrl != undefined){ 
+								$.ajax(settings.tasksUrl + story.id,
 										{ async: false,
 								          dataType: 'json',
 										  success: function (data) {
@@ -177,35 +254,11 @@
 					* Clears the task panel and returns it
 					*/
 					function clearRightPanel(){
-						rightPanel.html("");
+						rightPanel.html("").css("display","block");
 						return rightPanel;
 					}
 					
-					function _init() {
-						$(self).each (function () {
-						        //styling the two blocks
-							var block = $(this).children(".left-panel");
-							$(block).css("width", "49.5%")
-							        .css("display", "inline-block")
-							        .css("vertical-align", "top");
-							//$(block).css("padding", "0 5px");
-							
-							var leftBlock = $(this).children(".right-panel");
-							$(leftBlock).css("width", "49.5%")
-							        .css("display", "inline-block")
-							        .css("vertical-align", "top")
-							        .css("float", "right");
-							//$(leftBlock).css("padding", "0 5px");
-							
-							$(data).each(function(index, story){
-								addStoryOrTask(story,block,index);
-							});
-							makeElementsSortable(block, data, clearRightPanel);
-							
-						});
-						
-						initialized = true;
-					}
+					
 					
 					function makeElementsSortable(block, dataSet, onStart){
 					        $(block).sortable({
@@ -242,15 +295,7 @@
 						});
 					}
 					
-					return {
-						addStory: addStoryAndUpdateData,
-						addTaskToStory: addTaskToStory,
-						getStory: getStory,
-						deleteStory: deleteStoryOrTask,
-						showStoryDialog: displayStoryForm,
-						editStory: editStoryOrTask,
-						getData: function(){return data;}
-					}
+					
 					
 					function editStoryOrTask(curStoryOrTask, storyOrTask){
 						curStoryOrTask.name = storyOrTask.name;
@@ -271,13 +316,13 @@
 					
 					function addTaskToStory(story, task){
 						dataStory = getStory(story);
-						showStoryTasks(story);
+						showStoryTasks(story, false);
 						if (dataStory.tasks == undefined){
 							dataStory.tasks = [];
 						}
 						index = dataStory.tasks.length;
 						if (index == 0){
-							clearRightPanel().css("display","block");
+							clearRightPanel();
 						}
 						dataStory.tasks.push(task);
 						updateStoryPoints(dataStory);
@@ -303,14 +348,15 @@
 					}
 					
 					//display the dialog. If storyOrTask is null an empty form will show.
-					function displayStoryForm(storyOrTask, isTask){
+					function displayStoryOrTaskForm(storyOrTask, isTask){
 						var callingElement = this;
 						var form = null;
-						if ($("#dialog-form").length == 0){
+						var formId = "#dialog-form" + storyOrTaskReturn("-story","-task", isTask);
+						if ($(formId).length == 0){
 							form = $(getFormHtml(isTask));
 							$(document).append(form);
 						}else {
-							form = $("#dialog-form");
+							form = $(formId);
 						}
 						
 						var name = $( "#name", form ),
@@ -361,7 +407,11 @@
 					}
 					
 					function getFormHtml(isTask){
-						return "<div id=\"dialog-form\" title=\"" + storyOrTaskReturn("Story","Task", isTask)+ " details\"> " +
+						/* $("div",{
+							title: storyOrTaskReturn("Story","Task", isTask) + "details"
+							
+						}); */
+						return "<div id=\"dialog-form" + storyOrTaskReturn("-story","-task", isTask)+ "\" title=\"" + storyOrTaskReturn("Story","Task", isTask)+ " details\"> " +
 							"<p class=\"validateTips\">All form fields are required.</p>" + 
 							"<form>" + 
 							"<fieldset>" + 
@@ -383,15 +433,16 @@
 					
 					function storyOrTaskHtml(object, index, isTask){
 						taskBg = "url(\"images/ui-bg_highlight-soft_100_eeeeee_1x100.png\") repeat-x scroll 50% top #EEEEEE";
-						return "<div class=\"ui-widget storySummary\">" +
+						return "<div class=\"ui-widget  storySummary\">" +
 						
-								"<div class=\"" + storyOrTaskReturn("ui-state-highlight","ui-state-highlight", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
+								"<div class=\"" + storyOrTaskReturn("ui-state-highlight ","taskSummary", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
 									"<p>" +
 									"<span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
 									"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
 									"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-plusthick\" title=\"Add task\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
+									storyOrTaskReturn("","<span class=\"ui-icon ui-icon-circle-check\" title=\"Mark Completed\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
 									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ object.name +"</strong>" +
 									"<span class=\"storyOrTask-description\">" + object.description +"</span>" +
 									 "</p>" +
@@ -411,6 +462,16 @@
 						return html;
 					}
 					
+					return {
+						addStory: addStoryAndUpdateData,
+						addTaskToStory: addTaskToStory,
+						getStory: getStory,
+						deleteStory: deleteStoryOrTask,
+						showStoryDialog: displayStoryOrTaskForm,
+						editStory: editStoryOrTask,
+						getData: function(){return data;}
+					}
+					
 				}
 				
 				
@@ -420,19 +481,8 @@
 			
 			$(document).ready(function() {
 				// Ajax activity indicator bound to ajax start/stop document events
-	            $(document).ajaxStart(function(){
-	              $('#ajaxBusy').show();
-	            }).ajaxStop(function(){
-	              $('#ajaxBusy').hide();
-	            });
-				var board = $(".backlogWrapper").backlogBoard("@{Stories.getall()}");
-				$("#addStory").button().click(function() {
-					board.showStoryDialog();
-				});
-				$("#addTask").button();
-				$("#saveStories").button().click(function(){
-	                $.post("@{Stories.save()}",{json: JSON.stringify(board.getData())});
-				});
+	            $(".backlogWrapper").backlogBoard("@{Stories.getall()}", {tasksUrl: "@{Tasks.byStory()}?storyId="});
+				
 				
 				
 					
@@ -455,6 +505,15 @@
 				margin:5px 0;
 				cursor:move;
 			}
+			
+			.taskSummary {
+				border: 1px solid #dddddd; background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_00ffff_1x100.png'}) 50% top repeat-x; color: #333333; 
+			}
+			
+			.taskSummary-completed {
+				border: 1px solid #FFFFF; background: #efefef
+			}
+			
 			.card-info span.priority {
 				float:left;
 			}
@@ -472,10 +531,7 @@
 			
 		<!-- Highlight / Error -->
 		<h2 class="demoHeaders">Backlog</h2>
-		<div class="headerButtons">
-		        <button id="addStory">Add Story</button>
-				<button id="saveStories">Save Session</button>
-		</div>
+		
 		<div class="backlogWrapper">
 		</div>
 		

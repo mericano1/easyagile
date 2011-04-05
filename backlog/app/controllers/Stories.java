@@ -71,11 +71,12 @@ public class Stories extends Controller{
 		if (taskElement.isJsonObject()){
 			JsonObject taskJsonObject = taskElement.getAsJsonObject();
 			Task task = new Gson().fromJson(taskJsonObject, Task.class);
+			task.story = storyKey;
+
 			JsonElement taskDeleted = taskJsonObject.get("deleted");
 			if (taskDeleted != null && taskDeleted.getAsBoolean()){
 				task.delete();
 			} else {
-				task.story = storyKey;
 				task.save();
 			}
 		}
