@@ -100,7 +100,10 @@ public class Task extends ObjectifyModel<Task> {
 			Key<User> key = null;
 			if(assigneeElement != null){
 				String userEmail = assigneeElement.getAsString();
-				key = User.findByEmail(userEmail).getKey();
+				User byEmail = User.findByEmail(userEmail);
+				if(byEmail != null){
+					key = byEmail.getKey();
+				}
 				jsonObject.remove("assignee");
 			}
 			Task fromJson = new Gson().fromJson(jsonObject, Task.class);

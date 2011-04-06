@@ -166,7 +166,7 @@
                         $(users).each(function(index, value){
                             display = value.name?value.name:value.email;
                             id = value.email;
-                            select.append($("<option/>").attr("name", id ).attr("value", display).text(display));
+                            select.append($("<option/>").attr("name", display ).attr("value", id).text(display));
                         });
                         $("<div/>").append(select).dialog({
                                 autoOpen: true,
@@ -193,7 +193,12 @@
 					
 					function deleteStoryOrTask(storyOrTask, dataSet){
 						if (!dataSet) {dataSet = data;}
-						dataSet[storyOrTask.index].deleted = true;
+						//if persisted mark as deleted otherwise just remove from array
+						if (storyOrTask.id){
+							dataSet[storyOrTask.index].deleted = true;
+						}else {
+							dataSet.splice(storyOrTask.index,1);
+						}
 						var storyDiv=storyOrTask.div;
 						storyDiv.remove();
 						printData();

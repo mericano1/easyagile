@@ -12,7 +12,11 @@ import play.mvc.Controller;
 
 
 public class Application extends Controller {
-	static final Set<String> emails = Sets.newHashSet("andrea.salvadore@gmail.com","mark@denieffe.com","mike.k.baxter@gmail.com","ftrilnik@gmail.com");
+	static final Set<String> emails = Sets.newHashSet(
+			"andrea.salvadore@gmail.com",
+			"mdenieffe@gmail.com",
+			"michael.k.baxter@gmail.com",
+			"ftrilnik@gmail.com");
 	
 	@Before
     static void checkConnected() {
