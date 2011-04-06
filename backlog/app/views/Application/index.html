@@ -18,7 +18,8 @@
 					backlogBoard(url, options)
 					        url: String -> The get stories url,
 					        options: Object {
-					        	tasksUrl: String -> The url to retrieve tasks. If null assumes the previous url retrieves everythings,
+					        	tasksUrl: String -> The url to retrieve tasks. If null assumes the story url retrieved everything,
+					        	usersUrl: String -> The url to retrieve users. If null shows the no user available,
 					        }
 					        
 		        */
@@ -29,10 +30,11 @@
 					var header = null;
 					var leftPanel = null;
 					var rightPanel = null;
+					var users = null;
 					
 					//default settings
 					var settings = {
-						convertJsonFields : ["id", "name", "description", "points", "index", "tasks", "deleted", "completed"]
+						convertJsonFields : ["id", "name", "description", "points", "index", "tasks", "deleted", "completed","assignee"]
 					};
 					
 					if (args.length == 1 && typeof(args[0]) == "object") {
@@ -148,6 +150,44 @@
 						if (object.name){
 							return getByProperty("name", object.name);
 						}
+					}
+					
+					function showUsers(storyOrTaskDiv){
+						if (users == null && settings.usersUrl != undefined){
+							$.ajax(settings.usersUrl, //+ user.team.id?,
+                                    { async:false,
+							          dataType: 'json',
+                                      success: function (data) {
+                                           users = data;
+                                      }
+                            });
+						}
+						select = $("<select/>");
+                        $(users).each(function(index, value){
+                            display = value.name?value.name:value.email;
+                            id = value.email;
+                            select.append($("<option/>").attr("name", id ).attr("value", display).text(display));
+                        });
+                        $("<div/>").append(select).dialog({
+                                autoOpen: true,
+                                height: 150,
+                                width: 250,
+                                modal: true,
+                                resizable: false,
+                                buttons: {
+                                     Assign: function(){
+                                         storyOrTask = storyOrTaskDiv.data("storyOrTask");
+                                         storyOrTask.assignee = select.val();
+                                         storyOrTask.setDisplayAssignee(select.val());
+                                         printData();
+                                         $( this ).dialog( "close" );
+                                     },
+                                     Cancel: function() {
+                                            $( this ).dialog( "close" );
+                                     }
+                                    }
+                                }
+                        );
 						
 					}
 					
@@ -195,26 +235,36 @@
 							$(".storyOrTask-description",storyOrTaskDiv).text(description);
 						};
 						
+						storyOrTask.setDisplayAssignee = function(assignee) {
+                            $(".assignee",storyOrTaskDiv).text(assignee);
+                        };
+                        
 						storyOrTask.setDisplayPriority = function(priority) {
 							$(".priority",storyOrTaskDiv).text(priority);
 						};
 						
 						//Bind storyOrTask buttons
-						$(".ui-icon-trash",storyOrTaskDiv).button({icons:{primary:"ui-icon-trash"}}).click(function(){deleteStoryOrTask(storyOrTaskDiv.data("storyOrTask"), (isTask ? parentStory.tasks : null));});
-						$(".ui-icon-pencil",storyOrTaskDiv).button({icons:{primary:"ui-icon-pencil"}}).click(function(){displayStoryOrTaskForm(storyOrTask, isTask);});
+						$(".ui-icon-trash",storyOrTaskDiv).button().click(function(){deleteStoryOrTask(storyOrTaskDiv.data("storyOrTask"), (isTask ? parentStory.tasks : null));});
+						$(".ui-icon-pencil",storyOrTaskDiv).button().click(function(){displayStoryOrTaskForm(storyOrTask, isTask);});
 						if (!isTask){
 							$(".ui-icon-triangle-1-e",storyOrTaskDiv).button().click(function(){showStoryTasks(storyOrTask)});
 							$(".ui-icon-plusthick",storyOrTaskDiv).button().click(function(){displayStoryOrTaskForm.call(storyOrTask, null, true)});
 						}else {
-							$(".ui-icon-circle-check",storyOrTaskDiv).button().click(function(){markStoryOrTaskCompleted(storyOrTask)});
+							$(".ui-icon-check",storyOrTaskDiv).button().click(function(){toggleStoryOrTaskCompleted(storyOrTask)});
+							$(".user",storyOrTaskDiv).button().click(function(){showUsers(storyOrTaskDiv);});
 						}
 						storyOrTask.div = storyOrTaskDiv;
 						printData();
 					}
 					
-					function markStoryOrTaskCompleted(storyOrTask, isTask){
-						storyOrTask.completed = true
-						storyOrTask.div.switchClass("taskSummary","taskSummary-completed");
+					function toggleStoryOrTaskCompleted(storyOrTask, isTask){
+						if(storyOrTask.completed){
+							  storyOrTask.completed = false;
+							  $(".taskSummary-completed", storyOrTask.div).switchClass("taskSummary-completed","taskSummary");
+						}else{
+							 storyOrTask.completed = true;
+                             $(".taskSummary", storyOrTask.div).switchClass("taskSummary","taskSummary-completed");
+						}
 						printData();
 					}
 					
@@ -222,7 +272,7 @@
 						if (toggle == undefined){toggle = true;}
 						if (rightPanel.data("storyId") == story.index && toggle){//just hide it
 							rightPanel.toggle();
-							
+							//$(".ui-icon-triangle-1-e", story.div).switchClass("ui-icon-triangle-1-e", "ui-icon-triangle-1-w");
 						} else { //populates it
 							clearRightPanel();
 						
@@ -326,7 +376,7 @@
 						}
 						dataStory.tasks.push(task);
 						updateStoryPoints(dataStory);
-                        return addStoryOrTask(task, rightPanel, index, true);
+                        return addStoryOrTask(task, rightPanel, index, true, story);
 					}
 					
 					function updateStoryPoints(story){
@@ -432,21 +482,23 @@
 					}
 					
 					function storyOrTaskHtml(object, index, isTask){
-						taskBg = "url(\"images/ui-bg_highlight-soft_100_eeeeee_1x100.png\") repeat-x scroll 50% top #EEEEEE";
+						taskBgClass = isTask && object.completed ? "taskSummary-completed" : "taskSummary";
 						return "<div class=\"ui-widget  storySummary\">" +
 						
-								"<div class=\"" + storyOrTaskReturn("ui-state-highlight ","taskSummary", isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
+								"<div class=\"" + storyOrTaskReturn("ui-state-highlight ",taskBgClass, isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
 									"<p>" +
 									"<span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
 									"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
 									"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-plusthick\" title=\"Add task\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
-									storyOrTaskReturn("","<span class=\"ui-icon ui-icon-circle-check\" title=\"Mark Completed\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
+									storyOrTaskReturn("","<span class=\"ui-icon-custom user\" title=\"Assign Task\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
+									storyOrTaskReturn("","<span class=\"ui-icon ui-icon-check \" title=\"Mark Completed\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
 									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ object.name +"</strong>" +
 									"<span class=\"storyOrTask-description\">" + object.description +"</span>" +
 									 "</p>" +
 									 "<div class=\"card-info\"><span class=\"priority\">" + (isNaN(index)? "" : (index + 1) ) + "</span>" +
+									 storyOrTaskReturn("","<span class=\"assignee\">" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>", isTask) +
 									 "<span class=\"points\">" + object.points + "</span>" + 
 									 "<div style=\"clear:both;\"/>" + 
 									 "</div>" +
@@ -481,7 +533,11 @@
 			
 			$(document).ready(function() {
 				// Ajax activity indicator bound to ajax start/stop document events
-	            $(".backlogWrapper").backlogBoard("@{Stories.getall()}", {tasksUrl: "@{Tasks.byStory()}?storyId="});
+	            $(".backlogWrapper").backlogBoard("@{Stories.getall()}", 
+	            		{
+	            	     tasksUrl: "@{Tasks.byStory()}?storyId=",
+	            		 usersUrl: "@{Users.getAll()}"
+	            		});
 				
 				
 				
@@ -501,6 +557,15 @@
 				cursor: pointer;
 			}
 			
+			.ui-icon-custom {
+			     width: 16px; 
+			     height: 16px;
+			     cursor: pointer;
+			}
+			.user {
+			     background-image: url(@{'/public/stylesheets/ui-lightness/images/user.png'});
+			}
+			
 			.storySummary {
 				margin:5px 0;
 				cursor:move;
@@ -511,7 +576,7 @@
 			}
 			
 			.taskSummary-completed {
-				border: 1px solid #FFFFF; background: #efefef
+			    border: 1px solid #dddddd; background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_808000_1x100.png'}) 50% top repeat-x; color: #333333;
 			}
 			
 			.card-info span.priority {
@@ -519,6 +584,9 @@
 			}
 			.card-info span.points {
 				float:right;
+			}
+			.card-info span.assignee {
+			     margin-left:15px;
 			}
 			label, input, textarea { display:block; }
 			input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
@@ -535,7 +603,7 @@
 		<div class="backlogWrapper">
 		</div>
 		
-		<div id="data">
+		<div id="data" style="clear:both; margin-top:250px">
 		</div>
 		
 

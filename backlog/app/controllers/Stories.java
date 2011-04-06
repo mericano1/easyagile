@@ -4,16 +4,22 @@ import java.util.List;
 
 import models.Story;
 import models.Task;
-import play.modules.objectify.ObjectifyModel;
+import models.Task.TaskJsonDeserializer;
+import models.Task.TaskJsonSerializer;
+import models.User;
 import play.mvc.Controller;
+import play.mvc.With;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.googlecode.objectify.Key;
 
+
+@With(Application.class)
 public class Stories extends Controller{
 	
 	public static void getAll(){
@@ -70,18 +76,35 @@ public class Stories extends Controller{
 	private static void processTaskElement(JsonElement taskElement, Key<Story> storyKey){
 		if (taskElement.isJsonObject()){
 			JsonObject taskJsonObject = taskElement.getAsJsonObject();
-			Task task = new Gson().fromJson(taskJsonObject, Task.class);
+			Task task = getGson().fromJson(taskJsonObject, Task.class);
 			task.story = storyKey;
-
 			JsonElement taskDeleted = taskJsonObject.get("deleted");
 			if (taskDeleted != null && taskDeleted.getAsBoolean()){
 				task.delete();
 			} else {
+				//assignUser(task, taskJsonObject);
 				task.save();
 			}
 		}
 	}
 	
+/*	private static void assignUser(Task task, JsonObject jsonTask){
+		JsonElement jsonElement = jsonTask.get("assigneeEmail");
+		if (jsonElement != null){
+			User byEmail = User.findByEmail(jsonElement.getAsString());
+			task.assignee = byEmail.getKey(); 
+		}
+	}*/
+	
+	
+	
+	private static Gson getGson () {
+		Gson gson = new GsonBuilder()
+		.registerTypeAdapter(Task.class, new TaskJsonDeserializer())
+		.registerTypeAdapter(Task.class, new TaskJsonSerializer())
+		.create();
+		return gson;
+	}
 	
 	
 
