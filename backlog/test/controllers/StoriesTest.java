@@ -1,6 +1,8 @@
 package controllers;
 
+import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import models.Story;
 import models.Task;
@@ -14,10 +16,11 @@ import play.mvc.Http.Response;
 import play.mvc.Router;
 import play.test.FunctionalTest;
 
+import com.google.appengine.repackaged.com.google.common.collect.Maps;
 import com.google.gson.Gson;
 
 public class StoriesTest extends FunctionalTest {
-	String story1Json = "{\"id\":18,\"name\":\"story1\",\"description\":\"story1 desc\",\"points\":4,\"index\":0}",
+	String story1Json = "{\"name\":\"story1\",\"description\":\"story1 desc\",\"points\":4,\"index\":0}",
 	story2Json = "{\"id\":19,\"name\":\"story2\",\"description\":\"story2 desc\",\"points\":6,\"index\":1}" ,
 	story3Json = "{\"id\":20,\"name\":\"story3\",\"description\":\"story3 desc\",\"points\":8,\"index\":2}" ,
 	story4Json = "{\"id\":21,\"name\":\"story4\",\"description\":\"story4 desc\",\"points\":31,\"index\":3}",
@@ -28,6 +31,15 @@ public class StoriesTest extends FunctionalTest {
 	@Before
 	public void setup(){
 		ObjectifyFixtures.deleteAll();
+		clearCookies();
+		//logs in
+		String postUrl = Router.reverse("GAEActions.doLogin").url;
+		Map<String, String> map = Maps.newHashMap();
+		map.put("email", "andrea.salvadore@gmail.com");
+		map.put("url", "/");
+		map.put("isAdmin", "true");
+		Map<String, File> fileMap = Maps.newHashMap();
+		POST(postUrl, map, fileMap);
 	}
 	
 	@Test
@@ -70,7 +82,7 @@ public class StoriesTest extends FunctionalTest {
 		String url = Router.reverse("Stories.save").url;
 		String json = appendPropertyToJson(story1Json, "tasks", task1Json);
 		Response response = POST(url+"?json=" + json);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(response);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);

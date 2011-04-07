@@ -1,0 +1,7 @@
+#{selenium}
+clearSession()
+open('/')
+type('email','andrea.salvadore@gmail.com')
+clickAndWait('//input[@value='Sign in !']')
+waitForElementPresent('addStory')
+#{/selenium}

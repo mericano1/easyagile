@@ -18,6 +18,7 @@
 					backlogBoard(url, options)
 					        url: String -> The get stories url,
 					        options: Object {
+					        	saveSessionUrl: String -> This is required to persist the data. A json='stories' will be sent via POST
 					        	tasksUrl: String -> The url to retrieve tasks. If null assumes the story url retrieved everything,
 					        	usersUrl: String -> The url to retrieve users. If null shows the no user available,
 					        }
@@ -59,6 +60,7 @@
 							header = $("<div class='headerButtons'>");
 							header.append($("<button id='addStory'>Add Story</button>"));					
 							header.append($("<button id='saveStories'>Save Session</button>"));
+							header.append($("<p id='userMessages' style='display:inline; margin-left:20px;'>"));
 							
 							leftPanel = $("<div class='left-panel'/>");
 							rightPanel = $("<div class='right-panel'/>");
@@ -80,9 +82,7 @@
 							$("#addStory").button().click(function() {
 								displayStoryOrTaskForm();
 							});
-							$("#saveStories").button().click(function(){
-				                $.post("@{Stories.save()}",{json: JSON.stringify(data, settings.convertJsonFields)});
-							});
+							$("#saveStories").button().click(saveSession);
 						})($(this));
 						
 						$(self).each (function () {
@@ -116,6 +116,26 @@
 				        });
 						
 						initialized = true;
+					}
+					
+					
+					/**
+					* Saves the current session
+					*/
+					function saveSession(){
+					    $.post(settings.saveSessionUrl,{json: JSON.stringify(data, settings.convertJsonFields)})
+		                .success(function() {
+			                	(function (el) {
+			                	    setTimeout(function () {
+			                	        el.children().remove('span');
+			                	    }, 5000);
+			                	})($('#userMessages').html("<span>Session Saved successfully</span>"));
+		                	}
+		                )
+						.error(function() { 
+							$('#userMessages').html("<span><b>Error saving the current session! Please check the server log</b></span>"); 
+							}
+						);
 					}
 					
 					
@@ -208,14 +228,12 @@
 						var getItemText = function(element){
 							var text = "";
 							$(element).each(function(index, storyOrTask){
-								text +=JSON.stringify(storyOrTask, settings.convertJsonFields) 
-								+ (storyOrTask.tasks? "=><br/>" + getItemText(storyOrTask.tasks) : "")
-									+ "<br/>" ;
+								text +=JSON.stringify(storyOrTask, settings.convertJsonFields); 
 							});
 							return text;
 						};
 						
-						$("#data").html(getItemText(data));
+						$("textarea",$("#data")).val(getItemText(data));
 					}
 					
 					
@@ -229,23 +247,24 @@
 						
 						$(block).append(storyOrTaskDiv);
 						storyOrTask.setDisplayPoints = function(points) {
+							points = points?points:"";
 							$(".points",storyOrTaskDiv).text(points);
 						};
 						
 						storyOrTask.setDisplayName = function(name) {
-							$(".storyOrTask-name",storyOrTaskDiv).text(name);
+							$(".storyOrTask-name",storyOrTaskDiv).html(name);
 						};
 						
 						storyOrTask.setDisplayDescription = function(description) {
-							$(".storyOrTask-description",storyOrTaskDiv).text(description);
+							$(".storyOrTask-description",storyOrTaskDiv).html(description);
 						};
 						
 						storyOrTask.setDisplayAssignee = function(assignee) {
-                            $(".assignee",storyOrTaskDiv).text(assignee);
+                            $(".assignee",storyOrTaskDiv).html(assignee);
                         };
                         
 						storyOrTask.setDisplayPriority = function(priority) {
-							$(".priority",storyOrTaskDiv).text(priority);
+							$(".priority",storyOrTaskDiv).html(priority);
 						};
 						
 						//Bind storyOrTask buttons
@@ -273,11 +292,19 @@
 						printData();
 					}
 					
+					/*
+					 * Shows the story tasks. It loads them the first time and then keeps the data structure local 
+					 */
 					function showStoryTasks(story, toggle){
 						if (toggle == undefined){toggle = true;}
 						if (rightPanel.data("storyId") == story.index && toggle){//just hide it
 							rightPanel.toggle();
-							//$(".ui-icon-triangle-1-e", story.div).switchClass("ui-icon-triangle-1-e", "ui-icon-triangle-1-w");
+							//remove the selected story border
+							if(rightPanel.is(":visible")){
+								$(".ui-state-highlight:eq(" + story.index +")",leftPanel).addClass("selected");
+							}else {
+								$(".selected", leftPanel).removeClass("selected");
+							}
 						} else { //populates it
 							clearRightPanel();
 						
@@ -300,6 +327,9 @@
 							}
 							makeElementsSortable(rightPanel, story.tasks);
 							
+							//update selected highlight
+							$(".selected", leftPanel).removeClass("selected");
+							$(".ui-state-highlight:eq(" + story.index +")",leftPanel).addClass("selected");
 						}
 						updateStoryPoints(story);
 						rightPanel.data("storyId",story.index);
@@ -314,7 +344,10 @@
 					}
 					
 					
-					
+					/**
+					*
+					*
+					*/
 					function makeElementsSortable(block, dataSet, onStart){
 					        $(block).sortable({
 							stop: function(event, ui) {
@@ -429,23 +462,25 @@
 						}
 						$(form).dialog({
 							autoOpen: true,
-							height: 380,
-							width: 350,
+							height: 480,
+							width: 380,
 							modal: true,
-							resizable: false,
+							resizable: true,
 							buttons: {
 								Save: function() {
 									allFields.removeClass( "ui-state-error" );
 									if (isNaN(points.val())){
 										points.addClass( "ui-state-error" );
+									} else if(name.val().trim() == ""){
+										name.addClass("ui-state-error");
 									} else {
 										if(storyOrTask){//edit
-											editStoryOrTask(storyOrTask, {name:name.val() ,description: description.val(), points:points.val()});
+											editStoryOrTask(storyOrTask, getStoryOrTaskObjectFromForm());
 										} else {//add
 											if (isTask){
-												addTaskToStory(callingElement, {name:name.val() ,description: description.val(), points:points.val()});	
+												addTaskToStory(callingElement, getStoryOrTaskObjectFromForm());	
 											}else {
-											    addStoryAndUpdateData({name:name.val() ,description: description.val(), points:points.val()});
+											    addStoryAndUpdateData(getStoryOrTaskObjectFromForm());
 											}
 										}
 										$( this ).dialog( "close" );
@@ -458,7 +493,17 @@
 								
 							}
 						});
-						
+						function getStoryOrTaskObjectFromForm(){
+							/* var name = $( "#name", form ),
+							description = $( "#description", form  ),
+							points = $( "#points", form ),
+							allFields = $( [] ).add( name ).add( description ).add( points ); */
+							var returnObj = {};
+							if (name.val().trim() != ""){returnObj.name=name.val().trim();}
+							if (description.val().trim() != ""){returnObj.description=description.val().trim();}
+							if (points.val().trim() != ""){returnObj.points=points.val().trim();}
+							return returnObj;
+						}
 					}
 					
 					function getFormHtml(isTask){
@@ -471,11 +516,11 @@
 							"<form>" + 
 							"<fieldset>" + 
 								"<label for=\"name\">Name</label>" + 
-								"<input type=\"text\" name=\"name\" id=\"name\" class=\"text ui-widget-content ui-corner-all\" />" + 
+								"<input type=\"text\" name=\"name\" id=\"name\" class=\"text ui-widget-content ui-corner-all\" ></input>" + 
 								"<label for=\"description\">Description</label>" + 
-								"<textarea name=\"description\" id=\"description\" value=\"\" class=\"text ui-widget-content ui-corner-all\" ></textarea>" + 
+								"<textarea name=\"description\" id=\"description\" value=\"\" class=\"text ui-widget-content ui-corner-all\" rows=\"10\" ></textarea>" + 
 								"<label for=\"points\">Points</label>" + 
-								"<input type=\"points\" name=\"points\" id=\"points\" value=\"\" class=\"text ui-widget-content ui-corner-all\" />" + 
+								"<input type=\"points\" name=\"points\" id=\"points\" value=\"\" class=\"text ui-widget-content ui-corner-all\" ></input>" + 
 							"</fieldset>" + 
 							"</form>" + 
 						"</div>";
@@ -499,12 +544,12 @@
 									storyOrTaskReturn("<span class=\"ui-icon ui-icon-plusthick\" title=\"Add task\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
 									storyOrTaskReturn("","<span class=\"ui-icon-custom user\" title=\"Assign Task\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
 									storyOrTaskReturn("","<span class=\"ui-icon ui-icon-check \" title=\"Mark Completed\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
-									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ object.name +"</strong>" +
-									"<span class=\"storyOrTask-description\">" + object.description +"</span>" +
+									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ (object.name?object.name:"") +"</strong>" +
+									"<div class=\"storyOrTask-description\">" + (object.description?object.description:"") +"</div>" +
 									 "</p>" +
 									 "<div class=\"card-info\"><span class=\"priority\">" + (isNaN(index)? "" : (index + 1) ) + "</span>" +
 									 storyOrTaskReturn("","<span class=\"assignee\">" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>", isTask) +
-									 "<span class=\"points\">" + object.points + "</span>" + 
+									 "<span class=\"points\">" + (object.points?object.points:"") + "</span>" + 
 									 "<div style=\"clear:both;\"/>" + 
 									 "</div>" +
 									"</div>" +
@@ -515,7 +560,7 @@
 					
 					function noTasksHtml(){
 						html = $(storyOrTaskHtml({name:"No Tasks are available", description:"Click on \"Add Task\" to add one", points:""},"",true));
-						$(".ui-icon, .points, .priority", html).remove();
+						$(".ui-icon, .points, .priority, .ui-icon-custom", html).remove();
 						return html;
 					}
 					
@@ -526,7 +571,8 @@
 						deleteStory: deleteStoryOrTask,
 						showStoryDialog: displayStoryOrTaskForm,
 						editStory: editStoryOrTask,
-						getData: function(){return data;}
+						getData: function(){return data;},
+						getSettings: function(){return settings;}
 					}
 					
 				}
@@ -538,14 +584,14 @@
 			
 			$(document).ready(function() {
 				// Ajax activity indicator bound to ajax start/stop document events
-	            $(".backlogWrapper").backlogBoard("@{Stories.getall()}", 
+	            var backlog = $(".backlogWrapper").backlogBoard("@{Stories.getall()}", 
 	            		{
 	            	     tasksUrl: "@{Tasks.byStory()}?storyId=",
-	            		 usersUrl: "@{Users.getAll()}"
-	            		});
+	            		 usersUrl: "@{Users.getAll()}",
+	            		 saveSessionUrl:"@{Stories.save()}"
+	            });
 				
-				
-				
+				document.blSettings = backlog.getSettings();
 					
 			});
 		</script>
@@ -562,6 +608,10 @@
 				cursor: pointer;
 			}
 			
+			.ui-resizable-handle { 
+			      cursor:se-resize;
+			}
+			
 			.ui-icon-custom {
 			     width: 16px; 
 			     height: 16px;
@@ -576,12 +626,41 @@
 				cursor:move;
 			}
 			
+			.selected {
+				border: 1px solid #FF0F0F;  
+			}
+			
+			.unselected {
+				border: 1px solid #dddddd;  
+			}
+			
+			
 			.taskSummary {
-				border: 1px solid #dddddd; background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_00ffff_1x100.png'}) 50% top repeat-x; color: #333333; 
+				/*background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_00ffff_1x100.png'}) 50% top repeat-x; color: #333333;*/
+				background: #008800;
+			    /* Mozilla: */
+			    background: -moz-linear-gradient(top, #00ffff, #FFFFFF);
+			    /* Chrome, Safari:*/
+			    background: -webkit-gradient(linear,
+			                left top, left bottom, from(#00ffff), to(#FFFFFF));
+			    /* MSIE */
+			    filter: progid:DXImageTransform.Microsoft.Gradient(
+			                StartColorStr='#00ffff', EndColorStr='#FFFFFF', GradientType=0);
+				border: 1px solid #dddddd;  
 			}
 			
 			.taskSummary-completed {
-			    border: 1px solid #dddddd; background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_808000_1x100.png'}) 50% top repeat-x; color: #333333;
+				background: #008800;
+			    /* Mozilla: */
+			    background: -moz-linear-gradient(top, #FFFFFF,#808000);
+			    /* Chrome, Safari:*/
+			    background: -webkit-gradient(linear,
+			                left top, left bottom, from(#FFFFFF), to(#808000));
+			    /* MSIE */
+			    filter: progid:DXImageTransform.Microsoft.Gradient(
+			                StartColorStr='#FFFFFF', EndColorStr='#808000', GradientType=0);
+			    border: 1px solid #dddddd; 
+			    /*background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_808000_1x100.png'}) 50% top repeat-x; color: #333333;*/
 			}
 			
 			.card-info span.priority {
@@ -592,6 +671,16 @@
 			}
 			.card-info span.assignee {
 			     margin-left:15px;
+			}
+			.data-textArea
+			{
+			    width:100%;
+			}
+			.textwrapper
+			{
+			    border:1px solid #999999;
+			    margin:5px 0;
+			    padding:3px;
 			}
 			label, input, textarea { display:block; }
 			input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
@@ -608,9 +697,29 @@
 		<div class="backlogWrapper">
 		</div>
 		
-		<div id="data" style="clear:both; margin-top:250px">
-		</div>
 		
+		
+		<button style= "display: block;clear:both; margin-top:250px;" id="showDataButton">Show data</button>
+		<div id="data" style="display: none;" class="formitem">
+		    <label for="rules" id="ruleslabel">Data:</label>
+		    <div class="textwrapper">
+		    	<textarea class="data-textArea"cols="2" rows="10" id="data-textArea"></textarea>
+		    </div>
+		    <button id="postThisButton">Post this data</button>
+		</div>
+		<script>
+			$('#showDataButton').button().click(function (){
+				if ($("#data").is(":visible")){
+	                $("#showDataButton").empty().append("Show data");
+	            }else{
+	                $("#showDataButton").empty().append("Hide data");
+	            }
+				$('#data').toggle();
+			})
+			$("#postThisButton").click(function(){
+				$.post(document.blSettings.saveSessionUrl,{json: JSON.stringify($('#data-textArea').val(), document.blSettings.convertJsonFields)});
+			});
+		</script>
 
 
 	</body>

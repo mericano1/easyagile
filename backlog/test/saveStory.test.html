@@ -1,4 +1,6 @@
-    open('/')
+%{play.modules.objectify.ObjectifyFixtures.deleteAll();}%
+#{test.login /}
+#{selenium}
     click('addStory')
     type('name','story test1')
     type('description','desc desc')
@@ -8,6 +10,8 @@
     verifyTextPresent('desc desc')
     verifyTextPresent('{"name":"story test1","description":"desc desc","points":"4","index":0}')
     click('saveStories')
+    open('/')
+    waitForElementPresent('addStory')
     verifyTextPresent('name":"story test1","description":"desc desc","points":4,"index":0')
     verifyTextPresent('story test1')
     verifyTextPresent('desc desc')
@@ -27,3 +31,4 @@
     verifyText('//strong','story test1')
     click('//span[2]')
     verifyText('//div[3]/div/div/p/strong','mericano1')
+#{/selenium}
