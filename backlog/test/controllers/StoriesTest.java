@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import models.Sprint;
 import models.Story;
 import models.Task;
 
@@ -130,14 +131,15 @@ public class StoriesTest extends FunctionalTest {
 		ObjectifyFixtures.load("stories.yml");
 		String url = Router.reverse("Stories.save").url;
 
+		Sprint sprint = Sprint.findCurrentSprint();
 		Story firstStory = Story.findAll().get(0);
 		firstStory.name = "story1 updated";
 		firstStory.points = 10;
 		Gson gson = new Gson();
 		String jsonUpdated = gson.toJson(firstStory);
-		Response response = POST(url+"?json=" + jsonUpdated);
+		Response response = POST(url+"?json=" + jsonUpdated + "&sprintId=" + sprint.id);
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
-		Story retrieved = Story.findById(firstStory.id);
+		Story retrieved = Story.findById(firstStory.key());
 		assertEquals("story1 updated", retrieved.name);
 		assertEquals((Integer)10, (Integer)retrieved.points);
 	}
@@ -148,6 +150,7 @@ public class StoriesTest extends FunctionalTest {
 		ObjectifyFixtures.load("stories.yml");
 		String url = Router.reverse("Stories.save").url;
 
+		Sprint sprint = Sprint.findCurrentSprint();
 		Story firstStory = Story.findAll().get(0);
 		firstStory.name = "story1 updated";
 		firstStory.points = 10;
@@ -156,9 +159,9 @@ public class StoriesTest extends FunctionalTest {
 		String jsonUpdated = gson.toJson(firstStory);
 		//adds the deleted = true
 		jsonUpdated = appendPropertyToJson(jsonUpdated, "deleted", "\"true\"");
-		Response response = POST(url+"?json=" + jsonUpdated);
+		Response response = POST(url+"?json=" + jsonUpdated + "&sprintId=" + sprint.id);
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
-		Story retrieved = Story.findById(firstStory.id);
+		Story retrieved = Story.findById(firstStory.key());
 		assertNull(retrieved);
 		assertEquals(3, Story.findAll().size());
 	}

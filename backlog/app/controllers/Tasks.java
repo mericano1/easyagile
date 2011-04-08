@@ -26,10 +26,10 @@ public class Tasks extends Controller{
 	}
 	
 	/**
-	 * gets all the tasks for a story
+	 * Saves a task
 	 * @param storyId
 	 */
-	public static void add(String json, String storyId){
+	public static void save(String json, String storyId){
 		Task task = getGson().fromJson(json, Task.class);
 		task.story = new Key<Story>(Story.class, Long.valueOf(storyId));
 		task.save();

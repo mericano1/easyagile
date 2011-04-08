@@ -2,6 +2,7 @@ package controllers;
 
 import java.util.List;
 
+import models.Sprint;
 import models.Story;
 import models.Task;
 import models.Task.TaskJsonDeserializer;
@@ -22,49 +23,61 @@ import com.googlecode.objectify.Key;
 @With(Application.class)
 public class Stories extends Controller{
 	
-	public static void getAll(){
-		List<Story> findAll = Story.findAll();
+	public static void bySprint(Long sprintId){
+		List<Story> findAll = Story.findBySprint(sprintId);
 		renderJSON(findAll);
 	}
 	
 	
-	public static void save(String json){
+	public static void save(String json, Long sprintId){
 		JsonElement fromJson = new JsonParser().parse(json.trim());
-		processArrayOfElements(fromJson);
+		processArrayOfElements(fromJson, sprintId);
 	}
 	
-	
-	
-	private static void processArrayOfElements(JsonElement fromJson){
+	/**
+	 * Process all the story json objects. Can either delete update or add them to the persistence storage
+	 * @param fromJson the story json element array
+	 * @param sprintId the sprint these stories belong to
+	 */
+	private static void processArrayOfElements(JsonElement fromJson, Long sprintId){
 		if (fromJson.isJsonArray()){
 			JsonArray asJsonArray = fromJson.getAsJsonArray();
 			for (JsonElement jsonElement : asJsonArray) {
-				processElement(jsonElement);
+				processElement(jsonElement, sprintId);
 			}
 		} else {
-			processElement(fromJson);
+			processElement(fromJson, sprintId);
 		}
 	}
 	
 	
-	private static void processElement(JsonElement jsonElement){
+	/**
+	 * Process a single story json object. Can either delete update or add it to the persistence storage
+	 * @param jsonElement the story json element 
+	 * @param sprintId the sprint this story belong to
+	 */
+	private static void processElement(JsonElement jsonElement, Long sprintId){
 		if (jsonElement.isJsonObject()){
 			JsonObject jsonObject = jsonElement.getAsJsonObject();
 			Story story = new Gson().fromJson(jsonObject, Story.class);
-			JsonElement deleted = jsonObject.get("deleted");
-			if (deleted != null && deleted.getAsBoolean()){
-				story.delete();
-			} else {
-				Key<Story> storyKey = story.save();
-				JsonElement tasks = jsonObject.get("tasks");
-				if (tasks != null){
-					if (tasks.isJsonArray()){
-						JsonArray tasksArray = tasks.getAsJsonArray();
-						for (JsonElement taskElement : tasksArray) {
-							processTaskElement(taskElement,storyKey);
+			Key<Sprint> sprintKey = Sprint.findKey(sprintId);
+			if (sprintKey != null){
+				story.sprint = sprintKey;
+				JsonElement deleted = jsonObject.get("deleted");
+				if (deleted != null && deleted.getAsBoolean()){
+					story.delete();
+				} else {
+					Key<Story> storyKey = story.save();
+					JsonElement tasks = jsonObject.get("tasks");
+					if (tasks != null){
+						if (tasks.isJsonArray()){
+							JsonArray tasksArray = tasks.getAsJsonArray();
+							for (JsonElement taskElement : tasksArray) {
+								processTaskElement(taskElement,storyKey);
+							}
+						}else{
+							processTaskElement(tasks,storyKey);
 						}
-					}else{
-						processTaskElement(tasks,storyKey);
 					}
 				}
 			}
@@ -72,7 +85,11 @@ public class Stories extends Controller{
 		
 	}
 	
-	
+	/**
+	 * Process a task element. Can either delete update or add it to the persistence storage
+	 * @param taskElement the task json element
+	 * @param storyKey the parent story key
+	 */
 	private static void processTaskElement(JsonElement taskElement, Key<Story> storyKey){
 		if (taskElement.isJsonObject()){
 			JsonObject taskJsonObject = taskElement.getAsJsonObject();

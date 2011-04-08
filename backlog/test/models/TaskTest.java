@@ -1,9 +1,12 @@
 package models;
 
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import com.googlecode.objectify.Key;
 
 import play.modules.objectify.Datastore;
 import play.modules.objectify.ObjectifyFixtures;
@@ -23,7 +26,9 @@ public class TaskTest extends UnitTest {
 
 	@Test
 	public void should_find_task_by_id() {
-		Story story = TestModelBuilder.createSimpleStory("story1", "desc", 6, 0);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("firstSprint", new Date(), new Date(), true);
+		Key<Sprint> key = sprint.save();
+		Story story = TestModelBuilder.createSimpleStory("story1", "desc", 6, 0, key);
 		story.save();
 		Task task = TestModelBuilder.createSimpleTask("task1", "task desc", 5,0, story.key());
 		task.save();
@@ -46,7 +51,9 @@ public class TaskTest extends UnitTest {
 
 	@Test
 	public void should_find_task_by_story() {
-		Story story = TestModelBuilder.createSimpleStory("story", "desc", 4, 0);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("firstSprint", new Date(), new Date(), true);
+		Key<Sprint> key = sprint.save();
+		Story story = TestModelBuilder.createSimpleStory("story", "desc", 4, 0, key);
 		story.save();
 		Task task1 = TestModelBuilder.createSimpleTask("task1", "task1 desc",
 				5, 0, story.key());
@@ -68,18 +75,17 @@ public class TaskTest extends UnitTest {
 		Task retrievedTask = Datastore.query(Task.class)
 				.filter("name", "task1").get();
 		assertNotNull("Task is null", retrievedTask);
-		Datastore.delete(retrievedTask);
-		retrievedTask = Datastore.query(Task.class).filter("name", "task1")
-				.get();
+		retrievedTask.delete();
+		retrievedTask = Datastore.query(Task.class).filter("name", "task1").get();
 		assertNull("Task is not null", retrievedTask);
 	}
 
 	private Task put() {
-		Story story = TestModelBuilder
-				.createSimpleStory("story1", "desc", 6, 0);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("firstSprint", new Date(), new Date(), true);
+		Key<Sprint> key = sprint.save();
+		Story story = TestModelBuilder.createSimpleStory("story1", "desc", 6, 0, key);
 		story.save();
-		Task task = TestModelBuilder.createSimpleTask("task1", "task desc", 5,
-				0, story.key());
+		Task task = TestModelBuilder.createSimpleTask("task1", "task desc", 5,0, story.key());
 		task.save();
 		return task;
 	}

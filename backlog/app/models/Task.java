@@ -38,7 +38,6 @@ public class Task extends ObjectifyModel<Task> {
     public static Task findById(Long storyId, Long taskId) {
     	Key<Task> key = Datastore.key(Story.class, storyId, Task.class, taskId);
         return Datastore.find(key);
-
     }
     
     

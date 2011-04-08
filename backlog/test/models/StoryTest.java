@@ -1,9 +1,12 @@
 package models;
 
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import com.googlecode.objectify.Key;
 
 import play.modules.objectify.Datastore;
 import play.modules.objectify.ObjectifyFixtures;
@@ -24,7 +27,10 @@ public class StoryTest extends UnitTest {
 	@Test
 	public void should_find_story_by_id() {
 		Story story = put();
-		Story retrievedStory = Story.findById(story.id);
+		Sprint sprint = Sprint.findCurrentSprint();
+		assertNotNull(sprint);
+		assertNotNull(sprint.id);
+		Story retrievedStory = Story.findById(sprint.id, story.id);
 		assertNotNull("story is null", retrievedStory);
 		assertNotNull("story id is null", retrievedStory.id);
 		assertEquals("story id not correct", story.id, retrievedStory.id);
@@ -35,18 +41,22 @@ public class StoryTest extends UnitTest {
 	@Test
 	public void should_delete() {
 		Story story = put();
-		Story retrievedStory = Story.findById(story.id);
+		Sprint sprint = Sprint.findCurrentSprint();
+		assertNotNull(sprint);
+		Story retrievedStory = Story.findById(sprint.id, story.id);
 		assertNotNull("story is null", retrievedStory);
 		Datastore.delete(retrievedStory);
-		retrievedStory = Story.findById(story.id);
+		retrievedStory = Story.findById(sprint.id, story.id);
 		assertNull("story is not not null", retrievedStory);
 	}
 
 	@Test
 	public void getAll() {
-		Story story1 = TestModelBuilder.createSimpleStory("story1", "desc1", 4,0), 
-		story2 = TestModelBuilder.createSimpleStory("story2","desc2", 4, 0), 
-		story3 = TestModelBuilder.createSimpleStory("story3", "desc3", 4, 0);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("firstSprint", new Date(), new Date(), true);
+		Key<Sprint> key = sprint.save();
+		Story story1 = TestModelBuilder.createSimpleStory("story1", "desc1", 4,0, key), 
+		story2 = TestModelBuilder.createSimpleStory("story2","desc2", 4, 0, key), 
+		story3 = TestModelBuilder.createSimpleStory("story3", "desc3", 4, 0, key);
 		story1.save();
 		story2.save();
 		story3.save();
@@ -62,8 +72,9 @@ public class StoryTest extends UnitTest {
 	}
 
 	private Story put() {
-		Story story = TestModelBuilder.createSimpleStory("story1", "desc1", 4,
-				0);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("firstSprint", new Date(), new Date(), true);
+		Key<Sprint> sprintKey = sprint.save();
+		Story story = TestModelBuilder.createSimpleStory("story1", "desc1", 4, 0, sprintKey);
 		story.save();
 		return story;
 	}
