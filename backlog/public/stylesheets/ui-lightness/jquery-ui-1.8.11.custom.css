@@ -315,7 +315,10 @@
 .ui-draggable .ui-dialog-titlebar { cursor: move; }
 
 
+
+
 /*This seems to be missing from this css. It is needed for the dialog*/
+
 .ui-resizable-handle { 
       position: absolute;
       font-size: 0.1px;
