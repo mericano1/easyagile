@@ -23,6 +23,35 @@ public class StoryTest extends UnitTest {
 		Story story = put();
 		assertNotNull("story id is null", story.id);
 	}
+	
+	
+	@Test
+	public void should_find_story_by_sprint2() {
+		ObjectifyFixtures.load("stories.yml");
+		Sprint sprint = Sprint.findCurrentSprint();
+		List<Story> bySprint = Story.findBySprint(sprint.id);
+		assertNotNull(bySprint);
+		assertEquals(4, bySprint.size());
+		Story retrievedStory = bySprint.get(0);
+		assertNotNull("story is null", retrievedStory);
+		assertNotNull("story id is null", retrievedStory.id);
+		assertEquals("story first name not correct", "story1",retrievedStory.name);
+	}
+	
+	
+	@Test
+	public void should_find_story_by_sprint() {
+		Story story = put();
+		Sprint sprint = Sprint.findCurrentSprint();
+		List<Story> bySprint = Story.findBySprint(sprint.id);
+		assertNotNull(bySprint);
+		assertEquals(1, bySprint.size());
+		Story retrievedStory = bySprint.get(0);
+		assertNotNull("story is null", retrievedStory);
+		assertNotNull("story id is null", retrievedStory.id);
+		assertEquals("story id not correct", story.id, retrievedStory.id);
+		assertEquals("story first name not correct", "story1",retrievedStory.name);
+	}
 
 	@Test
 	public void should_find_story_by_id() {
@@ -30,7 +59,7 @@ public class StoryTest extends UnitTest {
 		Sprint sprint = Sprint.findCurrentSprint();
 		assertNotNull(sprint);
 		assertNotNull(sprint.id);
-		Story retrievedStory = Story.findById(sprint.id, story.id);
+		Story retrievedStory = Story.findById(story.id);
 		assertNotNull("story is null", retrievedStory);
 		assertNotNull("story id is null", retrievedStory.id);
 		assertEquals("story id not correct", story.id, retrievedStory.id);
@@ -41,12 +70,10 @@ public class StoryTest extends UnitTest {
 	@Test
 	public void should_delete() {
 		Story story = put();
-		Sprint sprint = Sprint.findCurrentSprint();
-		assertNotNull(sprint);
-		Story retrievedStory = Story.findById(sprint.id, story.id);
+		Story retrievedStory = Story.findById(story.id);
 		assertNotNull("story is null", retrievedStory);
 		Datastore.delete(retrievedStory);
-		retrievedStory = Story.findById(sprint.id, story.id);
+		retrievedStory = Story.findById(story.id);
 		assertNull("story is not not null", retrievedStory);
 	}
 

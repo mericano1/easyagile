@@ -580,18 +580,36 @@
 				
 			})(jQuery);
 			
+			(function(){
+				$.fn.sprintLine = function(){
+					var settings = {
+						sprintsUrl:"@{Sprints.getAll}",
+					}
+					var self = this;
+					
+					$.getJSON(settings.sprintsUrl, function (data){
+						$(data).each(function(index, value){
+							var sprintBtn = $("<button>").append(value.name);
+							sprintBtn.button().click(function(){
+	                                $(".backlogWrapper").empty().backlogBoard("@{Stories.bySprint()}?sprintId=" + value.id, 
+	                                        {
+	                                         tasksUrl: "@{Tasks.byStory()}?storyId=",
+	                                         usersUrl: "@{Users.getAll()}",
+	                                         saveSessionUrl:"@{Stories.save()}"
+	                                });
+	                            }
+	                        );
+							$(self).append(sprintBtn);
+						});
+                    });
+					
+					
+				}
+			})(jQuery);
 			
 			
 			$(document).ready(function() {
-				// Ajax activity indicator bound to ajax start/stop document events
-	            var backlog = $(".backlogWrapper").backlogBoard("@{Stories.getall()}", 
-	            		{
-	            	     tasksUrl: "@{Tasks.byStory()}?storyId=",
-	            		 usersUrl: "@{Users.getAll()}",
-	            		 saveSessionUrl:"@{Stories.save()}"
-	            });
-				
-				document.blSettings = backlog.getSettings();
+				$(".sprintWrapper").sprintLine();
 					
 			});
 		</script>
@@ -634,8 +652,7 @@
 				border: 1px solid #dddddd;  
 			}
 			
-			
-			.taskSummary {
+			.taskSummary-old {
 				/*background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_00ffff_1x100.png'}) 50% top repeat-x; color: #333333;*/
 				background: #008800;
 			    /* Mozilla: */
@@ -649,7 +666,23 @@
 				border: 1px solid #dddddd;  
 			}
 			
+			.taskSummary {
+			    background: #87e0fd; /* old browsers */
+                background: -moz-linear-gradient(top, #87e0fd 0%, #53cbf1 40%, #05abe0 100%); /* firefox */
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#87e0fd), color-stop(40%,#53cbf1), color-stop(100%,#05abe0)); /* webkit */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#87e0fd', endColorstr='#05abe0',GradientType=0 ); /* ie */
+                border: 1px solid #87e0fd;
+			}
+			
 			.taskSummary-completed {
+			    background: #bfd255; /* old browsers */
+                background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 100%); /* firefox */
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bfd255), color-stop(50%,#8eb92a), color-stop(100%,#72aa00)); /* webkit */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#72aa00',GradientType=0 ); /* ie */
+                border: 1px solid #b4e391;
+			}
+			
+			.taskSummary-completed-old {
 				background: #008800;
 			    /* Mozilla: */
 			    background: -moz-linear-gradient(top, #FFFFFF,#808000);
@@ -694,9 +727,11 @@
 		<!-- Highlight / Error -->
 		<h2 class="demoHeaders">Backlog</h2>
 		
+		<div class="sprintWrapper">
+        </div>
+		
 		<div class="backlogWrapper">
 		</div>
-		
 		
 		
 		<button style= "display: block;clear:both; margin-top:250px;" id="showDataButton">Show data</button>
@@ -705,7 +740,6 @@
 		    <div class="textwrapper">
 		    	<textarea class="data-textArea"cols="2" rows="10" id="data-textArea"></textarea>
 		    </div>
-		    <button id="postThisButton">Post this data</button>
 		</div>
 		<script>
 			$('#showDataButton').button().click(function (){
@@ -716,9 +750,6 @@
 	            }
 				$('#data').toggle();
 			})
-			$("#postThisButton").click(function(){
-				$.post(document.blSettings.saveSessionUrl,{json: JSON.stringify($('#data-textArea').val(), document.blSettings.convertJsonFields)});
-			});
 		</script>
 
 

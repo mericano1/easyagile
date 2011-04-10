@@ -1,12 +1,15 @@
 package controllers;
 
+
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import models.Sprint;
 import models.Story;
 import models.Task;
+import models.TestModelBuilder;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,8 +49,9 @@ public class StoriesTest extends FunctionalTest {
 	@Test
 	public void testGetAll(){
 		ObjectifyFixtures.load("stories.yml");
-		String url = Router.reverse("Stories.getAll").url;
-		Response get = GET(url);
+		String url = Router.reverse("Stories.bySprint").url;
+		Sprint sprint = Sprint.findCurrentSprint();
+		Response get = GET(url + "?sprintId=" + sprint.id);
 		String output = get.out.toString();
 		Gson gson = new Gson();
 		Story[] fromJson = gson.fromJson(output, Story[].class);
@@ -59,7 +63,9 @@ public class StoriesTest extends FunctionalTest {
 	@Test
 	public void testSave(){
 		String url = Router.reverse("Stories.save").url;
-		Response response = POST(url+"?json=" + story1Json);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
+		sprint.save();
+		Response response = POST(url+"?json=" + story1Json + "&sprintId=" + sprint.id);
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
@@ -69,7 +75,10 @@ public class StoriesTest extends FunctionalTest {
 	@Test
 	public void testSaveArray(){
 		String url = Router.reverse("Stories.save").url;
-		Response response = POST(url+"?json=[" + story1Json + "," + story2Json + "]");
+		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
+		sprint.save();
+		Response response = POST(url+"?json=[" + story1Json + "," + story2Json + "]&sprintId="+ sprint.id);
+		sprint.save();
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
 		List<Story> findAll = Story.findAll();
 		assertEquals(2, findAll.size());
@@ -82,7 +91,9 @@ public class StoriesTest extends FunctionalTest {
 	public void testSaveStoryAndTask(){
 		String url = Router.reverse("Stories.save").url;
 		String json = appendPropertyToJson(story1Json, "tasks", task1Json);
-		Response response = POST(url+"?json=" + json);
+		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
+		sprint.save();
+		Response response = POST(url+"?json=" + json + "&sprintId="+ sprint.id);
 		assertIsOk(response);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
@@ -97,8 +108,10 @@ public class StoriesTest extends FunctionalTest {
 	@Test
 	public void testSaveStoryAndTaskArray1(){
 		String url = Router.reverse("Stories.save").url;
+		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
+		sprint.save();
 		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+"]");
-		Response response = POST(url+"?json=" + json);
+		Response response = POST(url+"?json=" + json + "&sprintId="+ sprint.id);
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
@@ -112,8 +125,10 @@ public class StoriesTest extends FunctionalTest {
 	@Test
 	public void testSaveStoryAndTaskArray2(){
 		String url = Router.reverse("Stories.save").url;
+		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
+		sprint.save();
 		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+","+ task2Json +"]");
-		Response response = POST(url+"?json=" + json);
+		Response response = POST(url+"?json=" + json+ "&sprintId="+ sprint.id);
 		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
