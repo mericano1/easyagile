@@ -32,6 +32,7 @@ public class Stories extends Controller{
 	public static void save(String json, Long sprintId){
 		JsonElement fromJson = new JsonParser().parse(json.trim());
 		processArrayOfElements(fromJson, sprintId);
+		bySprint(sprintId);
 	}
 	
 	/**

@@ -9,9 +9,11 @@ import models.Task;
 import client.UserMessage;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
+import play.Play;
 import play.mvc.Controller;
 import play.mvc.With;
 
@@ -40,9 +42,10 @@ public class Sprints extends Controller{
 	 * @param json a json representation of the sprint
 	 */
 	public static void save(String json){
-		Sprint sprint = new Gson().fromJson(json, Sprint.class);
+		Gson gson = new GsonBuilder().setDateFormat(Play.configuration.getProperty("date.format")).create();
+		Sprint sprint = gson.fromJson(json, Sprint.class);
 		sprint.save();
-		renderJSON(UserMessage.SUCCESSFUL);
+		renderJSON(sprint);
 	}
 
 }

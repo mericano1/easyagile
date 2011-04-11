@@ -1,16 +1,14 @@
-<<<<<<< HEAD
-<!-- Indices written at Fri, 8 Apr 2011 17:55:45 BST -->
+<!-- Indices written at Mon, 11 Apr 2011 17:42:59 BST -->
 
 <datastore-indexes>
 
-    <!-- Used 2 times in query history -->
-=======
-<!-- Indices written at Wed, 6 Apr 2011 01:18:53 IST -->
+    <!-- Used 71 times in query history -->
+    <datastore-index kind="Story" ancestor="false" source="auto">
+        <property name="sprint" direction="asc"/>
+        <property name="index" direction="asc"/>
+    </datastore-index>
 
-<datastore-indexes>
-
-    <!-- Used 3 times in query history -->
->>>>>>> parent of efc938a... * Fixed the issue with points missing
+    <!-- Used 60 times in query history -->
     <datastore-index kind="Task" ancestor="true" source="auto">
         <property name="index" direction="asc"/>
     </datastore-index>

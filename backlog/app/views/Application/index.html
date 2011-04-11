@@ -69,7 +69,10 @@
 							//addBusyLoadingElement();
 							var winH = $(window).height();
 							var winW = $(window).width();
-							$('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
+							
+							if ($("#ajaxBusy").length == 0){
+								$('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
+							}
 							$('#ajaxBusy').css({
 							  display:"none",
 							  top:winH/2,
@@ -124,12 +127,14 @@
 					*/
 					function saveSession(){
 					    $.post(settings.saveSessionUrl,{json: JSON.stringify(data, settings.convertJsonFields)})
-		                .success(function() {
+		                .success(function(json) {
 			                	(function (el) {
 			                	    setTimeout(function () {
 			                	        el.children().remove('span');
 			                	    }, 5000);
 			                	})($('#userMessages').html("<span>Session Saved successfully</span>"));
+			                	data=json;
+			                	printData();
 		                	}
 		                )
 						.error(function() { 
@@ -451,16 +456,7 @@
 						description = $( "#description", form  ),
 						points = $( "#points", form ),
 						allFields = $( [] ).add( name ).add( description ).add( points );
-						if (storyOrTask){
-							name.val(storyOrTask.name);
-							description.val(storyOrTask.description);
-							points.val(storyOrTask.points);
-						} else {
-							name.val("");
-                            description.val("");
-                            points.val("");
-						}
-						$(form).dialog({
+						var dialogOptions = {
 							autoOpen: true,
 							height: 480,
 							width: 380,
@@ -492,7 +488,25 @@
 								}
 								
 							}
-						});
+						};
+						
+						if (storyOrTask){
+							name.val(storyOrTask.name);
+							description.val(storyOrTask.description);
+							points.val(storyOrTask.points);
+						} else {
+							name.val("");
+                            description.val("");
+                            points.val("");
+                            dialogOptions.buttons["Save and Add another"] = function(){
+                            	dialogOptions.buttons.Save();
+                            	$( this ).dialog( "close" );
+								displayStoryOrTaskForm.call(callingElement,null, isTask);
+							};
+						}
+								
+						
+						$(form).dialog(dialogOptions);
 						function getStoryOrTaskObjectFromForm(){
 							/* var name = $( "#name", form ),
 							description = $( "#description", form  ),
@@ -507,20 +521,16 @@
 					}
 					
 					function getFormHtml(isTask){
-						/* $("div",{
-							title: storyOrTaskReturn("Story","Task", isTask) + "details"
-							
-						}); */
-						return "<div id=\"dialog-form" + storyOrTaskReturn("-story","-task", isTask)+ "\" title=\"" + storyOrTaskReturn("Story","Task", isTask)+ " details\"> " +
-							"<p class=\"validateTips\">All form fields are required.</p>" + 
+						return "<div id='dialog-form" + storyOrTaskReturn("-story","-task", isTask)+ "' title='" + storyOrTaskReturn("Story","Task", isTask)+ " details'> " +
+							"<p class='validateTips'>All form fields are required.</p>" + 
 							"<form>" + 
 							"<fieldset>" + 
-								"<label for=\"name\">Name</label>" + 
-								"<input type=\"text\" name=\"name\" id=\"name\" class=\"text ui-widget-content ui-corner-all\" ></input>" + 
-								"<label for=\"description\">Description</label>" + 
-								"<textarea name=\"description\" id=\"description\" value=\"\" class=\"text ui-widget-content ui-corner-all\" rows=\"10\" ></textarea>" + 
-								"<label for=\"points\">Points</label>" + 
-								"<input type=\"points\" name=\"points\" id=\"points\" value=\"\" class=\"text ui-widget-content ui-corner-all\" ></input>" + 
+								"<label for='name'>Name</label>" + 
+								"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
+								"<label for='description'>Description</label>" + 
+								"<textarea name='description' id='description' value='' class='text ui-widget-content ui-corner-all' rows='10' ></textarea>" + 
+								"<label for='points'>Points</label>" + 
+								"<input type='points' name='points' id='points' value='' class='text ui-widget-content ui-corner-all' ></input>" + 
 							"</fieldset>" + 
 							"</form>" + 
 						"</div>";
@@ -533,24 +543,24 @@
 					
 					function storyOrTaskHtml(object, index, isTask){
 						taskBgClass = isTask && object.completed ? "taskSummary-completed" : "taskSummary";
-						return "<div class=\"ui-widget  storySummary\">" +
+						return "<div class='ui-widget  storySummary'>" +
 						
-								"<div class=\"" + storyOrTaskReturn("ui-state-highlight ",taskBgClass, isTask) + " ui-corner-all\" style=\"padding: 0 .7em; \">" + 
+								"<div class='" + storyOrTaskReturn("ui-state-highlight ",taskBgClass, isTask) + " ui-corner-all' style='padding: 0 .7em; '>" + 
 									"<p>" +
-									"<span class=\"ui-icon ui-icon-info\" style=\"float: left; margin-right: .3em;\"></span>" +
-									storyOrTaskReturn("<span class=\"ui-icon ui-icon-triangle-1-e\" title=\"Show tasks\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
-									"<span class=\"ui-icon ui-icon-trash\" title=\"delete\" style=\"float: right; margin-left: .3em;\"></span>" + 
-									"<span class=\"ui-icon ui-icon-pencil\" title=\"edit\"style=\"float: right; margin-left: .3em;\"></span>" + 
-									storyOrTaskReturn("<span class=\"ui-icon ui-icon-plusthick\" title=\"Add task\"style=\"float: right; margin-left: .3em;\"></span>", "", isTask) +
-									storyOrTaskReturn("","<span class=\"ui-icon-custom user\" title=\"Assign Task\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
-									storyOrTaskReturn("","<span class=\"ui-icon ui-icon-check \" title=\"Mark Completed\"style=\"float: right; margin-left: .3em;\"></span>",isTask) +
-									"<strong class=\"storyOrTask-name\" style=\"display:block\">"+ (object.name?object.name:"") +"</strong>" +
-									"<div class=\"storyOrTask-description\">" + (object.description?object.description:"") +"</div>" +
+									"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+									storyOrTaskReturn("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'></span>", "", isTask) +
+									"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+									"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" + 
+									storyOrTaskReturn("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>", "", isTask) +
+									storyOrTaskReturn("","<span class='ui-icon-custom user' title='Assign Task'style='float: right; margin-left: .3em;'></span>",isTask) +
+									storyOrTaskReturn("","<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>",isTask) +
+									"<strong class='storyOrTask-name' style='display:block'>"+ (object.name?object.name:"") +"</strong>" +
+									"<div class='storyOrTask-description'>" + (object.description?object.description:"") +"</div>" +
 									 "</p>" +
-									 "<div class=\"card-info\"><span class=\"priority\">" + (isNaN(index)? "" : (index + 1) ) + "</span>" +
-									 storyOrTaskReturn("","<span class=\"assignee\">" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>", isTask) +
-									 "<span class=\"points\">" + (object.points?object.points:"") + "</span>" + 
-									 "<div style=\"clear:both;\"/>" + 
+									 "<div class='card-info'><span class='priority'>" + (isNaN(index)? "" : (index + 1) ) + "</span>" +
+									 storyOrTaskReturn("","<span class='assignee'>" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>", isTask) +
+									 "<span class='points'>" + (object.points?object.points:"") + "</span>" + 
+									 "<div style='clear:both;'/>" + 
 									 "</div>" +
 									"</div>" +
 								"</div>" +
@@ -559,7 +569,7 @@
 					
 					
 					function noTasksHtml(){
-						html = $(storyOrTaskHtml({name:"No Tasks are available", description:"Click on \"Add Task\" to add one", points:""},"",true));
+						html = $(storyOrTaskHtml({name:"No Tasks are available", description:"Click on 'Add Task' to add one", points:""},"",true));
 						$(".ui-icon, .points, .priority, .ui-icon-custom", html).remove();
 						return html;
 					}
@@ -580,28 +590,159 @@
 				
 			})(jQuery);
 			
+			
+			
+			
+			
+			
+			
+			
+			
+			/*
+			*
+			********************************************************************************
+			
+				Sprints plugin
+			
+			********************************************************************************
+			*
+			*/
 			(function(){
 				$.fn.sprintLine = function(){
 					var settings = {
 						sprintsUrl:"@{Sprints.getAll}",
+						tasksUrl: "@{Tasks.byStory()}?storyId=",
+                        usersUrl: "@{Users.getAll()}",
+                        storiesBySprintUrl: "@{Stories.bySprint()}?sprintId=",
+                        saveSessionUrl:"@{Stories.save()}",
+                        sprintSaveUrl:"@{Sprints.save()}",
+                        dateFormat: "dd-mm-yy"
 					}
 					var self = this;
 					
 					$.getJSON(settings.sprintsUrl, function (data){
 						$(data).each(function(index, value){
-							var sprintBtn = $("<button>").append(value.name);
-							sprintBtn.button().click(function(){
-	                                $(".backlogWrapper").empty().backlogBoard("@{Stories.bySprint()}?sprintId=" + value.id, 
-	                                        {
-	                                         tasksUrl: "@{Tasks.byStory()}?storyId=",
-	                                         usersUrl: "@{Users.getAll()}",
-	                                         saveSessionUrl:"@{Stories.save()}"
-	                                });
-	                            }
-	                        );
-							$(self).append(sprintBtn);
+							addSprint(value);
 						});
                     });
+					
+					function addSprint(sprint){
+						var sprintBtn = $(getSprintHtml(sprint));
+						
+						sprintBtn.click(function(){
+								currentSprint = $(".backlogWrapper").data("sprint");
+								if (currentSprint==undefined || currentSprint.id != sprint.id){
+									loadBacklogForSprint(sprint);
+	                                $(".backlogWrapper").data("sprint", sprint);
+								}
+								$(".sprintSummary-selected", self).removeClass("sprintSummary-selected");
+								sprintBtn.addClass("sprintSummary-selected");
+                            }
+                        );
+						$(self).append(sprintBtn);
+					}
+					
+					function loadBacklogForSprint(sprint){
+						$(".backlogWrapper").empty().backlogBoard( settings.storiesBySprintUrl + sprint.id, 
+                                {
+                        		 sprintId: sprint.id,
+                                 tasksUrl: settings.tasksUrl,
+                                 usersUrl: settings.usersUrl,
+                                 saveSessionUrl: settings.saveSessionUrl + "?sprintId=" + sprint.id
+                        		}
+                        );
+					}
+
+					function getSprintHtml(sprint){
+						var getNameValueParagraph= function(name, value, cssClass){
+							return 	"<p><span class='label'>" + name + ":</span>" +
+										"<span class='" + cssClass + "'>" +
+											value +
+										"</span>" +
+									"</p>";
+						}
+						
+						html = "<div class='sprintSummary roundedBox'>" +
+								getNameValueParagraph("Id", sprint.id, "sprint-id") +
+								getNameValueParagraph("Name", sprint.name, "sprint-name value");
+						if (sprint.startDate){
+							html += getNameValueParagraph("From", sprint.startDate, "sprint-from value");
+						}
+						if (sprint.endDate){
+							html += getNameValueParagraph("To", sprint.endDate, "sprint-to value");
+						}
+						html += "</div>";
+						
+						return $(html);
+					}
+					
+					function getSprintFormHtml(){
+						return "<div id='dialog-form-sprint'> " +
+							"<p class='validateTips'>Name is required.</p>" + 
+							"<form>" + 
+							"<fieldset>" + 
+								"<label for='name'>Name</label>" + 
+								"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
+								"<label for='startDate'>Start Date</label>" + 
+								"<input type='text' name='startDate' id='startDate' class='text ui-widget-content ui-corner-all' >" + 
+								"<label for='endDate'>End Date</label>" + 
+								"<input type='text' name='endDate' id='endDate' class='text ui-widget-content ui-corner-all' >" + 
+							"</fieldset>" + 
+							"</form>" + 
+						"</div>";
+					}
+					
+					function showAddFormDialog(){
+						var form = $(getSprintFormHtml());
+						var name = $( "#name", form ),
+						start = $( "#startDate", form  ),
+						end = $( "#endDate", form ),
+						allFields = $( [] ).add( name ).add( start ).add( end );
+						
+						function getSprintFormObject(){
+							return {
+								name:name.val(),
+								startDate: start.val(),
+								endDate: end.val()
+								};
+						}
+						
+						$(form).dialog({
+							autoOpen: true,
+							height: 380,
+							width: 380,
+							modal: true,
+							resizable: true,
+							open: function(){
+								var options = {dateFormat: settings.dateFormat};
+								start.datepicker(options);
+								end.datepicker(options);
+							},
+							buttons: {
+								Save: function() {
+									allFields.removeClass( "ui-state-error" );
+									if(name.val().trim() == ""){
+										name.addClass("ui-state-error");
+									} else {
+										$.post(settings.sprintSaveUrl, {json: JSON.stringify(getSprintFormObject())}, function(data){
+											addSprint(data);
+										});
+										$( this ).dialog( "close" );
+									}
+								},
+								Cancel: function() {
+									allFields.removeClass( "ui-state-error" );
+									$( this ).dialog( "close" );
+								}
+								
+							}
+						});
+						
+					}
+					
+					return {
+						showAddFormDialog: showAddFormDialog
+					}
 					
 					
 				}
@@ -609,14 +750,23 @@
 			
 			
 			$(document).ready(function() {
-				$(".sprintWrapper").sprintLine();
-					
+				var sprintWrapper = $(".sprintWrapper").sprintLine();
+				$("#addSprint").button().click(function(){
+					sprintWrapper.showAddFormDialog();
+				});
 			});
 		</script>
 		<style type="text/css">
-			/*demo page css*/
-			body{ font: 62.5% "Trebuchet MS", sans-serif; margin: 50px;}
-			.demoHeaders { margin-top: 2em; }
+			body{ font: 62.5% "Trebuchet MS", sans-serif; margin: 10px 50 50 50;}
+			.demoHeaders {
+				padding:5px;
+				margin-bottom:5px;
+				background: #ffffff; /* old browsers */
+				background: -moz-linear-gradient(top, #ffffff 0%, #e5e5e5 100%); /* firefox */
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5)); /* webkit */
+				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* ie */
+				border: 1px solid #e5e5e5;  
+			}
 			#dialog_link {padding: .4em 1em .4em 20px;text-decoration: none;position: relative;}
 			#dialog_link span.ui-icon {margin: 0 5px 0 0;position: absolute;left: .2em;top: 50%;margin-top: -8px;}
 			ul#icons {margin: 0; padding: 0;}
@@ -652,19 +802,46 @@
 				border: 1px solid #dddddd;  
 			}
 			
-			.taskSummary-old {
-				/*background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_00ffff_1x100.png'}) 50% top repeat-x; color: #333333;*/
-				background: #008800;
-			    /* Mozilla: */
-			    background: -moz-linear-gradient(top, #00ffff, #FFFFFF);
-			    /* Chrome, Safari:*/
-			    background: -webkit-gradient(linear,
-			                left top, left bottom, from(#00ffff), to(#FFFFFF));
-			    /* MSIE */
-			    filter: progid:DXImageTransform.Microsoft.Gradient(
-			                StartColorStr='#00ffff', EndColorStr='#FFFFFF', GradientType=0);
-				border: 1px solid #dddddd;  
+			.sprintSummary p{
+				margin: 0px;
 			}
+			
+			.sprintSummary .label{
+				font-weight: bold;
+			}
+			
+			.sprintSummary .value{
+				margin-left: 5px;
+			}
+			
+			.sprintSummary:hover{
+				border: 1px solid #d0d000;
+			}
+			
+			.sprintSummary{
+				padding:5px;
+				background: #008800;
+			    background: -moz-linear-gradient(top, #00ffff, #FFFFFF);
+			    background: -webkit-gradient(linear,  left top, left bottom, from(#00ffff), to(#FFFFFF));
+			    filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='#00ffff', EndColorStr='#FFFFFF', GradientType=0);
+				display: inline-block;
+				cursor: pointer;
+				margin-bottom:5px;
+				margin-left:5px;
+				border: 1px solid #dddddd;
+			}
+			
+			.roundedBox {
+				-moz-border-radius:10px;
+			  	-webkit-border-radius:10px;
+			  	-moz-box-shadow:0 0 5px #888888;
+			  	-webkit-box-shadow:0 0 5px #888888;
+			}
+			
+			.sprintSummary-selected{
+				border: 1px solid #d0d000;
+			}
+			
 			
 			.taskSummary {
 			    background: #87e0fd; /* old browsers */
@@ -718,17 +895,18 @@
 			label, input, textarea { display:block; }
 			input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
 			fieldset { padding:0; border:0; margin-top:25px; }
-			
+			.ui-datepicker { z-index: 1003 !important; }
 		</style>	
 	</head>
 	<body>
 		
 			
 		<!-- Highlight / Error -->
-		<h2 class="demoHeaders">Backlog</h2>
-		
-		<div class="sprintWrapper">
-        </div>
+		<div class="demoHeaders">
+			<h2 >Sprints <button id="addSprint">Add Sprint</button></h2>
+			<div class="sprintWrapper">
+	        </div>
+		</div>
 		
 		<div class="backlogWrapper">
 		</div>
