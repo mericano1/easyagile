@@ -66,7 +66,7 @@ public class StoriesTest extends FunctionalTest {
 		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
 		sprint.save();
 		Response response = POST(url+"?json=" + story1Json + "&sprintId=" + sprint.id);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(response);
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);

@@ -6,6 +6,25 @@
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-1.5.1.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
 		<script type="text/javascript">
+		
+			//function to get url variables
+			$.extend({
+				getUrlVars: function(){
+				    var vars = [], hash;
+				    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+				    for(var i = 0; i < hashes.length; i++)
+				    {
+				      hash = hashes[i].split('=');
+				      vars.push(hash[0]);
+				      vars[hash[0]] = hash[1];
+				    }
+				    return vars;
+				  },
+				  getUrlVar: function(name){
+				    return $.getUrlVars()[name];
+				  }
+				});
+			
 			(function () {
 				
 				/*
@@ -119,6 +138,7 @@
 				        });
 						
 						initialized = true;
+						
 					}
 					
 					
@@ -134,7 +154,6 @@
 			                	    }, 5000);
 			                	})($('#userMessages').html("<span>Session Saved successfully</span>"));
 			                	data=json;
-			                	printData();
 		                	}
 		                )
 						.error(function() { 
@@ -187,12 +206,7 @@
                                       }
                             });
 						}
-						select = $("<select/>");
-                        $(users).each(function(index, value){
-                            display = value.name?value.name:value.email;
-                            id = value.email;
-                            select.append($("<option/>").attr("name", display ).attr("value", id).text(display));
-                        });
+						select = createSelect(users, "email", "email");
                         $("<div/>").append(select).dialog({
                                 autoOpen: true,
                                 height: 150,
@@ -204,7 +218,6 @@
                                          storyOrTask = storyOrTaskDiv.data("storyOrTask");
                                          storyOrTask.assignee = select.val();
                                          storyOrTask.setDisplayAssignee(select.val());
-                                         printData();
                                          $( this ).dialog( "close" );
                                      },
                                      Cancel: function() {
@@ -216,6 +229,18 @@
 						
 					}
 					
+					function createSelect(arrayOfObjects, nameProperty, valueProperty){
+						select = $("<select/>");
+                        $(arrayOfObjects).each(function(index, value){
+                            display = value[nameProperty];
+                            id = value[valueProperty];
+                            select.append($("<option/>").attr("name", display ).attr("value", id).text(display));
+                        });
+                        return select;
+					}
+					
+					
+					
 					function deleteStoryOrTask(storyOrTask, dataSet){
 						if (!dataSet) {dataSet = data;}
 						//if persisted mark as deleted otherwise just remove from array
@@ -226,10 +251,9 @@
 						}
 						var storyDiv=storyOrTask.div;
 						storyDiv.remove();
-						printData();
 					}
 					
-					function printData(){
+					function getDataJson(){
 						var getItemText = function(element){
 							var text = "";
 							$(element).each(function(index, storyOrTask){
@@ -238,7 +262,7 @@
 							return text;
 						};
 						
-						$("textarea",$("#data")).val(getItemText(data));
+						return getItemText(data);
 					}
 					
 					
@@ -271,6 +295,9 @@
 						storyOrTask.setDisplayPriority = function(priority) {
 							$(".priority",storyOrTaskDiv).html(priority);
 						};
+						storyOrTask.toJson = function(){
+							return JSON.stringify(storyOrTask, settings.convertJsonFields);
+						}
 						
 						//Bind storyOrTask buttons
 						$(".ui-icon-trash",storyOrTaskDiv).button().click(function(){deleteStoryOrTask(storyOrTaskDiv.data("storyOrTask"), (isTask ? parentStory.tasks : null));});
@@ -280,10 +307,9 @@
 							$(".ui-icon-plusthick",storyOrTaskDiv).button().click(function(){displayStoryOrTaskForm.call(storyOrTask, null, true)});
 						}else {
 							$(".ui-icon-check",storyOrTaskDiv).button().click(function(){toggleStoryOrTaskCompleted(storyOrTask)});
-							$(".user",storyOrTaskDiv).button().click(function(){showUsers(storyOrTaskDiv);});
+							$(".ui-icon-user",storyOrTaskDiv).button().click(function(){showUsers(storyOrTaskDiv);});
 						}
 						storyOrTask.div = storyOrTaskDiv;
-						printData();
 					}
 					
 					function toggleStoryOrTaskCompleted(storyOrTask, isTask){
@@ -294,7 +320,6 @@
 							 storyOrTask.completed = true;
                              $(".taskSummary", storyOrTask.div).switchClass("taskSummary","taskSummary-completed");
 						}
-						printData();
 					}
 					
 					/*
@@ -380,7 +405,6 @@
 								storyOrTask.index = newIndex;
 								sortData();
 								storyOrTask.setDisplayPriority(newIndex + 1);
-								printData();
 							},
 							start: function(event, ui){
 								if (onStart) { onStart();}
@@ -397,8 +421,6 @@
 						curStoryOrTask.setDisplayPoints(storyOrTask.points);
 						curStoryOrTask.setDisplayDescription(storyOrTask.description);
 						curStoryOrTask.setDisplayName(storyOrTask.name);
-						printData();
-						
 					}
 					
 					function addStoryAndUpdateData(story){
@@ -552,7 +574,7 @@
 									"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
 									"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" + 
 									storyOrTaskReturn("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>", "", isTask) +
-									storyOrTaskReturn("","<span class='ui-icon-custom user' title='Assign Task'style='float: right; margin-left: .3em;'></span>",isTask) +
+									storyOrTaskReturn("","<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>",isTask) +
 									storyOrTaskReturn("","<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>",isTask) +
 									"<strong class='storyOrTask-name' style='display:block'>"+ (object.name?object.name:"") +"</strong>" +
 									"<div class='storyOrTask-description'>" + (object.description?object.description:"") +"</div>" +
@@ -582,7 +604,9 @@
 						showStoryDialog: displayStoryOrTaskForm,
 						editStory: editStoryOrTask,
 						getData: function(){return data;},
-						getSettings: function(){return settings;}
+						getSettings: function(){return settings;},
+						saveSession: saveSession,
+						getDataJson: getDataJson
 					}
 					
 				}
@@ -614,66 +638,205 @@
 						tasksUrl: "@{Tasks.byStory()}?storyId=",
                         usersUrl: "@{Users.getAll()}",
                         storiesBySprintUrl: "@{Stories.bySprint()}?sprintId=",
+                        storiesUnassigned: "@{Stories.unassigned()}",
                         saveSessionUrl:"@{Stories.save()}",
                         sprintSaveUrl:"@{Sprints.save()}",
                         dateFormat: "dd-mm-yy"
 					}
 					var self = this;
+					var sprints = null;
+					var currentBacklogBoard = null;
 					
-					$.getJSON(settings.sprintsUrl, function (data){
-						$(data).each(function(index, value){
-							addSprint(value);
+					
+					
+					
+					/**
+					* This class represents a sprint block
+					* @info : Object with sprint info
+					*/
+					function SprintBlock(info, container){
+						var self = this;
+						this.info = info;
+						this.container = container;
+						this.block = null;
+						
+						
+						this.init = function (){
+							this.block = $(this.getSprintHtml(info))
+							this.block.click(function () {onBlockClick.call(self)});
+							this.block.droppable({drop:function(event, ui){onBlockDrop.call(self, event, ui)}});
+						}
+						
+						
+						/**
+						* Event handler on click
+						*/
+						function onBlockClick (){
+							if (!this.isCurrentSprint()){
+								
+								//save current board
+								currentSprintBoard=this.getCurrentSprintBoard();
+								if(currentSprintBoard){
+									currentSprintBoard.saveSession();
+								}
+								//load selected sprint board
+								currentSprintBoard = loadBacklogForSprint(this.info);
+								this.setCurrentSprintBoard(currentSprintBoard);
+								this.markSelected();
+							}
+						}
+						
+						/**
+						* Event handler on drop
+						*/
+						function onBlockDrop(event,ui){
+				            storyOrTask = $(ui.draggable).data('storyOrTask');
+				            sprint = this.info;
+				            block = this;
+				            if (!this.isCurrentSprint()){
+				            	$(getAssignToSprintConfirmationForm()).dialog({
+				            		resizable: false,
+				        			height:140,
+				        			modal: true,
+				        			autoOpen:true,
+				        			buttons: {
+				        				"Yes move it": function() {
+				        					$.post("@{Stories.assignStory}", {
+				        						json:storyOrTask.toJson(), 
+				        						sprintId: (sprint!=null)? sprint.id: null
+				        					})
+							            	.success(function(){
+							            		currentBacklogBoard = block.getCurrentSprintBoard();
+							            		data = currentBacklogBoard.getData();
+							            		data.splice(storyOrTask.index, 1);
+							            		storyOrTask.div.remove();
+							            	})
+							            	.error(function(){
+							            		alert("mannaggia!");
+							            	});
+				        					$( this ).dialog( "close" );
+				        				},
+				        				Cancel: function() {
+				        					$( this ).dialog( "close" );
+				        				}
+				        			}
+
+				            	});
+				            }
+				        }
+						
+						
+						this.getSprintHtml = function(sprint){
+							var getNameValueParagraph= function(name, value, cssClass){
+								return 	"<p><span class='label'>" + name + ":</span>" +
+											"<span class='" + cssClass + "'>" +
+												value +
+											"</span>" +
+										"</p>";
+							}
+							
+							html = "<div class='sprintSummary roundedBox'>" ;
+							//if sprint is not null fills in the info
+							if (sprint){
+								html += getNameValueParagraph("Id", sprint.id, "sprint-id value") +
+										getNameValueParagraph("Name", sprint.name, "sprint-name value");
+								if (sprint.startDate){
+									html += getNameValueParagraph("From", sprint.startDate, "sprint-from value");
+								}
+								if (sprint.endDate){
+									html += getNameValueParagraph("To", sprint.endDate, "sprint-to value");
+								}
+							}else{
+								html +="<h2>Unassigned</h2>";
+							}
+							html += "</div>";
+							
+							return $(html);
+						}
+						
+						
+						
+						this.isCurrentSprint = function(){
+							return this.container.data("sprintBlock") === this;
+						}
+						
+						this.getCurrentSprintBoard= function(){
+							return  this.container.data("sprintBoard");
+						}
+						
+						this.setCurrentSprintBoard = function(sprintBoard){
+							this.container.data("sprintBoard", sprintBoard);
+						}
+						
+						this.markSelected = function (){
+							$(".sprintSummary-selected", this.container).removeClass("sprintSummary-selected");
+							this.block.addClass("sprintSummary-selected");
+						}
+						this.init();
+					}
+					
+					
+					
+					loadSprints();
+					
+					function loadSprints(){
+						var sprintId = $.getUrlVar("sprintId");
+						if (sprintId == undefined || sprintId == null || isNaN(sprintId)){
+							sprintId = 0;
+						}
+						$.getJSON(settings.sprintsUrl, function (data){
+							sprints = data;
+							addSprints(sprintId);
+					    });
+					}
+					
+					function addSprints(sprintId){
+						
+						$([null].concat(sprints)).each(function(index, value){
+							sprintBtn = addSprint(value);
+							
+							if ((value==null && sprintId==0) || (value!= null && sprintId == value.id)){
+								sprintBtn.trigger("click");
+							}
 						});
-                    });
+					}
+					
+					
+					
+					function isNotCurrentSprint(sprint){
+						currentSprint = $(".backlogWrapper").data("sprint");
+						return (currentSprint==undefined || 
+						(currentSprint == null && sprint != null) ||
+						(currentSprint != null && sprint == null) ||
+						(currentSprint.id != sprint.id));
+					}
 					
 					function addSprint(sprint){
-						var sprintBtn = $(getSprintHtml(sprint));
-						
-						sprintBtn.click(function(){
-								currentSprint = $(".backlogWrapper").data("sprint");
-								if (currentSprint==undefined || currentSprint.id != sprint.id){
-									loadBacklogForSprint(sprint);
-	                                $(".backlogWrapper").data("sprint", sprint);
-								}
-								$(".sprintSummary-selected", self).removeClass("sprintSummary-selected");
-								sprintBtn.addClass("sprintSummary-selected");
-                            }
-                        );
+						var sprintBtn = new SprintBlock(sprint, $(self)).block;
 						$(self).append(sprintBtn);
+						return sprintBtn;
 					}
 					
 					function loadBacklogForSprint(sprint){
-						$(".backlogWrapper").empty().backlogBoard( settings.storiesBySprintUrl + sprint.id, 
+						storiesUrl = (sprint)?settings.storiesBySprintUrl + sprint.id : settings.storiesUnassigned;
+						saveSessionUrl = (sprint)?settings.saveSessionUrl + "?sprintId=" + sprint.id : settings.saveSessionUrl;
+						return $(".backlogWrapper").empty().backlogBoard( storiesUrl, 
                                 {
-                        		 sprintId: sprint.id,
+                        		 sprintId: (sprint)?sprint.id : null,
                                  tasksUrl: settings.tasksUrl,
                                  usersUrl: settings.usersUrl,
-                                 saveSessionUrl: settings.saveSessionUrl + "?sprintId=" + sprint.id
-                        		}
+                                 saveSessionUrl: saveSessionUrl,
+                             	}
                         );
 					}
 
-					function getSprintHtml(sprint){
-						var getNameValueParagraph= function(name, value, cssClass){
-							return 	"<p><span class='label'>" + name + ":</span>" +
-										"<span class='" + cssClass + "'>" +
-											value +
-										"</span>" +
-									"</p>";
-						}
-						
-						html = "<div class='sprintSummary roundedBox'>" +
-								getNameValueParagraph("Id", sprint.id, "sprint-id") +
-								getNameValueParagraph("Name", sprint.name, "sprint-name value");
-						if (sprint.startDate){
-							html += getNameValueParagraph("From", sprint.startDate, "sprint-from value");
-						}
-						if (sprint.endDate){
-							html += getNameValueParagraph("To", sprint.endDate, "sprint-to value");
-						}
-						html += "</div>";
-						
-						return $(html);
+					
+					
+					function getAssignToSprintConfirmationForm(){
+						dialog = "<div id='dialog-confirm' title='Move the story to another sprint?'>" +
+	            		"<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>All the tasks will also be moved. Are you sure?</p>" +
+	            		"</div>";
+	            		return dialog;
 					}
 					
 					function getSprintFormHtml(){
@@ -692,6 +855,10 @@
 						"</div>";
 					}
 					
+					
+					/**
+					* Shows the add sprint dialog
+					*/
 					function showAddFormDialog(){
 						var form = $(getSprintFormHtml());
 						var name = $( "#name", form ),
@@ -780,18 +947,26 @@
 			      cursor:se-resize;
 			}
 			
+			.ui-icon-calendarviewday {
+				background-image: url(@{'/public/stylesheets/ui-lightness/images/calendar_view_day.png'});
+			}
+			
 			.ui-icon-custom {
 			     width: 16px; 
 			     height: 16px;
 			     cursor: pointer;
 			}
-			.user {
+			.ui-icon-user {
 			     background-image: url(@{'/public/stylesheets/ui-lightness/images/user.png'});
 			}
 			
 			.storySummary {
 				margin:5px 0;
 				cursor:move;
+			}
+			
+			.sprintWrapper{
+				vertical-align: top;
 			}
 			
 			.selected {
@@ -804,6 +979,10 @@
 			
 			.sprintSummary p{
 				margin: 0px;
+			}
+			
+			.sprintSummary h2{
+				text-align: center;
 			}
 			
 			.sprintSummary .label{
@@ -828,7 +1007,9 @@
 				cursor: pointer;
 				margin-bottom:5px;
 				margin-left:5px;
+				vertical-align:top;
 				border: 1px solid #dddddd;
+				min-width: 250px;
 			}
 			
 			.roundedBox {
@@ -896,6 +1077,7 @@
 			input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
 			fieldset { padding:0; border:0; margin-top:25px; }
 			.ui-datepicker { z-index: 1003 !important; }
+			
 		</style>	
 	</head>
 	<body>
@@ -924,7 +1106,8 @@
 				if ($("#data").is(":visible")){
 	                $("#showDataButton").empty().append("Show data");
 	            }else{
-	                $("#showDataButton").empty().append("Hide data");
+	            	$("#data-textArea").val($(".sprintWrapper").data("sprintBoard").getDataJson());
+	            	$("#showDataButton").empty().append("Hide data");
 	            }
 				$('#data').toggle();
 			})

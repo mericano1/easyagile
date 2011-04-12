@@ -23,16 +23,43 @@ import com.googlecode.objectify.Key;
 @With(Application.class)
 public class Stories extends Controller{
 	
+	public static void getAll(){
+		List<Story> findAll = Story.findAll();
+		renderJSON(findAll);
+	}
+	
+	
+	
 	public static void bySprint(Long sprintId){
 		List<Story> findAll = Story.findBySprint(sprintId);
 		renderJSON(findAll);
 	}
 	
+	public static void unassigned(){
+		List<Story> findAll = Story.findUnassigned();
+		renderJSON(findAll);
+	}
+	
+	public static void assignStory(String json, Long sprintId){
+		Story story = new Gson().fromJson(json, Story.class);
+		if (sprintId == null){
+			story.sprint = null;
+		} else {
+			Key<Sprint> sprintKey = Sprint.findKey(sprintId);
+			story.sprint = sprintKey;
+		}
+	
+		story.save();
+	}
 	
 	public static void save(String json, Long sprintId){
 		JsonElement fromJson = new JsonParser().parse(json.trim());
 		processArrayOfElements(fromJson, sprintId);
-		bySprint(sprintId);
+		if (sprintId != null){
+			bySprint(sprintId);
+		}else {
+			unassigned();
+		}
 	}
 	
 	/**
@@ -61,24 +88,24 @@ public class Stories extends Controller{
 		if (jsonElement.isJsonObject()){
 			JsonObject jsonObject = jsonElement.getAsJsonObject();
 			Story story = new Gson().fromJson(jsonObject, Story.class);
-			Key<Sprint> sprintKey = Sprint.findKey(sprintId);
-			if (sprintKey != null){
+			if (sprintId != null){
+				Key<Sprint> sprintKey = Sprint.findKey(sprintId);
 				story.sprint = sprintKey;
-				JsonElement deleted = jsonObject.get("deleted");
-				if (deleted != null && deleted.getAsBoolean()){
-					story.delete();
-				} else {
-					Key<Story> storyKey = story.save();
-					JsonElement tasks = jsonObject.get("tasks");
-					if (tasks != null){
-						if (tasks.isJsonArray()){
-							JsonArray tasksArray = tasks.getAsJsonArray();
-							for (JsonElement taskElement : tasksArray) {
-								processTaskElement(taskElement,storyKey);
-							}
-						}else{
-							processTaskElement(tasks,storyKey);
+			}
+			JsonElement deleted = jsonObject.get("deleted");
+			if (deleted != null && deleted.getAsBoolean()){
+				story.delete();
+			} else {
+				Key<Story> storyKey = story.save();
+				JsonElement tasks = jsonObject.get("tasks");
+				if (tasks != null){
+					if (tasks.isJsonArray()){
+						JsonArray tasksArray = tasks.getAsJsonArray();
+						for (JsonElement taskElement : tasksArray) {
+							processTaskElement(taskElement,storyKey);
 						}
+					}else{
+						processTaskElement(tasks,storyKey);
 					}
 				}
 			}

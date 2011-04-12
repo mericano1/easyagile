@@ -26,10 +26,18 @@ public class Story extends ObjectifyModel<Story>{
         return Datastore.find(key);
     }
     
+    public static List<Story> findUnassigned() {
+    	List<Story> list = Datastore.query(Story.class)
+    	.filter("sprint", null)
+    	.order("index").list();
+        return list;
+    }
+    
     public static List<Story> findBySprint(Long sprintId) {
     	List<Story> list = Datastore.query(Story.class)
     	.filter("sprint", Datastore.key(Sprint.class, sprintId))
-    	.order("index").list();
+    	.order("index")
+    	.list();
         return list;
     }
     
