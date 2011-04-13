@@ -1,0 +1,28 @@
+%{play.modules.objectify.ObjectifyFixtures.deleteAll();}%
+*{
+	This test passes because the second element is higher than the first( i assume)
+	so the drop works. if you wap them it does not work
+	add first story
+    put second on top
+
+}*
+#{test.login /}
+#{test.createStory name:"testStory", exOrder:1/}
+#{test.createStory name:"test story 2", desc:"test story2 desc", exOrder:2/}
+#{test.dragAndDropStory fromIdx:2, toIdx:1 /}
+#{selenium "save and reload"}
+    
+    click('saveStories')
+    open('/')
+    waitForElementPresent('addStory')
+#{/selenium}
+#{test.verifyName type:"story", index:1, value:"test story 2" /}
+
+*{
+    //This does not work swap again
+    dragAndDropToObject('//div[2]/div[2]/div','//div[2]/div[1]/div')
+    click('saveStories')
+    open('/')
+    waitForElementPresent('addStory')
+    verifyText('//strong','test story')
+}*

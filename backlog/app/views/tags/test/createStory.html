@@ -1,0 +1,23 @@
+*{
+This tag creates a story for the currently selected sprint
+Requires
+	exOrder	-> The expected index of the newly added story starting with 1
+}*
+#{selenium "createStory"}
+	click('addStory')
+	type('name',${_name})
+	#{if _desc}
+	type('description',${_desc})
+	#{/if}
+	#{if _points}
+	type('points',${_points})
+	#{/if}
+	click('//button[@type='button']')
+#{/selenium}
+#{test.verifyName type:"story", value:_name, index:_exOrder /}
+#{selenium}
+	#{if _desc}
+		verifyText('//div[2]/div[2]/div[${_exOrder}]/div/div[1]',${_desc})
+	#{/if}
+	click('saveStories')
+#{/selenium}

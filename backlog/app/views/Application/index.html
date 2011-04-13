@@ -72,7 +72,10 @@
 							settings = jQuery.extend(true, settings, args[1]);
 						}
 					}
-					
+					function BaseUnit(info){
+						this.info = info;
+						
+					}
 					
 					function _init() {
 						(function addHtmlToElement(element){
@@ -606,7 +609,8 @@
 						getData: function(){return data;},
 						getSettings: function(){return settings;},
 						saveSession: saveSession,
-						getDataJson: getDataJson
+						getDataJson: getDataJson,
+						getSprintId : function () {return settings.sprintId}
 					}
 					
 				}
@@ -660,17 +664,20 @@
 						this.container = container;
 						this.block = null;
 						
-						
+						// bind event functions
 						this.init = function (){
 							this.block = $(this.getSprintHtml(info))
 							this.block.click(function () {onBlockClick.call(self)});
 							this.block.droppable({drop:function(event, ui){onBlockDrop.call(self, event, ui)}});
 						}
 						
+						// click class click is the same as the block click
+						/*this.click = function (event, ui){
+							this.block.trigger("click", event, ui);
+						}*/
 						
-						/**
-						* Event handler on click
-						*/
+						
+						// Event handler on click
 						function onBlockClick (){
 							if (!this.isCurrentSprint()){
 								
@@ -686,9 +693,7 @@
 							}
 						}
 						
-						/**
-						* Event handler on drop
-						*/
+						// Event handler on drop
 						function onBlockDrop(event,ui){
 				            storyOrTask = $(ui.draggable).data('storyOrTask');
 				            sprint = this.info;
@@ -757,7 +762,11 @@
 						
 						
 						this.isCurrentSprint = function(){
-							return this.container.data("sprintBlock") === this;
+							var sprintBoard = this.container.data("sprintBoard");
+							if (sprintBoard == undefined || sprintBoard == null) { return false; } // no sprint loaded
+							boardId = sprintBoard.getSprintId();
+							return ((boardId == null) && (this.info == null) || 
+								(this.info!= null && boardId == this.info.id));
 						}
 						
 						this.getCurrentSprintBoard= function(){
@@ -773,7 +782,8 @@
 							this.block.addClass("sprintSummary-selected");
 						}
 						this.init();
-					}
+						
+					}// ---------- End SprintBlock class --------------
 					
 					
 					

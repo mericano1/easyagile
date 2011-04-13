@@ -19,6 +19,7 @@ import play.mvc.Http;
 import play.mvc.Http.Response;
 import play.mvc.Router;
 import play.test.FunctionalTest;
+import utils.TestHelper;
 
 import com.google.appengine.repackaged.com.google.common.collect.Maps;
 import com.google.gson.Gson;
@@ -66,7 +67,7 @@ public class StoriesTest extends FunctionalTest {
 		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
 		sprint.save();
 		Response response = POST(url+"?json=" + story1Json + "&sprintId=" + sprint.id);
-		assertIsOk(response);
+		assertIsOk(TestHelper.followRedirect(response));
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);
@@ -79,7 +80,7 @@ public class StoriesTest extends FunctionalTest {
 		sprint.save();
 		Response response = POST(url+"?json=[" + story1Json + "," + story2Json + "]&sprintId="+ sprint.id);
 		sprint.save();
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(TestHelper.followRedirect(response));
 		List<Story> findAll = Story.findAll();
 		assertEquals(2, findAll.size());
 		assertEquals("story1", findAll.get(0).name);
@@ -94,7 +95,7 @@ public class StoriesTest extends FunctionalTest {
 		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
 		sprint.save();
 		Response response = POST(url+"?json=" + json + "&sprintId="+ sprint.id);
-		assertIsOk(response);
+		assertIsOk(TestHelper.followRedirect(response));
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);
@@ -112,7 +113,7 @@ public class StoriesTest extends FunctionalTest {
 		sprint.save();
 		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+"]");
 		Response response = POST(url+"?json=" + json + "&sprintId="+ sprint.id);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(TestHelper.followRedirect(response));
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);
@@ -123,13 +124,44 @@ public class StoriesTest extends FunctionalTest {
 	}
 	
 	@Test
+	public void testSaveStoryAndTaskArrayNullSprintId(){
+		String url = Router.reverse("Stories.save").url;
+		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+"]");
+		Response response = POST(url+"?json=" + json);
+		assertIsOk(TestHelper.followRedirect(response));
+		List<Story> findAll = Story.findAll();
+		assertEquals(1, findAll.size());
+		assertEquals("story1", findAll.get(0).name);
+		assertNull(findAll.get(0).sprint);
+		List<Task> tasks = Task.findAllByStory(findAll.get(0).id);
+		assertEquals(1, tasks.size());
+		assertEquals("hi there task", tasks.get(0).name);
+	}
+	
+	@Test
+	public void testSaveStoryAndTaskArrayNullSprintId2(){
+		String url = Router.reverse("Stories.save").url;
+		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+"]");
+		Response response = POST(url+"?json=" + json + "&sprintId=");
+		assertIsOk(TestHelper.followRedirect(response));
+		List<Story> findAll = Story.findAll();
+		assertEquals(1, findAll.size());
+		assertEquals("story1", findAll.get(0).name);
+		assertNull(findAll.get(0).sprint);
+		List<Task> tasks = Task.findAllByStory(findAll.get(0).id);
+		assertEquals(1, tasks.size());
+		assertEquals("hi there task", tasks.get(0).name);
+	}
+	
+	
+	@Test
 	public void testSaveStoryAndTaskArray2(){
 		String url = Router.reverse("Stories.save").url;
 		Sprint sprint = TestModelBuilder.createSimpleSprint("sprint1", new Date(), new Date(), true);
 		sprint.save();
 		String json = appendPropertyToJson(story1Json, "tasks", "["+task1Json+","+ task2Json +"]");
 		Response response = POST(url+"?json=" + json+ "&sprintId="+ sprint.id);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(TestHelper.followRedirect(response));
 		List<Story> findAll = Story.findAll();
 		assertEquals(1, findAll.size());
 		assertEquals("story1", findAll.get(0).name);
@@ -153,7 +185,7 @@ public class StoriesTest extends FunctionalTest {
 		Gson gson = new Gson();
 		String jsonUpdated = gson.toJson(firstStory);
 		Response response = POST(url+"?json=" + jsonUpdated + "&sprintId=" + sprint.id);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(TestHelper.followRedirect(response));
 		Story retrieved = Story.findById(firstStory.key());
 		assertEquals("story1 updated", retrieved.name);
 		assertEquals((Integer)10, (Integer)retrieved.points);
@@ -175,7 +207,7 @@ public class StoriesTest extends FunctionalTest {
 		//adds the deleted = true
 		jsonUpdated = appendPropertyToJson(jsonUpdated, "deleted", "\"true\"");
 		Response response = POST(url+"?json=" + jsonUpdated + "&sprintId=" + sprint.id);
-		assertEquals((Integer)Http.StatusCode.OK,(Integer) response.status);
+		assertIsOk(TestHelper.followRedirect(response));
 		Story retrieved = Story.findById(firstStory.key());
 		assertNull(retrieved);
 		assertEquals(3, Story.findAll().size());

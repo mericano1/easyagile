@@ -1,0 +1,28 @@
+*{
+This tag create a task for the given story
+Requires 
+	story 	-> the index of the story the task is created for starting with 1
+	exOder 	-> The expected index of the newly added task starting with 1
+}*
+#{selenium "createTask"}
+	click('//div[${_story}]/div/p[1]/span[5]')
+	type('name',${_name})
+	#{if _desc}
+	type('description',${_desc})
+	#{/if}
+	#{if _points}
+	type('points',${_points})
+	#{/if}
+	click('//button[@type='button']')
+	//verify name
+	verifyText('//div[3]/div[${_exOrder}]/div/p[1]/strong', ${_name})
+	#{if _desc}
+		//verify description
+		verifyText('//div[3]/div[${_exOrder}]/div/div[1]', ${_desc})
+	#{/if}
+	#{if _points}
+		//verify points
+		verifyText('//div[${_exOrder}]/div/div[2]/span[3]','${_points}')
+	#{/if}
+	click('saveStories')
+#{/selenium}

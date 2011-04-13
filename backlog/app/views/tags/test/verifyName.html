@@ -1,0 +1,14 @@
+*{
+Requires
+	value	-> expected value
+	index	-> story or task index starting with 1
+	type	-> story or task
+}*
+#{selenium "verify name for " + _type + " is:" + _value}
+	#{if _type=="story"}
+		verifyText('//div[${_index}]/div/p[1]/strong', ${_value})
+	#{/if}
+	#{else}
+		verifyText('//div[3]/div[${_index}]/div/p[1]/strong', ${_value})
+	#{/else}
+#{/selenium}

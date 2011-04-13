@@ -1,0 +1,14 @@
+%{play.modules.objectify.ObjectifyFixtures.deleteAll();}%
+#{test.login /}
+#{test.createStory name:"story1", desc:"desc desc", exOrder:1/}
+#{selenium "verifyStory"}
+    open('/')
+    waitForTextPresent('story1')
+#{/selenium}
+#{test.createTask story:1, name:"task1 - story1", desc:"desc desc", exOrder:1/}
+#{selenium "verifyTask"}
+    open('/')
+    waitForTextPresent('story1')
+#{/selenium}
+#{test.expandTasksForStory story:1/}
+#{test.verifyName type:"task", index:1, value:"task1 - story1"/}
