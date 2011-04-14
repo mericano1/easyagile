@@ -1,15 +1,10 @@
-<!-- Indices written at Thu, 14 Apr 2011 17:59:50 BST -->
+<!-- Indices written at Thu, 14 Apr 2011 18:48:50 IST -->
 
 <datastore-indexes>
 
-    <!-- Used 8 times in query history -->
+    <!-- Used 7 times in query history -->
     <datastore-index kind="Story" ancestor="false" source="auto">
         <property name="sprint" direction="asc"/>
-        <property name="index" direction="asc"/>
-    </datastore-index>
-
-    <!-- Used 4 times in query history -->
-    <datastore-index kind="Task" ancestor="true" source="auto">
         <property name="index" direction="asc"/>
     </datastore-index>
 

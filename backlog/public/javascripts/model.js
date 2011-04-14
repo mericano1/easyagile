@@ -1,7 +1,6 @@
 //-----------------------------------------------------------------------
 // BaseBlock
 //-----------------------------------------------------------------------
-
 BaseBlock.defaultSettings = {
 	convertJsonFields : ["id", "name", "description", "points", "index", "tasks", "deleted", "completed","assignee"],
 	css:{
@@ -97,7 +96,13 @@ function BaseBlock(info, container, options){
 	this.getDescription = function() {return this.info.description;}
 	this.getPoints = function() {return this.info.points;}
 	this.getIndex = function() {return this.info.index;}
-	this.setIndex = function(idx) {this.info.index = idx;}
+	this.increaseIndex = function(num) {
+		this.setIndex(info.index + num);
+	}
+	this.decreaseIndex = function(num) {
+		this.setIndex(this.info.index -num);
+		
+	}
 	this.getFormDialog = BaseBlock.getFormDialog;
 	this.showAddNewForm = BaseBlock.showAddNewForm;
 	
@@ -194,7 +199,9 @@ BaseBlock.prototype.getHtmlBlock= function (object, index){
 						"</div>" +
 					"</div>" +
 				"</div>";
-	return $(htmlCode);
+	html = $(htmlCode)
+	$(".ui-icon-trash, .ui-icon-pencil", html).button();
+	return html;
 }
 
 BaseBlock.getFormBlock= function(){
@@ -253,6 +260,7 @@ function Story(info, container, options){
 		html = BaseBlock.prototype.getHtmlBlock.call(this,object, index);
 		$("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info",html));
 		$("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil", html));
+		$(".ui-icon-triangle-1-e, .ui-icon-plusthick", html).button();
 		return html;
 	}
 	this.block = $(this.getHtmlBlock(this.info));
@@ -373,34 +381,31 @@ function Container(data, block, loadFunction){
 	
 	
 	this.makeChildrenSortable = function(){
+		dataSet = this.children;
 		 $(block).sortable({
 				stop: function(event, ui) {
 					var item = ui.item;
 					var newIndex = $(item).parent().children().index(item);
 					var element = item.data("element");
-					var prevIndex = element.info.index;
+					var prevIndex = element.getIndex();
 					//update element indexes
 					if (prevIndex == newIndex){return;}
 					if (prevIndex > newIndex ) { //drag up
 						for (i=newIndex; i < prevIndex; i++){
-							dataSet[i].index++;
-							currentDiv = dataSet[i].div;
-							$(".priority", currentDiv).text(dataSet[i].index + 1);
+							dataSet[i].increaseIndex(1);
 						}
 					}
 					//prevIndex is still the moved object
 					if (prevIndex < newIndex ) { //drag down
 						for (i= (prevIndex + 1); i <= newIndex; i++){
-							dataSet[i].index--;
-							currentDiv = dataSet[i].div;
-							$(".priority", currentDiv).text(dataSet[i].index + 1);
+							dataSet[i].decreaseIndex(1);
 						}
 					}
 					element.setIndex(newIndex);
-					children.sort(element.sortFunction);
+					dataSet.sort(element.sortFunction);
 				},
 				start: function(event, ui){
-					if (onStart) { onStart();}
+					
 				}
 			});
 	}
@@ -427,9 +432,3 @@ function Container(data, block, loadFunction){
 	
 	init.call(this);
 }
-
-
-
-
-
-
