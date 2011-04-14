@@ -5,6 +5,7 @@
 		<link type="text/css" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.11.custom.css'}" rel="stylesheet" />	
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-1.5.1.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/model.js'}"></script>
 		<script type="text/javascript">
 		
 			//function to get url variables
@@ -72,10 +73,6 @@
 							settings = jQuery.extend(true, settings, args[1]);
 						}
 					}
-					function BaseUnit(info){
-						this.info = info;
-						
-					}
 					
 					function _init() {
 						(function addHtmlToElement(element){
@@ -111,26 +108,24 @@
 						})($(this));
 						
 						$(self).each (function () {
-					        //styling the two blocks
-						var block = $(self).children(".left-panel");
-						$(block).css("width", "49.5%")
+					    //styling the two blocks
+						leftPanel.css("width", "49.5%")
 						        .css("display", "inline-block")
 						        .css("vertical-align", "top")
 						        .css("float", "left");;
 						//$(block).css("padding", "0 5px");
 						
-						var leftBlock = $(self).children(".right-panel");
-						$(leftBlock).css("width", "49.5%")
+						rightPanel.css("width", "49.5%")
 						        .css("display", "inline-block")
 						        .css("vertical-align", "top")
 						        .css("float", "right");
-						//$(leftBlock).css("padding", "0 5px");
 						
-						$(data).each(function(index, story){
+						var storyContainer = new Container(Story.factory(data), leftPanel);
+/* 						$(data).each(function(index, story){
 							addStoryOrTask(story,block,index);
 						});
 						makeElementsSortable(block, data, clearRightPanel);
-						
+ */						
 					});
 						
 						// Setup the ajax indicator
@@ -973,6 +968,11 @@
 			.storySummary {
 				margin:5px 0;
 				cursor:move;
+				background: #fefcea; /* old browsers */
+				background: -moz-linear-gradient(top, #fefcea 0%, #f1da36 100%); /* firefox */
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fefcea), color-stop(100%,#f1da36)); /* webkit */
+				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefcea', endColorstr='#f1da36',GradientType=0 ); /* ie */
+				border: 1px solid #fefcea;
 			}
 			
 			.sprintWrapper{

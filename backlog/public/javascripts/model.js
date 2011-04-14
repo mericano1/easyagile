@@ -362,6 +362,9 @@ function Container(data, block, loadFunction){
 		if (block){
 			this.block.data("element", this);
 			this.block.data("type", "container");
+			$(this.children).each(function(index, child){
+				block.append(child.block);
+			});
 		}
 	}
 	this.get = function(index){
