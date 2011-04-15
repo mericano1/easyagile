@@ -22,9 +22,8 @@ BaseBlock.sortFunction = function (a,b) {
 	return  (a.info.index < b.info.index) ? -1 : (a.info.index > b.info.index) ? 1 : 0;
 };
 
-function BaseBlock(info, container, options){
+function BaseBlock(info, options){
 	this.info = (info == undefined || info == null) ? {} : info;
-	this.container = container;
 	this.visible = true;
 	this.changed = false;
 	this.settings = $.extend(true, BaseBlock.defaultSettings, options?options:{});
@@ -147,14 +146,25 @@ BaseBlock.getFormDialog= function(buttons){
 }
 
 
-//shows the add new form
+//shows the add new form. It takes 2 functions, onSave and onCancel.
+//The onSave will get the form object as json
 BaseBlock.showAddNewForm = function(onSave, onCancel){
+	var getFormObj = function(){
+		form = $(this);
+		var returnObj = {};
+		if ($( "#name", form ).val().trim() != ""){returnObj.name=$( "#name", form ).val().trim();}
+		if ($( "#description", form  ).val().trim() != ""){returnObj.description=$( "#description", form  ).val().trim();}
+		if ($( "#points", form ).val().trim() != ""){returnObj.points=$( "#points", form ).val().trim();}
+		return returnObj;
+	}
 	var buttons = {
-			"Save" : onSave,
+			"Save" : function(){
+				onSave(getFormObj.call(this));
+			},
 			"Cancel": onCancel,
 			"Save and Add another": function(){
-				onSave(); 
-				this.showAddNewForm(onSave, onCancel, display)
+				onSave(getFormObj.call(this)); 
+				this.showAddNewForm(onSave, onCancel, display);
 			}
 	};
 	form = this.getFormDialog(buttons);
@@ -177,7 +187,7 @@ BaseBlock.prototype.showEditForm = function(onSave, onCancel){
 }
 
 //gets the html of the block itself
-BaseBlock.prototype.getHtmlBlock= function (object, index){
+BaseBlock.prototype.getHtmlBlock= function (object){
 	summaryClass = this.settings.css.summary;
 	if (this.hasCompleteStatus()){
 		summaryClass = this.isComplete() ? this.settings.css.completed : this.settings.css.incompleted;
@@ -200,7 +210,6 @@ BaseBlock.prototype.getHtmlBlock= function (object, index){
 					"</div>" +
 				"</div>";
 	html = $(htmlCode)
-	$(".ui-icon-trash, .ui-icon-pencil", html).button();
 	return html;
 }
 
@@ -243,42 +252,102 @@ Story.getBlankFormBlock = function(){
 	html.attr("title", "Story details");
 	return html;
 }
-Story.showAddNewForm=function(){
+Story.showAddNewForm=function(onSave){
 	return BaseBlock.showAddNewForm.call(this,
-			function(){alert("save")}, 
+			onSave, 
 			BaseBlock.closeDialog
 		);
 }
 Story.prototype = new BaseBlock;
-function Story(info, container, options){
-	BaseBlock.call(this, info, container, $.extend(true, {css:{
+function Story(info, taskBlock, options){
+	BaseBlock.call(this, info, $.extend(true, {css:{
 			summary:"storySummary",
 			completed:"storySummary-completed",
 			incompleted:"storySummary",
+			selected:"story-selected"
 		}},options));// Call super-class constructor
-	this.getHtmlBlock = function(object, index){
-		html = BaseBlock.prototype.getHtmlBlock.call(this,object, index);
+	this.getHtmlBlock = function(object){
+		html = BaseBlock.prototype.getHtmlBlock.call(this, object);
 		$("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info",html));
 		$("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil", html));
-		$(".ui-icon-triangle-1-e, .ui-icon-plusthick", html).button();
+		
+		//trigger events
+		$(".ui-icon-plusthick", html).button().click(function(){html.trigger("addTask");});
+		$(".ui-icon-triangle-1-e", html).button().click(function(){html.trigger("showTasks");});
+		$(".ui-icon-trash", html).button().click(function(){html.trigger("delete");});
+		$(".ui-icon-pencil", html).button().click(function(){html.trigger("edit");});
 		return html;
 	}
 	this.block = $(this.getHtmlBlock(this.info));
+	this.taskBlock = $(taskBlock);
+	this.tasks = null;
 	this.getFormBlockId = Story.getFormBlockId;
 	this.getBlankFormBlock = Story.getBlankFormBlock;
 	this.showAddNewForm = Story.showAddNewForm;
+	this.hasTasks = function(){return (this.tasks != undefined) && (this.tasks != null);}
+	this.markSelected = function(){
+		this.block.addClass("selected");
+	}
+	this.unmarkSelected = function(){
+		this.block.removeClass("selected");
+	}
+	this.addTask = function(task){
+		if(!this.hasTasks()){
+			this.tasks = new Container([]);
+		}
+		if (!(task instanceof Task)){
+			task = new Task(task);
+		}
+		this.tasks.addChild(task);
+		if (this.taskBlock){
+			this.taskBlock.append(task);
+		}
+	}
+	
+	this.showTasks = function(){
+		if (this.taskBlock){
+			var taskBlock = this.taskBlock.empty();
+			if (this.tasks.length > 0){
+				$(this.tasks).each(function(index, task){
+					taskBlock.append(task.block);
+				});
+			}else {
+				taskBlock.append(Task.getNoTaskAvailableBlock);
+			}
+		}
+	}
 	
 	//binds data to the html element
 	this.block.data("element", this);
 	this.block.data("type", "story");
+	
+	//binds functions
+	this.block.bind("addTask", this, function(event){
+		Task.showAddNewForm(function(toSave){
+			storyBlock = event.data;
+			storyBlock.addTask(toSave);
+			$(this).dialog("close");
+		});
+	});
+	this.block.bind("showTasks", this.showTasks);
+	//this.block.bind("delete", this, onDelete);
+	//this.block.bind("edit", this, onEdit);
+	
 }
 
-
+//-------------------------------------------------------------------------
+// Factory class
+// elements 	-> array of story objects
+// options		-> Object with following properties 
+//		taskBlock 	-> jQuery object where the tasks will be displayed
+//		
+//
 //This function is used in the container and (this) is the container object
-Story.factory = function(elements){
+Story.factory = function(elements, taskBlock){
 	var stories = [];
 	$(elements).each(function(index, child){
-		stories.push(new Story(child));
+		story = new Story(child, taskBlock);
+		stories.push(story);
 	});
 	return stories;
 }
@@ -298,15 +367,15 @@ Task.getBlankFormBlock =  function(){
 	html.attr("title", "Task details");
 	return html;
 }
-Task.showAddNewForm=function(){
+Task.showAddNewForm=function(onSave){
 	return BaseBlock.showAddNewForm.call(this,
-			function(){alert("save")}, 
+			onSave,
 			BaseBlock.closeDialog
 		);
 }
 Task.prototype = new BaseBlock;
-function Task(info, container, options){
-	BaseBlock.call(this, info, container, $.extend(true, {css:{
+function Task(info, options){
+	BaseBlock.call(this, info, $.extend(true, {css:{
 			summary:"taskSummary",
 			completed:"taskSummary-completed",
 			incompleted:"taskSummary"
@@ -317,6 +386,11 @@ function Task(info, container, options){
 		$("<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil",html));
 		$("<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-user", html));
 		$("<span class='assignee'>" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>").insertAfter($(".priority", html));
+		//trigger events
+		$(".ui-icon-user", html).button().click(function(){html.trigger("assignUser");});
+		$(".ui-icon-check", html).button().click(function(){html.trigger("markCompleted");});
+		$(".ui-icon-trash", html).button().click(function(){html.trigger("delete");});
+		$(".ui-icon-pencil", html).button().click(function(){html.trigger("edit");});
 		return html;
 	}
 	this.block = $(this.getHtmlBlock(this.info));

@@ -3,7 +3,7 @@ module('model classes');
 test('structure', function(){
 	var story = new Story({"id":189,"name":"test story 2","description":"test story2 desc","index":0});
 	parent = $("<div>").append(story.block);
-	equals($(".ui-widget", parent).length, 1, 'cannot find the top widget' + parent.html());
+	ok($(".ui-widget", parent).length >= 1, 'cannot find any widget' + parent.html());
 	
 });
 
@@ -312,7 +312,7 @@ test('test create story array', function(){
 
 
 
-test('test create story array', function(){
+test('test create task array', function(){
 	var tasks = [{"id":1,"name":"layout","description":"","index":0,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},{"id":3002,"name":"Bug - player edit","description":"To recreate: register new user. Click edit player info.","index":1,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":1001,"name":"Front page image (600p x 400p)","description":"","index":2,"points":3,"story":{"kindClassName":"models.Story","id":7001}},{"id":5001,"name":"Bug","description":"edit match- invisible email\u0027s guideline still visible","index":3,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},{"id":3001,"name":"Bug","description":"When user is logged in and a match is created it goes to match page and not MatchPlayerHome","index":4,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},{"id":2001,"name":"Front page text","description":"","index":5,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":4001,"name":"Bug","description":"Bug: edit match- don\u0027t show creator in list of participants","index":6,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":2002,"name":"Bug","description":"after register in authentication page, too many flash msgs\n\u003cbr/\u003e\n\u003cbr/\u003e\n\u003cb\u003eNote\u003c/b\u003e\u003cbr/\u003e\nThis was not a real bug. We saw duplicated messages because of the duplicated matches created","index":7,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},{"id":6001,"name":"Bug","description":"How to recreate:\n\u003col\u003e\n\u003cli\u003eCreate a match not as anonymous\u003c/li\u003e\n\u003cli\u003eSkip login after create match.\u003c/li\u003e\n\u003cli\u003eClick on the confirmation link sent thru email\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eResult: Logged in user is messed up\u003c/p\u003e\n\u003cp\u003eExpected : User that created the match is logged in\u003c/p\u003e","index":8,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"ftrilnik@gmail.com"}];
 	
 	var taskObjs = Task.factory(tasks);
@@ -324,6 +324,21 @@ test('test create story array', function(){
 		equals(value.getDescription(), tasks[index]["description"], 'wrong description');
 		equals(value.getAssignee(), tasks[index]["assignee"], 'wrong assignee');
 	});
+});
+
+
+test('test task bind events', function(){
+	var tasks = [{"id":1,"name":"layout","description":"","index":0,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},{"id":3002,"name":"Bug - player edit","description":"To recreate: register new user. Click edit player info.","index":1,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":1001,"name":"Front page image (600p x 400p)","description":"","index":2,"points":3,"story":{"kindClassName":"models.Story","id":7001}},{"id":5001,"name":"Bug","description":"edit match- invisible email\u0027s guideline still visible","index":3,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},{"id":3001,"name":"Bug","description":"When user is logged in and a match is created it goes to match page and not MatchPlayerHome","index":4,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},{"id":2001,"name":"Front page text","description":"","index":5,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":4001,"name":"Bug","description":"Bug: edit match- don\u0027t show creator in list of participants","index":6,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},{"id":2002,"name":"Bug","description":"after register in authentication page, too many flash msgs\n\u003cbr/\u003e\n\u003cbr/\u003e\n\u003cb\u003eNote\u003c/b\u003e\u003cbr/\u003e\nThis was not a real bug. We saw duplicated messages because of the duplicated matches created","index":7,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},{"id":6001,"name":"Bug","description":"How to recreate:\n\u003col\u003e\n\u003cli\u003eCreate a match not as anonymous\u003c/li\u003e\n\u003cli\u003eSkip login after create match.\u003c/li\u003e\n\u003cli\u003eClick on the confirmation link sent thru email\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eResult: Logged in user is messed up\u003c/p\u003e\n\u003cp\u003eExpected : User that created the match is logged in\u003c/p\u003e","index":8,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"ftrilnik@gmail.com"}];
+	var taskObjs = Task.factory(tasks);
+	
+});
+
+
+test('test story bind events', function(){
+	var stories = [{"id":7001,"name":"(NOT SO) Simplest possible create a match","description":"basic web application to create a match, send notification to friends and collect participations","points":14,"index":0},
+	               {"id":2002,"name":"Int tests for features","description":"","points":5,"index":1}];
+	var storyObjs = Story.factory(stories);
+	storyObjs[0].block.trigger("addTask");
 });
 
 
