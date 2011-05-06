@@ -1,0 +1,154 @@
+body{ font: 62.5% "Trebuchet MS", sans-serif; margin: 10px 50 50 50;}
+.sprintContainer {
+	padding:5px;
+	margin-bottom:5px;
+	background: #ffffff; /* old browsers */
+	background: -moz-linear-gradient(top, #ffffff 0%, #e5e5e5 100%); /* firefox */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5)); /* webkit */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* ie */
+	border: 1px solid #e5e5e5;  
+}
+#dialog_link {padding: .4em 1em .4em 20px;text-decoration: none;position: relative;}
+#dialog_link span.ui-icon {margin: 0 5px 0 0;position: absolute;left: .2em;top: 50%;margin-top: -8px;}
+ul#icons {margin: 0; padding: 0;}
+ul#icons li {margin: 2px; position: relative; padding: 4px 0; cursor: pointer; float: left;  list-style: none;}
+ul#icons span.ui-icon {float: left; margin: 0 4px;}
+.ui-icon{
+	cursor: pointer;
+}
+
+.ui-resizable-handle { 
+      cursor:se-resize;
+}
+
+.ui-icon-custom {
+     width: 16px; 
+     height: 16px;
+     cursor: pointer;
+}
+.ui-icon-user {
+     background-image: url('ui-lightness/images/user.png');
+}
+.left-panel{
+	width: 49.5%;
+	display:inline-block;
+	vertical-align: top;
+	float: left;
+}
+.right-panel{
+	width: 49.5%;
+	display:inline-block;
+	vertical-align: top;
+	float: right;
+}
+.storySummary {
+	margin:5px 0;
+	cursor:move;
+	background: #fefcea; /* old browsers */
+	background: -moz-linear-gradient(top, #FBF4C2 0%, #f1da36 100%); /* firefox */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#FBF4C2), color-stop(100%,#f1da36)); /* webkit */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#FBF4C2', endColorstr='#f1da36',GradientType=0 ); /* ie */
+	border: 1px solid #FED22F;
+}
+
+.sprintWrapper{
+	vertical-align: top;
+}
+
+.storySummary-selected {
+	border: 1px solid #0099FF;  
+}
+
+.unselected {
+	border: 1px solid #dddddd;  
+}
+
+.sprintSummary p{
+	margin: 0px;
+}
+
+.sprintSummary h2{
+	text-align: center;
+}
+
+.sprintSummary .label{
+	font-weight: bold;
+}
+
+.sprintSummary .value{
+	margin-left: 5px;
+}
+
+.sprintSummary:hover{
+	border: 1px solid #d0d000;
+}
+
+.sprintSummary{
+	padding:5px;
+	background: #008800;
+    background: -moz-linear-gradient(top, #00ffff, #FFFFFF);
+    background: -webkit-gradient(linear,  left top, left bottom, from(#00ffff), to(#FFFFFF));
+    filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='#00ffff', EndColorStr='#FFFFFF', GradientType=0);
+	display: inline-block;
+	cursor: pointer;
+	margin-bottom:5px;
+	margin-left:5px;
+	vertical-align:top;
+	border: 1px solid #dddddd;
+	min-width: 250px;
+}
+
+.roundedBox {
+	-moz-border-radius:10px;
+  	-webkit-border-radius:10px;
+}
+
+.sprintSummary-selected{
+	border: 1px solid #0099FF;
+}
+
+
+.taskSummary {
+    background: #87e0fd; /* old browsers */
+             background: -moz-linear-gradient(top, #87e0fd 0%, #53cbf1 40%, #05abe0 100%); /* firefox */
+             background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#87e0fd), color-stop(40%,#53cbf1), color-stop(100%,#05abe0)); /* webkit */
+             filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#87e0fd', endColorstr='#05abe0',GradientType=0 ); /* ie */
+             border: 1px solid #6699FF;
+             margin: 5px 0;
+             cursor:move;
+}
+
+.taskSummary-completed {
+    background: #bfd255; /* old browsers */
+             background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 100%); /* firefox */
+             background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bfd255), color-stop(50%,#8eb92a), color-stop(100%,#72aa00)); /* webkit */
+             filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#72aa00',GradientType=0 ); /* ie */
+             border: 1px solid #829376;
+             margin: 5px 0;
+             cursor:move;
+}
+
+
+.card-info span.priority {
+	float:left;
+}
+.card-info span.points {
+	float:right;
+}
+.card-info span.assignee {
+     margin-left:15px;
+}
+.data-textArea
+{
+    width:100%;
+}
+.textwrapper
+{
+    border:1px solid #999999;
+    margin:5px 0;
+    padding:3px;
+}
+label, input, textarea { display:block; }
+input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
+fieldset { padding:0; border:0; margin-top:25px; }
+.ui-datepicker { z-index: 1003 !important; }

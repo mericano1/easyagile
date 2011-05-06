@@ -2,10 +2,13 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 		<title>Backlog</title>
+		<link type="text/css" href="@{'/public/stylesheets/main.css'}" rel="stylesheet" />
 		<link type="text/css" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.11.custom.css'}" rel="stylesheet" />	
-		<script type="text/javascript" src="@{'/public/javascripts/jquery-1.5.1.min.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/jquery-1.6.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
-		<script type="text/javascript" src="@{'/public/javascripts/model.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/underscore.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/backbone.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/modelBB.js'}"></script>
 		<script type="text/javascript">
 		
 			//function to get url variables
@@ -75,64 +78,12 @@
 					}
 					
 					function _init() {
-						(function addHtmlToElement(element){
-							header = $("<div class='headerButtons'>");
-							header.append($("<button id='addStory'>Add Story</button>"));					
-							header.append($("<button id='saveStories'>Save Session</button>"));
-							header.append($("<p id='userMessages' style='display:inline; margin-left:20px;'>"));
-							
-							leftPanel = $("<div class='left-panel'/>");
-							rightPanel = $("<div class='right-panel'/>");
-							self.append(header).append(leftPanel).append(rightPanel);
-							
-							//addBusyLoadingElement();
-							var winH = $(window).height();
-							var winW = $(window).width();
-							
-							if ($("#ajaxBusy").length == 0){
-								$('body').append('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
-							}
-							$('#ajaxBusy').css({
-							  display:"none",
-							  top:winH/2,
-							  left:winW/2,
-							  width:"auto",
-							  position:"absolute" 
-							});
-							
-							//main header buttons
-							$("#addStory").button().click(function() {
-								displayStoryOrTaskForm();
-							});
-							$("#saveStories").button().click(saveSession);
-						})($(this));
-						
-						$(self).each (function () {
-					    //styling the two blocks
-						leftPanel.css("width", "49.5%")
-						        .css("display", "inline-block")
-						        .css("vertical-align", "top")
-						        .css("float", "left");;
-						//$(block).css("padding", "0 5px");
-						
-						rightPanel.css("width", "49.5%")
-						        .css("display", "inline-block")
-						        .css("vertical-align", "top")
-						        .css("float", "right");
-						
-						var storyContainer = new Container(Story.factory(data, rightPanel), leftPanel);
-/* 						$(data).each(function(index, story){
-							addStoryOrTask(story,block,index);
-						});
-						makeElementsSortable(block, data, clearRightPanel);
- */						
-					});
-						
+						dialog = $('<div id="ajaxBusy"><p><img src="@{'/public/images/loading.gif'}"></p></div>');
 						// Setup the ajax indicator
 						$(document).ajaxStart(function(){
-				        	$('#ajaxBusy').show();
+				        	dialog.dialog({ modal: true, closeOnEscape: false,	open: function(event, ui) { $(".ui-dialog-titlebar-close").hide();  }});
 				        }).ajaxStop(function(){
-							$('#ajaxBusy').hide();
+							dialog.dialog("close");
 				        });
 						
 						initialized = true;
@@ -161,95 +112,9 @@
 					}
 					
 					
+
 					
-					
-					function loadData(prmdata){
-					        data = prmdata;
-					        $(data).each(function(index, story){
-					                if (story.tasks && story.tasks.length > 0){
-					                        var totalPoints = 0;
-					                        $(story.tasks).each(function(index, task) {totalPoints +=task.points});
-					                        story.points = totalPoints;
-					                }
-					        });
-					        
-					}
-										
-					function getStory(object){
-						var getByProperty = function (name, value){
-							for(var i in data){
-								if (data[i][name] == value){
-									return data[i];
-								}
-							}
-						}
-						if (object.id){
-                            return getByProperty("id", object.id);
-                        }
-						if (object.index){
-							return getByProperty("index", object.index);
-						}
-						if (object.name){
-							return getByProperty("name", object.name);
-						}
-					}
-					
-					function showUsers(storyOrTaskDiv){
-						if (users == null && settings.usersUrl != undefined){
-							$.ajax(settings.usersUrl, //+ user.team.id?,
-                                    { async:false,
-							          dataType: 'json',
-                                      success: function (data) {
-                                           users = data;
-                                      }
-                            });
-						}
-						select = createSelect(users, "email", "email");
-                        $("<div/>").append(select).dialog({
-                                autoOpen: true,
-                                height: 150,
-                                width: 250,
-                                modal: true,
-                                resizable: false,
-                                buttons: {
-                                     Assign: function(){
-                                         storyOrTask = storyOrTaskDiv.data("storyOrTask");
-                                         storyOrTask.assignee = select.val();
-                                         storyOrTask.setDisplayAssignee(select.val());
-                                         $( this ).dialog( "close" );
-                                     },
-                                     Cancel: function() {
-                                            $( this ).dialog( "close" );
-                                     }
-                                    }
-                                }
-                        );
-						
-					}
-					
-					function createSelect(arrayOfObjects, nameProperty, valueProperty){
-						select = $("<select/>");
-                        $(arrayOfObjects).each(function(index, value){
-                            display = value[nameProperty];
-                            id = value[valueProperty];
-                            select.append($("<option/>").attr("name", display ).attr("value", id).text(display));
-                        });
-                        return select;
-					}
-					
-					
-					
-					function deleteStoryOrTask(storyOrTask, dataSet){
-						if (!dataSet) {dataSet = data;}
-						//if persisted mark as deleted otherwise just remove from array
-						if (storyOrTask.id){
-							dataSet[storyOrTask.index].deleted = true;
-						}else {
-							dataSet.splice(storyOrTask.index,1);
-						}
-						var storyDiv=storyOrTask.div;
-						storyDiv.remove();
-					}
+				
 					
 					function getDataJson(){
 						var getItemText = function(element){
@@ -672,21 +537,6 @@
 						}*/
 						
 						
-						// Event handler on click
-						function onBlockClick (){
-							if (!this.isCurrentSprint()){
-								
-								//save current board
-								currentSprintBoard=this.getCurrentSprintBoard();
-								if(currentSprintBoard){
-									currentSprintBoard.saveSession();
-								}
-								//load selected sprint board
-								currentSprintBoard = loadBacklogForSprint(this.info);
-								this.setCurrentSprintBoard(currentSprintBoard);
-								this.markSelected();
-							}
-						}
 						
 						// Event handler on drop
 						function onBlockDrop(event,ui){
@@ -725,37 +575,6 @@
 				            }
 				        }
 						
-						
-						this.getSprintHtml = function(sprint){
-							var getNameValueParagraph= function(name, value, cssClass){
-								return 	"<p><span class='label'>" + name + ":</span>" +
-											"<span class='" + cssClass + "'>" +
-												value +
-											"</span>" +
-										"</p>";
-							}
-							
-							html = "<div class='sprintSummary roundedBox'>" ;
-							//if sprint is not null fills in the info
-							if (sprint){
-								html += getNameValueParagraph("Id", sprint.id, "sprint-id value") +
-										getNameValueParagraph("Name", sprint.name, "sprint-name value");
-								if (sprint.startDate){
-									html += getNameValueParagraph("From", sprint.startDate, "sprint-from value");
-								}
-								if (sprint.endDate){
-									html += getNameValueParagraph("To", sprint.endDate, "sprint-to value");
-								}
-							}else{
-								html +="<h2>Unassigned</h2>";
-							}
-							html += "</div>";
-							
-							return $(html);
-						}
-						
-						
-						
 						this.isCurrentSprint = function(){
 							var sprintBoard = this.container.data("sprintBoard");
 							if (sprintBoard == undefined || sprintBoard == null) { return false; } // no sprint loaded
@@ -789,21 +608,25 @@
 						if (sprintId == undefined || sprintId == null || isNaN(sprintId)){
 							sprintId = 0;
 						}
-						$.getJSON(settings.sprintsUrl, function (data){
-							sprints = data;
-							addSprints(sprintId);
-					    });
-					}
-					
-					function addSprints(sprintId){
 						
-						$([null].concat(sprints)).each(function(index, value){
-							sprintBtn = addSprint(value);
-							
-							if ((value==null && sprintId==0) || (value!= null && sprintId == value.id)){
-								sprintBtn.trigger("click");
-							}
+						$.extend(Statics.settings, settings);
+						Statics.settings.backlogEl = $('.backlogWrapper');
+
+						sprintList = new SprintList;
+						sprintList.url = settings.sprintsUrl;
+						var sprintContainer = new SprintListView({
+								collection: sprintList,
+								el:  $(".sprintWrapper")
+							});
+						sprintList.fetch();
+						
+						var users = new UserList;
+						users.url = settings.usersUrl;
+						var team = new TeamView({
+							users : users
 						});
+						Statics.team = team;
+						
 					}
 					
 					
@@ -822,18 +645,6 @@
 						return sprintBtn;
 					}
 					
-					function loadBacklogForSprint(sprint){
-						storiesUrl = (sprint)?settings.storiesBySprintUrl + sprint.id : settings.storiesUnassigned;
-						saveSessionUrl = (sprint)?settings.saveSessionUrl + "?sprintId=" + sprint.id : settings.saveSessionUrl;
-						return $(".backlogWrapper").empty().backlogBoard( storiesUrl, 
-                                {
-                        		 sprintId: (sprint)?sprint.id : null,
-                                 tasksUrl: settings.tasksUrl,
-                                 usersUrl: settings.usersUrl,
-                                 saveSessionUrl: saveSessionUrl,
-                             	}
-                        );
-					}
 
 					
 					
@@ -928,173 +739,12 @@
 				});
 			});
 		</script>
-		<style type="text/css">
-			body{ font: 62.5% "Trebuchet MS", sans-serif; margin: 10px 50 50 50;}
-			.demoHeaders {
-				padding:5px;
-				margin-bottom:5px;
-				background: #ffffff; /* old browsers */
-				background: -moz-linear-gradient(top, #ffffff 0%, #e5e5e5 100%); /* firefox */
-				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5)); /* webkit */
-				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* ie */
-				border: 1px solid #e5e5e5;  
-			}
-			#dialog_link {padding: .4em 1em .4em 20px;text-decoration: none;position: relative;}
-			#dialog_link span.ui-icon {margin: 0 5px 0 0;position: absolute;left: .2em;top: 50%;margin-top: -8px;}
-			ul#icons {margin: 0; padding: 0;}
-			ul#icons li {margin: 2px; position: relative; padding: 4px 0; cursor: pointer; float: left;  list-style: none;}
-			ul#icons span.ui-icon {float: left; margin: 0 4px;}
-			.ui-icon{
-				cursor: pointer;
-			}
-			
-			.ui-resizable-handle { 
-			      cursor:se-resize;
-			}
-			
-			.ui-icon-calendarviewday {
-				background-image: url(@{'/public/stylesheets/ui-lightness/images/calendar_view_day.png'});
-			}
-			
-			.ui-icon-custom {
-			     width: 16px; 
-			     height: 16px;
-			     cursor: pointer;
-			}
-			.ui-icon-user {
-			     background-image: url(@{'/public/stylesheets/ui-lightness/images/user.png'});
-			}
-			
-			.storySummary {
-				margin:5px 0;
-				cursor:move;
-				background: #fefcea; /* old browsers */
-				background: -moz-linear-gradient(top, #FBF4C2 0%, #f1da36 100%); /* firefox */
-				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#FBF4C2), color-stop(100%,#f1da36)); /* webkit */
-				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#FBF4C2', endColorstr='#f1da36',GradientType=0 ); /* ie */
-				border: 1px solid #FED22F;
-			}
-			
-			.sprintWrapper{
-				vertical-align: top;
-			}
-			
-			.selected {
-				border: 1px solid #FF0F0F;  
-			}
-			
-			.unselected {
-				border: 1px solid #dddddd;  
-			}
-			
-			.sprintSummary p{
-				margin: 0px;
-			}
-			
-			.sprintSummary h2{
-				text-align: center;
-			}
-			
-			.sprintSummary .label{
-				font-weight: bold;
-			}
-			
-			.sprintSummary .value{
-				margin-left: 5px;
-			}
-			
-			.sprintSummary:hover{
-				border: 1px solid #d0d000;
-			}
-			
-			.sprintSummary{
-				padding:5px;
-				background: #008800;
-			    background: -moz-linear-gradient(top, #00ffff, #FFFFFF);
-			    background: -webkit-gradient(linear,  left top, left bottom, from(#00ffff), to(#FFFFFF));
-			    filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='#00ffff', EndColorStr='#FFFFFF', GradientType=0);
-				display: inline-block;
-				cursor: pointer;
-				margin-bottom:5px;
-				margin-left:5px;
-				vertical-align:top;
-				border: 1px solid #dddddd;
-				min-width: 250px;
-			}
-			
-			.roundedBox {
-				-moz-border-radius:10px;
-			  	-webkit-border-radius:10px;
-			  	-moz-box-shadow:0 0 5px #888888;
-			  	-webkit-box-shadow:0 0 5px #888888;
-			}
-			
-			.sprintSummary-selected{
-				border: 1px solid #d0d000;
-			}
-			
-			
-			.taskSummary {
-			    background: #87e0fd; /* old browsers */
-                background: -moz-linear-gradient(top, #87e0fd 0%, #53cbf1 40%, #05abe0 100%); /* firefox */
-                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#87e0fd), color-stop(40%,#53cbf1), color-stop(100%,#05abe0)); /* webkit */
-                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#87e0fd', endColorstr='#05abe0',GradientType=0 ); /* ie */
-                border: 1px solid #87e0fd;
-			}
-			
-			.taskSummary-completed {
-			    background: #bfd255; /* old browsers */
-                background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 100%); /* firefox */
-                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bfd255), color-stop(50%,#8eb92a), color-stop(100%,#72aa00)); /* webkit */
-                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#72aa00',GradientType=0 ); /* ie */
-                border: 1px solid #b4e391;
-			}
-			
-			.taskSummary-completed-old {
-				background: #008800;
-			    /* Mozilla: */
-			    background: -moz-linear-gradient(top, #FFFFFF,#808000);
-			    /* Chrome, Safari:*/
-			    background: -webkit-gradient(linear,
-			                left top, left bottom, from(#FFFFFF), to(#808000));
-			    /* MSIE */
-			    filter: progid:DXImageTransform.Microsoft.Gradient(
-			                StartColorStr='#FFFFFF', EndColorStr='#808000', GradientType=0);
-			    border: 1px solid #dddddd; 
-			    /*background: #eeeeee url(@{'/public/stylesheets/ui-lightness/images/ui-bg-widget_808000_1x100.png'}) 50% top repeat-x; color: #333333;*/
-			}
-			
-			.card-info span.priority {
-				float:left;
-			}
-			.card-info span.points {
-				float:right;
-			}
-			.card-info span.assignee {
-			     margin-left:15px;
-			}
-			.data-textArea
-			{
-			    width:100%;
-			}
-			.textwrapper
-			{
-			    border:1px solid #999999;
-			    margin:5px 0;
-			    padding:3px;
-			}
-			label, input, textarea { display:block; }
-			input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
-			fieldset { padding:0; border:0; margin-top:25px; }
-			.ui-datepicker { z-index: 1003 !important; }
-			
-		</style>	
 	</head>
 	<body>
 		
 			
 		<!-- Highlight / Error -->
-		<div class="demoHeaders">
+		<div class="sprintContainer">
 			<h2 >Sprints <button id="addSprint">Add Sprint</button></h2>
 			<div class="sprintWrapper">
 	        </div>
