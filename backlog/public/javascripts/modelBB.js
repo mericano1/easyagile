@@ -10,25 +10,51 @@ var sprintTemplate =
 		"<%}else{%>" +
 		"<h2>Unassigned</h2>" +
 		"<%}%>";
+var sprintFormTemplate = 
+	"<div id='dialog-form-sprint'> " +
+		"<p class='validateTips'>Name is required.</p>" + 
+		"<form>" + 
+		"<fieldset>" + 
+			"<label for='name'>Name</label>" + 
+			"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' value='<%=sprint?sprint.display('name'):''%>'></input>" + 
+			"<label for='startDate'>Start Date</label>" + 
+			"<input type='text' name='startDate' id='startDate' class='text ui-widget-content ui-corner-all' value='<%=sprint?sprint.display('startDate'):''%>' >" + 
+			"<label for='endDate'>End Date</label>" + 
+			"<input type='text' name='endDate' id='endDate' class='text ui-widget-content ui-corner-all' value='<%=sprint?sprint.display('endDate'):''%>' >" + 
+		"</fieldset>" + 
+		"</form>" + 
+	"</div>";
 
 var storyTemplate = "";
 var taskTemplate = "";
 var storiesHeaderTemplate = 
 		"<div class='headerButtons'>" +
 		"<button id='addStory'>Add Story</button>" +
-		"<button id='saveStories'>Save Session</button>" +
+		"<input type='checkbox' id='hideCompleted'>Hide Completed</input>" +
 		"<p id='userMessages' style='display:inline; margin-left:20px;'>" +
 		"</div>" + 
 		"<div class='left-panel'></div>" +
 		"<div class='right-panel'></div>" ;
 
-leftPanel = $("<div class='left-panel'/>");
-rightPanel = $("<div class='right-panel'/>");
 var sprintsHeaderTemplate = 
 		"<span>Sprints</span> <button id='addSprint'>Add Sprint</button>" +
 		"<div class='sprintWrapper'>" +
 		"</div>" ;
-		
+var storyTaskFormTemplate = 
+		"<div> " +
+			"<p class='validateTips'>All form fields are required.</p>" + 
+			"<form>" + 
+			"<fieldset>" + 
+				"<label for='name'>Name</label>" + 
+				"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
+				"<label for='description'>Description</label>" + 
+				"<textarea name='description' id='description' value='' class='text ui-widget-content ui-corner-all' rows='10' ></textarea>" + 
+				"<label for='points'>Points</label>" + 
+				"<input type='points' name='points' id='points' value='' class='text ui-widget-content ui-corner-all' ></input>" + 
+			"</fieldset>" + 
+			"</form>" + 
+		"</div>";		
+
 //-----------------------------------------------------------------------
 // Statics
 //-----------------------------------------------------------------------
@@ -100,11 +126,14 @@ Statics.getFormDialog= function(buttons){
 }
 
 Statics.getFormObject = function(form){
-	return {
+	obj = {
 		name:$( "#name", form ).val().trim(),
-		description:$( "#description", form  ).val().trim(),
-		points:parseInt($( "#points", form ).val().trim()),
+		description:$( "#description", form  ).val().trim()
 	}
+	if ($( "#points", form ).val().trim() != ''){
+		obj.points = parseInt($( "#points", form ).val().trim());
+	}
+	return obj;
 }
 
 //shows the add new form. It takes 2 functions, onSave and onCancel.
@@ -130,20 +159,7 @@ Statics.showAddNewForm = function(onSave, onCancel){
 
 
 Statics.getFormBlock= function(){
-	html = "<div> " +
-		"<p class='validateTips'>All form fields are required.</p>" + 
-		"<form>" + 
-		"<fieldset>" + 
-			"<label for='name'>Name</label>" + 
-			"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
-			"<label for='description'>Description</label>" + 
-			"<textarea name='description' id='description' value='' class='text ui-widget-content ui-corner-all' rows='10' ></textarea>" + 
-			"<label for='points'>Points</label>" + 
-			"<input type='points' name='points' id='points' value='' class='text ui-widget-content ui-corner-all' ></input>" + 
-		"</fieldset>" + 
-		"</form>" + 
-	"</div>";
-	return $(html);
+	return $(storyTaskFormTemplate);
 }
 
 //-----------------------------------------------------------------------
@@ -165,7 +181,7 @@ var WorkUnit = BaseModel.extend({
     increaseIndex : function(num) { this.set({'index' : this.get('index')+ num}); },
 	decreaseIndex : function(num) {	this.set({'index' : this.get('index')- num}); },
 	validate: function(attrs){
-		if (_(attrs.points).isNaN()){ return "points have to be numeric";}
+		if (_(attrs.points).isNaN()){ alert("points have to be numeric");}
 	}
 });
 var Story = WorkUnit.extend({});
@@ -241,20 +257,17 @@ var SprintView = Backbone.View.extend({
 		$(this.el).html(this.template({sprint:this.model}));
 		return this;
 	},
-	markSelected : function(){ $(this.el).addClass(this.css.selected);	},
-	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected)},
+	markSelected : function(){ $(this.el).addClass(this.css.selected);	this.selected = true;},
+	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected); this.selected = false;},
 	loadSprint:function(){
 		//if (!this.storyContainer){
-			this.header = new StoriesHeaderView;
-			this.header.el = Statics.settings.backlogEl;
-			this.header.render();
-			this.storyContainer = new StoryListView({
-				collection: this.stories,
-				el: $('.left-panel', this.header.el),
-				tasks_el : $('.right-panel', this.header.el),
-				tasks_url : Statics.settings.tasksUrl
-			});
-			this.stories.fetch();
+		this.storyContainer = new StoryContainerView({
+			el: Statics.settings.backlogEl,
+			collection : this.stories,
+			tasks_url : Statics.settings.tasksUrl
+		});
+		this.stories.fetch();
+		this.trigger('selected', this);
 		/*}else {
 			this.header.render();
 			this.storyContainer.render();
@@ -309,14 +322,14 @@ var BaseView = Backbone.View.extend({
 				.addClass(this.css.incompleted);
 		}
 	},
-	markSelected : function(){ $(this.el).children(':first').children(':first').addClass(this.css.selected);	},
-	unmarkSelected : function(){ $(this.el).children(':first').children(':first').removeClass(this.css.selected)},
+	markSelected : function(){ $(this.el).children(':first').children(':first').addClass(this.css.selected); this.selected = true;	},
+	unmarkSelected : function(){ $(this.el).children(':first').children(':first').removeClass(this.css.selected); this.selected = false;},
 	changeName : function(){$(".name", this.el).text(this.model.get('name'));},
 	changeDescription : function(){$(".description", this.el).html(this.model.get('description'));},
 	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
 	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
-	setVisible : function(){this.visible = true; $(this.el).show();},
-	setInvisible : function(){this.visible = false; $(this.el).hide();},
+	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
+	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide();},
 	isVisible : function(){return this.visible;},
 	getChangeForm: function(onSave){
 		var buttons = {
@@ -409,7 +422,7 @@ var TaskView = BaseView.extend({
 	toggleCompleted: function(){this.model.set({completed: !this.model.get('completed')});}
 });
 
-TaskViewStatics.getNoTaskAvailableBlock = function(container){
+TaskViewStatics.getNoTaskAvailableBlock = function(){
 	html = Statics.getHtmlBlock(new Task({name:"No Tasks are available", description:"Click on 'Add Task' to add one", points:""}), TaskViewStatics.css);
 	$(".ui-icon, .points, .priority, .ui-icon-custom", html).remove();
 	return html;
@@ -481,22 +494,26 @@ var StoryView = BaseView.extend({
 	initialize: function(){
 		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
 		BaseView.prototype.initialize.call(this);
+		_.bindAll(this, 'changeTaskCompleted');
 		this.tasks = new TaskList();
 		this.tasks.url = Statics.settings.tasksUrl + this.model.id;
+		this.tasks.bind('change:completed', this.changeTaskCompleted);
 	},
 	events : {
 		"click .ui-icon-plusthick": "showNewTaskForm",
 		"click .ui-icon-triangle-1-e": "showTasks",
 		"click .ui-icon-trash": "remove",
 		"click .ui-icon-pencil": "showChangeForm",
+		"click .ui-icon-pin-w" : "togglePinTasks",
 		"dblclick":"showChangeForm"
 	},
 	render: function(){
 		html = Statics.getHtmlBlock(this.model, this.css);
 		//Adds story specific icons
+		//$("<span id='togglePinTasks' class='ui-icon ui-icon-pin-w' title='Pin this story\'s tasks' style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info", html));
 		$("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info",html));
 		$("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil", html));
-		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil",  html).button();
+		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil, .ui-icon-pin-w",  html).button();
 		//mark changed
 		if (this.model.get('changed')){$(".name", this.el).append($("<span>",{'class':"changed", 'css':{'display':'inline'}, text:'*'}));		}
 		$(this.el).html(html);
@@ -510,24 +527,58 @@ var StoryView = BaseView.extend({
 		task.index = this.tasks.length;
 		this.tasks.add(task);
 	},
+	togglePinTasks: function(){
+		//$("#togglePinTasks",this.el).toggleClass('ui-icon-pin-s').toggleClass('ui-icon-pin-w');
+	},
 	showTasks : function(){
 		if (_.isUndefined(this.taskContainer)){
 			this.taskContainer = new TaskListView({
 				collection: this.tasks,
 				el: this.options.tasks_el
 			});
-			this.tasks.fetch();
+			//don't try to fetch if its a new model
+			if (!this.model.isNew()){
+				this.tasks.fetch();
+			}else { 
+				this.taskContainer.render();
+			}
 		} else {
 			this.taskContainer.render();
 		}
+		this.trigger('selected', this);
 	},
 	showNewTaskForm : function(toSave){
-		var that = this;
+		var self = this;
 		TaskViewStatics.showAddNewForm(function(toSave){
-			that.addTask(toSave);
+			self.addTask(toSave);
 			$(this).dialog("close");
 		});
+		this.showTasks();
+	},
+	changeTaskCompleted: function(){
+		var self = this;
+		this.tasks.each(function(task){
+			if (_(task.get('completed')).isUndefined() || task.get('completed')==false ){
+				self.model.set({'completed':false});
+				return {}; // breaker object
+			}else {
+				self.model.set({'completed':true});
+			}
+		});
+	},
+	setInvisible: function(){		
+		BaseView.prototype.setInvisible.call(this);
+		if (this.selected){
+			$(this.options.tasks_el).empty();
+		}
+	},
+	setVisible: function(){
+		BaseView.prototype.setVisible.call(this);
+		if (this.selected){
+			this.showTasks();
+		}
 	}
+	
 });
 
 //-----------------------------------------------------------------------
@@ -547,50 +598,53 @@ var StoryList = BaseList.extend({
 //-----------------------------------------------------------------------
 var CollectionView = Backbone.View.extend({
 	initialize:function(){
-		_.bindAll(this, 'loadAndRender','add', 'remove', 'render');
-		this.collection.bind('refresh', this.loadAndRender);
+		_.bindAll(this, 'add', 'remove', 'render', 'addView', 'onSelected');
+		this.collection.bind('refresh', this.render);
 		this.collection.bind('add', this.add);
 		this.collection.bind('remove', this.remove);
 	},
 	render:function(){
 		//loads the views from the collection
 		this.loadViews();
-		// We keep track of the rendered state of the view
-	    this._rendered = true;
-		var that = this;
+		var self = this;
 	    // Clear out this element.
 	    $(this.el).empty();
 	 
 	    // Render each sub-view and append it to the parent view's element.
 	    _(this._modelViews).each(function(sv) {
-	      $(that.el).append(sv.render().el);
+	      $(self.el).append(sv.render().el);
 	      sv.delegateEvents();
 	    });
 	    return this;
 	},
 	add: function(model){
-		view = this.viewFactory(model);
-		this._modelViews.push(view);
-		if (this._rendered) {
-			$(this.el).append(view.render().el);
-		}
+		var view = this.addView(model);
+		if (this.collection.length ==1){$(this.el).empty();} // if its first element lets clear the div 
+		$(this.el).append(view.render().el);
+		view.delegateEvents();
 	},
 	remove:function(model){
 		var viewToRemove = _(this._modelViews).select(function(cv) { return cv.model === model; })[0];
 	    this._modelViews = _(this._modelViews).without(viewToRemove);
-	 
-	    if (this._rendered) $(viewToRemove.el).remove();
+	    $(viewToRemove.el).remove();
 	},
 	loadViews:function(){
-		var that = this;
+		var self = this;
 		this._modelViews = [];
-		this.collection.each(function(model){
-			that._modelViews.push(that.viewFactory(model));
-		});
+		this.collection.each(this.addView);
 	},
-	loadAndRender:function(){
-		this.loadViews();
-		this.render();
+	addView : function(model){
+		var curView = this.viewFactory(model);
+		curView.bind('selected', this.onSelected);
+		this._modelViews.push(curView);
+		return curView;
+	},
+	onSelected:function(view){
+		view.markSelected();
+		deselect = _(this._modelViews).without(view);
+		_(deselect).each(function(aView){
+			aView.unmarkSelected();
+		})
 	}
 });
 
@@ -631,7 +685,7 @@ var SortableView = CollectionView.extend({
 			}
 		}
 		model.set({'index': newIndex});
-		dataSet.sort({silent:true});
+		dataSet.sort();
 	},
 	onDragStart : function(event, ui){
 		
@@ -640,55 +694,44 @@ var SortableView = CollectionView.extend({
 });
 
 var StoryListView = SortableView.extend({
-	events:{
-		"click .ui-icon-triangle-1-e" : "markSelected"
-	},
-	markSelected: function(event){
-		view = this;
-		target = event.target;
-		$('.ui-icon-triangle-1-e', this.el).each(function(index, value){
-			if (value === target){
-				view._modelViews[index].markSelected();
-			}else{
-				view._modelViews[index].unmarkSelected();
-			}
-		});
-	},
 	viewFactory: function(model){
 		return new StoryView({model:model, tasks_url:this.options.tasks_url, tasks_el:this.options.tasks_el});
 	}
 });
+
 var TaskListView = SortableView.extend({
 	viewFactory: function(model){
 		return new TaskView({model:model});
+	},
+	render:function(){
+		SortableView.prototype.render.call(this);
+		if (this.collection == null || this.collection.length == 0){
+			$(this.el).empty().append(TaskViewStatics.getNoTaskAvailableBlock());
+		}else{
+		}
 	}
 });
 
 var SprintListView = CollectionView.extend({
-	events:{
-		"click": "markSelected"
-	},
-	viewFactory: function(model){
+		viewFactory: function(model){
 		return new SprintView({model:model});
-	},
-	markSelected: function(event){
-		view = this;
-		clickTarget = event.target;
-		$('.sprintSummary', this.el).each(function(index, value){
-			if (value === clickTarget || $(clickTarget).parents().is(value)){
-				view._modelViews[index].markSelected();
-			}else{
-				view._modelViews[index].unmarkSelected();
-			}
-		});
-		
 	}
 });
 
-var StoriesHeaderView = Backbone.View.extend({
+var StoryContainerView = Backbone.View.extend({
+	initialize:function(){
+		_.bindAll(this, "addStory");
+		this.render();
+		this.collection = this.options.collection;
+		this.storyList = new StoryListView({
+			collection: this.collection,
+			el: $('.left-panel', this.el),
+			tasks_el : $('.right-panel', this.el),
+		});
+	},
 	events:{
 		"click #addStory" : "addStory",
-		"click #saveStories" : "saveStories"
+		"change #hideCompleted" : "toggleCompleted"
 	},
 	render: function(){
 		html = _.template(storiesHeaderTemplate,{});
@@ -698,10 +741,31 @@ var StoriesHeaderView = Backbone.View.extend({
 		return this;
 	},
 	addStory: function(){
-		alert("not yet implemented");
+		var self = this;
+		StoryViewStatics.showAddNewForm(function(toSave){
+			toSave.index = self.collection.length;
+			self.collection.add(toSave);
+		});
 	},
-	saveStories:function(){
-		alert("not yet implemented");
+	toggleCompleted: function(){
+		var self = this;
+		checkbox = $("#hideCompleted", this.el);
+		if (checkbox.is(":checked")){
+			this.collection.each(function(model, index){
+				if (model.get('completed')){
+					model.view.setInvisible();
+					if (index === self.storyList.selected){
+						$('.right-panel', self.el).empty();
+					}
+				}
+			});
+		}else{
+			this.collection.each(function(model){
+				if (model.get('completed')){
+					model.view.setVisible();
+				}
+			});
+		}
 	} 
 });
 

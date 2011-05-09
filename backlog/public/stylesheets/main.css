@@ -41,6 +41,9 @@ ul#icons span.ui-icon {float: left; margin: 0 4px;}
 	vertical-align: top;
 	float: right;
 }
+.headerButtons input, label {
+	display: inline;
+}
 .storySummary {
 	margin:5px 0;
 	cursor:move;
@@ -51,16 +54,22 @@ ul#icons span.ui-icon {float: left; margin: 0 4px;}
 	border: 1px solid #FED22F;
 }
 
+.storySummary-completed {
+	 background: #bfd255; /* old browsers */
+     background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 100%); /* firefox */
+     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bfd255), color-stop(50%,#8eb92a), color-stop(100%,#72aa00)); /* webkit */
+     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#72aa00',GradientType=0 ); /* ie */
+     border: 1px solid #829376;
+     margin: 5px 0;
+     cursor:move;
+}
+
 .sprintWrapper{
 	vertical-align: top;
 }
 
 .storySummary-selected {
 	border: 1px solid #0099FF;  
-}
-
-.unselected {
-	border: 1px solid #dddddd;  
 }
 
 .sprintSummary p{
