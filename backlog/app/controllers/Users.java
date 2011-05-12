@@ -9,7 +9,7 @@ import play.mvc.With;
 @With(Application.class)
 public class Users extends Controller {
 
-	public static void getAll(){
+	public static void all(){
 		List<User> findAll = User.findAll();
 		renderJSON(findAll);
 	}

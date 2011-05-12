@@ -19,8 +19,20 @@ public class Sprint extends ObjectifyModel<Sprint>{
 	public Date startDate;
 	public Date endDate;
 	public Boolean current;
+
+	public Sprint() {}
 	
-    public static Sprint findById(Long sprintId) {
+	
+	
+    public Sprint(Long id, String name) {
+		super();
+		this.id = id;
+		this.name = name;
+	}
+
+
+
+	public static Sprint findById(Long sprintId) {
     	Key<Sprint> key = Datastore.key(Sprint.class, sprintId);
         return Datastore.find(key);
     }

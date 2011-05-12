@@ -1,7 +1,6 @@
 # you describe your data using the YAML notation here
 # and then load them using Fixtures.load("data.yml")
-
-Sprint(first):
+Sprint(sprint1):
    name: sprint1
    startDate: 2010-11-23 15:03:17 -5
    endDate: 2011-11-23 15:03:17 -5
@@ -12,25 +11,25 @@ Story(story2):
    index: 1
    description: story2 desc
    points: 6
-   sprint: first
+   sprint: sprint1
 
 Story(story1):
    name: story1
    index: 0
    description: story1 desc
    points: 4
-   sprint: first
+   sprint: sprint1
 
 Story(story3):
    name: story3
    index: 2
    description: story3 desc
    points: 8
-   sprint: first
+   sprint: sprint1
 
 Story(story4):
    name: story4
    index: 3
    description: story4 desc
    points: 31
-   sprint: first
+   sprint: sprint1

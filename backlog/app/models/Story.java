@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import play.data.validation.Required;
 import play.modules.objectify.Datastore;
 import play.modules.objectify.ObjectifyModel;
+import utils.Assert;
 
 import com.googlecode.objectify.Key;
 
@@ -21,8 +22,8 @@ public class Story extends ObjectifyModel<Story>{
     public Key<Sprint> sprint;
     
     public static Story findById(Long storyId) {
+    	Assert.notNull(storyId, "Story id cannot be null");
     	Key<Story> key = new Key<Story>(Story.class, storyId);
-    	//Key<Story> key = Datastore.key(Sprint.class, sprintId, Story.class, storyId);
         return Datastore.find(key);
     }
     
@@ -34,6 +35,7 @@ public class Story extends ObjectifyModel<Story>{
     }
     
     public static List<Story> findBySprint(Long sprintId) {
+    	Assert.notNull(sprintId, "Story id cannot be null");
     	List<Story> list = Datastore.query(Story.class)
     	.filter("sprint", Datastore.key(Sprint.class, sprintId))
     	.order("index")
@@ -48,6 +50,16 @@ public class Story extends ObjectifyModel<Story>{
     public static List<Story> findAll() {
         return Datastore.query(Story.class).order("index").list();
     }
+    
+    public static List<Story> findByStartName(String name) {
+        return Datastore.query(Story.class)
+        .filter("name >=", name)
+        .filter("name <", name + '\uFFFD')
+        .order("name")
+        .order("index")
+        .list();
+    }
+    
     
     public Key<Story> save() {
         return Datastore.put(this);

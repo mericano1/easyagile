@@ -3,10 +3,46 @@
 # ~~~~
 
 # Home page
-GET     /                                       Application.index
+GET     /                                       		Application.index
 
 # Map static resources from the /app/public folder to the /public path
-GET     /public/                                staticDir:public
+GET     /public/                                		staticDir:public
+
+#Sprints
+GET		/sprints										Sprints.all
+GET		/sprints/{<[0-9]+>sprintId}						Sprints.byId
+POST	/sprints										Sprints.save
+PUT		/sprints/{<[0-9]+>sprintId}						Sprints.update
+DELETE  /sprints/{<[0-9]+>sprintId}						Sprints.delete
+
+
+#Stories
+GET		/sprints/0/stories												Stories.unassigned
+GET		/sprints/{<[0-9]+>sprintId}/stories								Stories.bySprint
+GET		/stories														Stories.all
+GET		/stories/{<[0-9]+>storyId}										Stories.byId
+POST	/sprints/{<[0-9]+>sprintId}/stories								Stories.save
+PUT		/stories/{<[0-9]+>storyId}										Stories.update
+PUT		/stories														Stories.updateIndexes
+PUT		/sprints/{<[0-9]+>sprintId}/stories								Stories.updateIndexes
+PUT		/sprints/{<[0-9]+>sprintId}/stories/{<[0-9]+>storyId}			Stories.update
+DELETE  /stories/{<[0-9]+>storyId}										Stories.delete
+DELETE  /sprints/{<[0-9]+>sprintId}/stories/{<[0-9]+>storyId}			Stories.delete
+
+
+#Tasks
+GET		/stories/{<[0-9]+>storyId}/tasks						Tasks.byStory
+GET		/stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.byId
+POST	/stories/{<[0-9]+>storyId}/tasks						Tasks.save
+PUT		/stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.update
+PUT		/stories/{<[0-9]+>storyId}/tasks						Tasks.updateIndexes
+DELETE  /stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.delete
+
+
+#Users
+GET		/users													Users.all
+
+
 
 # Catch all
 *       /{controller}/{action}                  {controller}.{action}

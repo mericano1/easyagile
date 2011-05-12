@@ -113,7 +113,7 @@ test('Task form - getValuedFormBlock', function(){
 	parent = $("<div>").append(form);
 	
 	equals($("#dialog-form-story", parent).length, 1, 'form has wrong id' + parent.html());
-	equals(form.attr("title"), "Story details", 'title incorrect' + parent.html());
+	//equals(form.attr("title"), "Story details", 'title incorrect' + parent.html());
 	equals($("#name", form).val(), "test story 2", 'name is incorrect' + form.html());
 	equals($("#description", form).val(), "test story2 desc", 'desc is incorrect' + form.html());
 	equals($("#points", form).val(), "", 'points is incorrect' + form.html());
@@ -128,7 +128,7 @@ test('Task form - getValuedFormBlock', function(){
 	parent = $("<div>").append(form);
 	
 	equals($("#dialog-form-task", parent).length, 1, 'form has wrong id' + parent.html());
-	equals(form.attr("title"), "Task details", 'title incorrect' + form.html());
+	//equals(form.attr("title"), "Task details", 'title incorrect' + form.html());
 	equals($("#name", form).val(), "task1", 'name is incorrect' + form.html());
 	equals($("#description", form).val(), "test task desc", 'desc is incorrect' + form.html());
 	equals($("#points", form).val(), "", 'points is incorrect' + form.html());
@@ -327,6 +327,7 @@ test('test create story array', function(){
 	equals(storyObjs.length, 25, 'wrong size');
 	storyObjs.each(function(value, index){
 		equals(value.get('id'), stories[index]["id"], 'wrong id');
+		equals(value.get('index'), stories[index]["index"], 'wrong index');
 		equals(value.get('name'), stories[index]["name"], 'wrong name');
 		equals(value.get('points'), stories[index]["points"], 'wrong points');
 		equals(value.get('description'), stories[index]["description"], 'wrong description');
@@ -343,6 +344,7 @@ test('test create task array', function(){
 	equals(taskObjs.length, 9, 'wrong size');
 	taskObjs.each(function(value, index){
 		equals(value.get('id'), tasks[index]["id"], 'wrong id');
+		equals(value.get('index'), tasks[index]["index"], 'wrong index');
 		equals(value.get('name'), tasks[index]["name"], 'wrong name');
 		equals(value.get('points'), tasks[index]["points"], 'wrong points');
 		equals(value.get('description'), tasks[index]["description"], 'wrong description');
@@ -350,3 +352,147 @@ test('test create task array', function(){
 		equals(value.get('completed'), tasks[index]["completed"], 'wrong assignee');
 	});
 });
+
+
+test('test task change index', function(){
+	var tasks = [{"id":1,"name":"layout","description":"","index":0,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},
+	             {"id":3002,"name":"Bug - player edit","description":"To recreate: register new user. Click edit player info.","index":1,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},
+	             {"id":1001,"name":"Front page image (600p x 400p)","description":"","index":2,"points":3,"story":{"kindClassName":"models.Story","id":7001}},
+	             {"id":5001,"name":"Bug","description":"edit match- invisible email\u0027s guideline still visible","index":3,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},
+	             {"id":3001,"name":"Bug","description":"When user is logged in and a match is created it goes to match page and not MatchPlayerHome","index":4,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"},
+	             {"id":2001,"name":"Front page text","description":"","index":5,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},
+	             {"id":4001,"name":"Bug","description":"Bug: edit match- don\u0027t show creator in list of participants","index":6,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},
+	             {"id":2002,"name":"Bug","description":"after register in authentication page, too many flash msgs\n\u003cbr/\u003e\n\u003cbr/\u003e\n\u003cb\u003eNote\u003c/b\u003e\u003cbr/\u003e\nThis was not a real bug. We saw duplicated messages because of the duplicated matches created","index":7,"points":1,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"mdenieffe@gmail.com"},
+	             {"id":6001,"name":"Bug","description":"How to recreate:\n\u003col\u003e\n\u003cli\u003eCreate a match not as anonymous\u003c/li\u003e\n\u003cli\u003eSkip login after create match.\u003c/li\u003e\n\u003cli\u003eClick on the confirmation link sent thru email\u003c/li\u003e\n\u003c/ol\u003e\n\u003cp\u003eResult: Logged in user is messed up\u003c/p\u003e\n\u003cp\u003eExpected : User that created the match is logged in\u003c/p\u003e","index":8,"points":2,"completed":true,"story":{"kindClassName":"models.Story","id":7001},"assignee":"ftrilnik@gmail.com"}];
+	
+	var taskObjs = new TaskList(tasks);
+	equals(taskObjs.length, 9, 'wrong size');
+	//swap indexes
+	taskObjs.at(0).set({index:1});
+	taskObjs.at(1).set({index:0});
+	taskObjs.sort();
+	//assert the changed indexes are in the array
+	equals(taskObjs.changedIndexes.length, 2, 'wrong changed index size');
+	var options = null;
+    jQuery.ajax = function (param) {
+        options = param;
+    };
+    
+    taskObjs.saveIndexes();
+    same('[{"id":3002,"index":0},{"id":1,"index":1}]', options.data);
+    
+    options.success();
+    equals(taskObjs.changedIndexes.length, 0, 'changed indexes dont get reset');
+    
+    //delete second item
+    var second = taskObjs.at(1);
+    taskObjs.remove(second);
+    equals(taskObjs.length, 8, 'wrong size');
+    //check indexes
+    
+    taskObjs.each(function(model,index){
+    	same(index, model.get('index'),'index is not right');
+    });
+    
+    equals(taskObjs.changedIndexes.length, taskObjs.length - 1, 'wrong number of indexes for an update' + taskObjs.changedIndexes);
+    
+	
+});
+
+
+test('test story change index', function(){
+	var stories = [{"id":7001,"name":"(NOT SO) Simplest possible create a match","description":"basic web application to create a match, send notification to friends and collect participations","points":14,"index":0},
+	               {"id":2002,"name":"Int tests for features","description":"","points":5,"index":1},{"id":2003,"name":"Feedback slideout","description":"","points":3,"index":2},{"id":6001,"name":"Publish to prod","description":"","index":3},{"id":16001,"name":"Logged user redirected to player home","description":"After login the user should be redirected to player home page","index":4},{"id":17001,"name":"Add password","description":"After a participant follows the link from the email and goes to the MatchPlayer page, if the user is not registered (not password) a button should appear to allow the user to add a password","points":0,"index":5},{"id":18001,"name":"Error page","description":"Add a nice error page to redirect in case of errors","index":6},{"id":15001,"name":"Customer feedback","description":"we need to talk to the users / customers to get a better idea of what we need\u003cbr/\u003e\nCheck tasks-\u003e","index":7},{"id":11001,"name":"Add button to ask system to resend confirmation email","description":"If the user deleted email, he won\u0027t be able to login. (From mike- need clarification on exactly what this means. Forgot now).","points":0,"index":8},{"id":8004,"name":"Player edit","index":9},{"id":7003,"name":"Match update- should go back to MatchPlayerHome. No new emails sent.","index":10},{"id":7002,"name":"Color of items in menu bar- make better","index":11},{"id":7005,"name":"Style MatchPlayerHome","index":12},{"id":9005,"name":"No allow duplicate emails in system","index":13},{"id":11003,"name":"No allow duplicate emails in system","index":14},{"id":11005,"name":"Date picker- make knobs more visible","index":15},{"id":8005,"name":"Automate publish to prod in Hudson","index":16},{"id":10005,"name":"https login","index":17},{"id":7004,"name":"Clean up css","index":18},{"id":9004,"name":"Facebook- select participants from FB","index":19},{"id":7006,"name":"Logout goes to home","index":20},{"id":11004,"name":"Strategy to update db (liquibase?)","index":21},{"id":8008,"name":"Facebook - use fgraph","index":22},{"id":8006,"name":"Style all buttons the same","index":23},{"id":19001,"name":"Cancel button problem in edit player","description":"Cancel button in edit player page is same as back button, so does not necessarily cancel out of the page.","index":24}];
+	
+	var storyObjs = new StoryList(stories);
+	equals(storyObjs.length, 25, 'wrong size');
+	storyObjs.each(function(value, index){
+		equals(value.get('id'), stories[index]["id"], 'wrong id');
+		equals(value.get('index'), stories[index]["index"], 'wrong index');
+		equals(value.get('name'), stories[index]["name"], 'wrong name');
+		equals(value.get('points'), stories[index]["points"], 'wrong points');
+		equals(value.get('description'), stories[index]["description"], 'wrong description');
+		
+	});
+	
+	storyObjs.at(0).set({index:1});
+	storyObjs.at(1).set({index:0});
+	storyObjs.sort();
+	//assert the changed indexes are in the array
+	equals(storyObjs.changedIndexes.length, 2, 'wrong changed index size');
+	
+	var options = null;
+    jQuery.ajax = function (param) {
+        options = param;
+    };
+    
+    storyObjs.saveIndexes();
+    same('[{"id":2002,"index":0},{"id":7001,"index":1}]', options.data);
+    
+    options.success();
+    equals(storyObjs.changedIndexes.length, 0, 'changed indexes dont get reset');
+    
+    //delete second item
+    var second = storyObjs.at(1);
+    storyObjs.remove(second);
+    equals(storyObjs.length, 24, 'wrong size');
+    //check indexes
+    
+    storyObjs.each(function(model,index){
+    	same(index, model.get('index'),'index is not right');
+    });
+    
+    equals(storyObjs.changedIndexes.length, storyObjs.length - 1, 'wrong number of indexes for an update' + storyObjs.changedIndexes);
+});
+
+test('swap and swap back indexes', function(){
+	var stories = [{"id":7001,"name":"(NOT SO) Simplest possible create a match","description":"basic web application to create a match, send notification to friends and collect participations","points":14,"index":0},
+	               {"id":2002,"name":"Int tests for features","description":"","points":5,"index":1},{"id":2003,"name":"Feedback slideout","description":"","points":3,"index":2},{"id":6001,"name":"Publish to prod","description":"","index":3},{"id":16001,"name":"Logged user redirected to player home","description":"After login the user should be redirected to player home page","index":4},{"id":17001,"name":"Add password","description":"After a participant follows the link from the email and goes to the MatchPlayer page, if the user is not registered (not password) a button should appear to allow the user to add a password","points":0,"index":5},{"id":18001,"name":"Error page","description":"Add a nice error page to redirect in case of errors","index":6},{"id":15001,"name":"Customer feedback","description":"we need to talk to the users / customers to get a better idea of what we need\u003cbr/\u003e\nCheck tasks-\u003e","index":7},{"id":11001,"name":"Add button to ask system to resend confirmation email","description":"If the user deleted email, he won\u0027t be able to login. (From mike- need clarification on exactly what this means. Forgot now).","points":0,"index":8},{"id":8004,"name":"Player edit","index":9},{"id":7003,"name":"Match update- should go back to MatchPlayerHome. No new emails sent.","index":10},{"id":7002,"name":"Color of items in menu bar- make better","index":11},{"id":7005,"name":"Style MatchPlayerHome","index":12},{"id":9005,"name":"No allow duplicate emails in system","index":13},{"id":11003,"name":"No allow duplicate emails in system","index":14},{"id":11005,"name":"Date picker- make knobs more visible","index":15},{"id":8005,"name":"Automate publish to prod in Hudson","index":16},{"id":10005,"name":"https login","index":17},{"id":7004,"name":"Clean up css","index":18},{"id":9004,"name":"Facebook- select participants from FB","index":19},{"id":7006,"name":"Logout goes to home","index":20},{"id":11004,"name":"Strategy to update db (liquibase?)","index":21},{"id":8008,"name":"Facebook - use fgraph","index":22},{"id":8006,"name":"Style all buttons the same","index":23},{"id":19001,"name":"Cancel button problem in edit player","description":"Cancel button in edit player page is same as back button, so does not necessarily cancel out of the page.","index":24}];
+	
+	var storyObjs = new StoryList(stories);
+	storyObjs.at(0).set({index:1});
+	storyObjs.at(1).set({index:0});
+	
+	//assert the changed indexes are in the array
+	equals(storyObjs.changedIndexes.length, 2, 'wrong changed index size');
+	
+	//swap back
+	storyObjs.at(0).set({index:0});
+	storyObjs.at(1).set({index:1});
+	
+	//assert the changed indexes is still the same
+	equals(storyObjs.changedIndexes.length, 2, 'changed index has duplicates');
+	
+	
+});
+
+
+test('tasks complete = story complete', function(){
+	var story = new StoryView({"id":7001,"name":"(NOT SO) Simplest possible create a match","description":"basic web application to create a match, send notification to friends and collect participations","points":14,"index":0});
+	var tasks = [{"id":3002,"name":"Bug - player edit","description":"To recreate: register new user. Click edit player info.","index":1,"points":1,"completed":false,"story":{"kindClassName":"models.Story","id":7001},"assignee":"michael.k.baxter@gmail.com"},
+	             {"id":1001,"name":"Front page image (600p x 400p)","description":"","index":2,"points":3,"story":{"kindClassName":"models.Story","id":7001}},
+	             {"id":5001,"name":"Bug","description":"edit match- invisible email\u0027s guideline still visible","index":3,"points":1,"completed":false,"story":{"kindClassName":"models.Story","id":7001},"assignee":"andrea.salvadore@gmail.com"}];
+
+	var storyEl = $(story.render().el);
+	story.tasks.add(tasks[0]);
+	story.tasks.add(tasks[1]);
+	story.tasks.add(tasks[2]);
+	
+	equals(story.$('.storySummary-completed').length, 0, 'no story complete class' + storyEl.html());
+	
+	var task1 = story.tasks.at(0);
+	var task2 = story.tasks.at(1);
+	var task3 = story.tasks.at(2);
+	
+	task3.set({'completed':true});
+	equals(story.$('.storySummary-completed').length, 0, 'no story complete class' + storyEl.html());
+	task2.set({'completed':true});
+	equals(story.$('.storySummary-completed').length, 0, 'no story complete class' + storyEl.html());
+	task1.set({'completed':true});
+	equals(story.$('.storySummary-completed').length, 1, 'story is now completed' + storyEl.html());
+	
+
+	
+});
+
+

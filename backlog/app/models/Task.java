@@ -10,8 +10,7 @@ import play.data.validation.Required;
 import play.modules.objectify.Datastore;
 import play.modules.objectify.ObjectifyModel;
 
-import com.google.appengine.repackaged.com.google.common.collect.Maps;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -52,6 +51,10 @@ public class Task extends ObjectifyModel<Task> {
     
     public void delete() {
         Datastore.delete(this);
+    }
+    
+    public static List<Task> findAll() {
+       return Datastore.query(Task.class).order("index").list();
     }
     
     public static List<Task> findAllByStory(Long storyId) {

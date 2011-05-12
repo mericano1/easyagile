@@ -3,7 +3,7 @@ package controllers;
 import java.util.Date;
 import java.util.Set;
 
-import com.google.appengine.repackaged.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 
 import models.User;
 import play.modules.gae.GAE;

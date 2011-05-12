@@ -13,8 +13,8 @@ import play.mvc.Scope;
 import play.mvc.Scope.RenderArgs;
 import play.test.FunctionalTest;
 
-import com.google.appengine.repackaged.com.google.common.base.Joiner;
-import com.google.appengine.repackaged.com.google.common.collect.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 public class TestHelper {
 	

@@ -2,8 +2,8 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 		<title>Backlog</title>
-		<link type="text/css" href="@{'/public/stylesheets/main.css'}" rel="stylesheet" />
 		<link type="text/css" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.11.custom.css'}" rel="stylesheet" />	
+		<link type="text/css" href="@{'/public/stylesheets/main.css'}" rel="stylesheet" />
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-1.6.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/underscore.js'}"></script>
@@ -27,18 +27,7 @@
 				  getUrlVar: function(name){
 				    return $.getUrlVars()[name];
 				  }
-				});
-			
-		
-			
-			
-			
-			
-			
-			
-			
-			
-			
+				});			
 			/*
 			*
 			********************************************************************************
@@ -49,12 +38,14 @@
 			*
 			*/
 			(function(){
+				var storiesBySprintUrl = #{jsAction @Stories.bySprint(':sprintId') /}
+				var tasksByStory = #{jsAction @Tasks.byStory(':storyId') /}
 				$.fn.sprintLine = function(){
 					var settings = {
-						sprintsUrl:"@{Sprints.getAll}",
-						tasksUrl: "@{Tasks.byStory()}?storyId=",
-                        usersUrl: "@{Users.getAll()}",
-                        storiesBySprintUrl: "@{Stories.bySprint()}?sprintId=",
+						sprintsUrl:"@{Sprints.all}",
+						tasksUrl: tasksByStory,
+                        usersUrl: "@{Users.all()}",
+                        storiesBySprintUrl: storiesBySprintUrl,
                         storiesUnassigned: "@{Stories.unassigned()}",
                         saveSessionUrl:"@{Stories.save()}",
                         sprintSaveUrl:"@{Sprints.save()}",
@@ -72,22 +63,6 @@
 					* @info : Object with sprint info
 					*/
 					function SprintBlock(info, container){
-						var self = this;
-						this.info = info;
-						this.container = container;
-						this.block = null;
-						
-						// bind event functions
-						this.init = function (){
-							this.block = $(this.getSprintHtml(info))
-							this.block.click(function () {onBlockClick.call(self)});
-							this.block.droppable({drop:function(event, ui){onBlockDrop.call(self, event, ui)}});
-						}
-						
-						// click class click is the same as the block click
-						/*this.click = function (event, ui){
-							this.block.trigger("click", event, ui);
-						}*/
 						
 						
 						
@@ -128,33 +103,13 @@
 				            }
 				        }
 						
-						this.isCurrentSprint = function(){
-							var sprintBoard = this.container.data("sprintBoard");
-							if (sprintBoard == undefined || sprintBoard == null) { return false; } // no sprint loaded
-							boardId = sprintBoard.getSprintId();
-							return ((boardId == null) && (this.info == null) || 
-								(this.info!= null && boardId == this.info.id));
-						}
 						
-						this.getCurrentSprintBoard= function(){
-							return  this.container.data("sprintBoard");
-						}
-						
-						this.setCurrentSprintBoard = function(sprintBoard){
-							this.container.data("sprintBoard", sprintBoard);
-						}
-						
-						this.markSelected = function (){
-							$(".sprintSummary-selected", this.container).removeClass("sprintSummary-selected");
-							this.block.addClass("sprintSummary-selected");
-						}
-						this.init();
 						
 					}// ---------- End SprintBlock class --------------
 					
 					
 					
-					loadSprints();
+					var sprints = loadSprints();
 					
 					function loadSprints(){
 						var sprintId = $.getUrlVar("sprintId");
@@ -179,116 +134,26 @@
 							users : users
 						});
 						Statics.team = team;
+						return sprintContainer;
 						
 					}
 					
 					
 					
-					function isNotCurrentSprint(sprint){
-						currentSprint = $(".backlogWrapper").data("sprint");
-						return (currentSprint==undefined || 
-						(currentSprint == null && sprint != null) ||
-						(currentSprint != null && sprint == null) ||
-						(currentSprint.id != sprint.id));
-					}
 					
-					function addSprint(sprint){
-						var sprintBtn = new SprintBlock(sprint, $(self)).block;
-						$(self).append(sprintBtn);
-						return sprintBtn;
-					}
-					
-
-					
-					
-					function getAssignToSprintConfirmationForm(){
-						dialog = "<div id='dialog-confirm' title='Move the story to another sprint?'>" +
-	            		"<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>All the tasks will also be moved. Are you sure?</p>" +
-	            		"</div>";
-	            		return dialog;
-					}
-					
-					function getSprintFormHtml(){
-						return "<div id='dialog-form-sprint'> " +
-							"<p class='validateTips'>Name is required.</p>" + 
-							"<form>" + 
-							"<fieldset>" + 
-								"<label for='name'>Name</label>" + 
-								"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
-								"<label for='startDate'>Start Date</label>" + 
-								"<input type='text' name='startDate' id='startDate' class='text ui-widget-content ui-corner-all' >" + 
-								"<label for='endDate'>End Date</label>" + 
-								"<input type='text' name='endDate' id='endDate' class='text ui-widget-content ui-corner-all' >" + 
-							"</fieldset>" + 
-							"</form>" + 
-						"</div>";
-					}
-					
-					
-					/**
-					* Shows the add sprint dialog
-					*/
-					function showAddFormDialog(){
-						var form = $(getSprintFormHtml());
-						var name = $( "#name", form ),
-						start = $( "#startDate", form  ),
-						end = $( "#endDate", form ),
-						allFields = $( [] ).add( name ).add( start ).add( end );
-						
-						function getSprintFormObject(){
-							return {
-								name:name.val(),
-								startDate: start.val(),
-								endDate: end.val()
-								};
-						}
-						
-						$(form).dialog({
-							autoOpen: true,
-							height: 380,
-							width: 380,
-							modal: true,
-							resizable: true,
-							open: function(){
-								var options = {dateFormat: settings.dateFormat};
-								start.datepicker(options);
-								end.datepicker(options);
-							},
-							buttons: {
-								Save: function() {
-									allFields.removeClass( "ui-state-error" );
-									if(name.val().trim() == ""){
-										name.addClass("ui-state-error");
-									} else {
-										$.post(settings.sprintSaveUrl, {json: JSON.stringify(getSprintFormObject())}, function(data){
-											addSprint(data);
-										});
-										$( this ).dialog( "close" );
-									}
-								},
-								Cancel: function() {
-									allFields.removeClass( "ui-state-error" );
-									$( this ).dialog( "close" );
-								}
-								
-							}
-						});
-						
-					}
-					
-					return {
-						showAddFormDialog: showAddFormDialog
-					}
-					
-					
+					return sprints;
 				}
 			})(jQuery);
 			
 			
 			$(document).ready(function() {
-				var sprintWrapper = $(".sprintWrapper").sprintLine();
+				var sprints = $(".sprintWrapper").sprintLine();
 				$("#addSprint").button().click(function(){
-					sprintWrapper.showAddFormDialog();
+					view = new SprintFormView({onSave: function(toAdd){
+						var addedSprint = sprints.collection._add(toAdd);
+						addedSprint.save();
+					}});
+					view.display();
 				});
 			});
 		</script>
