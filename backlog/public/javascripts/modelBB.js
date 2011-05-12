@@ -5,8 +5,8 @@ var sprintTemplate =
 		"<% if (sprint && sprint.get('id')!=0){%>" +
 			"<p>" +
 			"<span class='label'>Id:</span><span class='sprint-id value'><%=sprint.display('id')%></span>" +
-			"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;margin-top: -15px;'></span>" + 
-			"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;margin-top: -15px;'></span>" + 
+			"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+			"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" + 
 			"</p>" +
 			"<p><span class='label'>Name:</span><span class='sprint-name value'><%=sprint.display('name')%></span></p>" +
 			"<p><span class='label'>From:</span><span class='sprint-from value'><%=sprint.display('startDate')%></span></p>" +
