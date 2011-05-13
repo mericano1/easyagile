@@ -37,8 +37,58 @@ var confirmDeleteDialogTemplate =
 	"</p>" +
 	"</div>";
 
-var storyTemplate = "";
-var taskTemplate = "";
+var storyTemplate =
+	"<%if (_(css).isUndefined()){css = Statics.settings.css;}" +
+		"summaryClass = css.summary;" +
+	"if (!_.isUndefined(object.get('completed'))){" +
+		"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
+	"}%>" +
+	"<div class='<%=css.wrapper%>'>" +
+		"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
+				"<p>" +
+					"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+					"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>" +
+					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
+					"<div class='description'><%=object.display('description')%></div>" +
+				"</p>" +
+			"<div class='card-info'>" +
+				"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
+				"<span class='points'><%=object.display('points')%></span>" + 
+					"<div style='clear:both;'/>" + 
+					"</div>" +
+			"</div>" +
+		"</div>" +
+	"</div>";
+var taskTemplate = 
+	"<%if (_(css).isUndefined()){css = Statics.settings.css;}" +
+	"summaryClass = css.summary;" +
+	"if (!_.isUndefined(object.get('completed'))){" +
+		"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
+	"}%>" +
+	"<div class='<%=css.wrapper%>'>" +
+		"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
+				"<p>" +
+					"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+					"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>"+
+					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
+					"<div class='description'><%=object.display('description')%></div>" +
+				"</p>" +
+			"<div class='card-info'>" +
+				"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
+				"<span class='assignee'><%=((this.model.get('assignee')) ? this.model.get('assignee') : 'Not Assigned')%></span>" +
+				"<span class='doneBy'><%=this.model.display('doneBy')%></span>" +
+				"<span class='points'><%=object.display('points')%></span>" + 
+					"<div style='clear:both;'/>" + 
+					"</div>" +
+			"</div>" +
+		"</div>" +
+	"</div>";
 var storiesHeaderTemplate = 
 		"<div class='headerButtons'>" +
 			"<button id='addStory'>Add Story</button>" +
@@ -68,12 +118,15 @@ var storyTaskFormTemplate =
 		"</div>";
 var assignUserDialogTemplate = 
 	"<div>" + 
-	"<select>" +
-		"<% _.each(users, function(user) { %> " +
-		"<option name=<%=user.get('email')%> value=<%=user.get('email')%>><%=user.get('email')%></option>" +
-		"<% }); %>" +
-	"</select>" +
-	"" +
+	"<form>" + 
+		"<select class='userSelect'>" +
+			"<% _.each(users, function(user) { %> " +
+			"<option name=<%=user.get('email')%> value=<%=user.get('email')%>><%=user.get('email')%></option>" +
+			"<% }); %>" +
+		"</select>" +
+		"<label for='doneBy'>Will have it done by</label>" + 
+		"<input type='text' name='doneBy' id='doneBy' class='text ui-widget-content ui-corner-all' value='<%=task?task.display('doneBy'):''%>' >" +
+	"</form>" + 	
 	"</div>";
 
 var confirmAssignStoryToSprintTemplate = 
@@ -199,6 +252,7 @@ Statics.getFormBlock= function(){
 var BaseModel = Backbone.Model.extend({
 	display:function(name){
 		value = this.get(name);
+		if (_(value).isDate()){return value.toString(Statics.settings.dateFormat)}
 		return (_(value).isUndefined() || _(value).isNaN())? "": value;
 	}
 }); 
@@ -238,16 +292,20 @@ var TeamView = Backbone.View.extend({
 		this.users.fetch();
 	},
 	display: function(model){
-		var select = $(this.template({users:this.users.models}));
-		 $("<div/>").append(select).dialog({
+		var form = $(this.template({users:this.users.models, task:model}));
+		 $("<div/>").append(form).dialog({
              autoOpen: true,
-             height: 150,
+             height: 180,
              width: 250,
              modal: true,
              resizable: false,
+             open: function(){
+ 				var options = {dateFormat: Statics.settings.dateFormat};
+ 				$( "#doneBy", form).datepicker(options);
+ 			},
              buttons: {
                   Assign: function(){
-                	  model.set({assignee: select.val()});
+                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val()});
                       $( this ).dialog( "close" );
                   },
                   Cancel: function() {$( this ).dialog( "close" );}
@@ -348,17 +406,21 @@ var SprintView = Backbone.View.extend({
 		$(this.el).html(toRender);
 		return this;
 	},
-	changeId: function(model){$('.sprint-id',this.el).text(model.get('id'));},
-	changeName: function(model){$('.sprint-name',this.el).text(model.get('name'));},
-	changeStartDate:function(model){$('.sprint-from',this.el).text(model.get('startDate'));},
-	changeEndDate: function(model){$('.sprint-to',this.el).text(model.get('endDate'));},
+	changeId: function(model){
+		$('.sprint-id',this.el).text(model.display('id'));
+		this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
+	},
+	changeName: function(model){$('.sprint-name',this.el).text(model.display('name'));},
+	changeStartDate:function(model){$('.sprint-from',this.el).text(model.display('startDate'));},
+	changeEndDate: function(model){$('.sprint-to',this.el).text(model.display('endDate'));},
 	markSelected : function(){ $(this.el).addClass(this.css.selected);	this.selected = true;},
 	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected); this.selected = false;},
 	loadSprint:function(){
 		if (_(this.model.get('id')).isNumber() && (!this.selected)){
-			this.storyContainer = new StoryContainerView({
+			this.storyContainer = new SprintStoriesView({
 				el: Statics.settings.backlogEl,
-				collection : this.stories
+				collection : this.stories,
+				sprint: this
 			});
 			this.stories.fetch();
 			this.trigger('selected', this);
@@ -386,7 +448,7 @@ var SprintView = Backbone.View.extend({
 		var self = this;
 		var view = new SprintFormView({model:self.model, onSave: function(toAdd){
 			self.model.set(toAdd);
-			self.model.save({error:Statics.errorAlert});
+			//self.model.save({error:Statics.errorAlert});
 		}});
 		view.display();
 	}
@@ -397,14 +459,12 @@ var SprintView = Backbone.View.extend({
 //-----------------------------------------------------------------------
 var BaseView = Backbone.View.extend({
 	initialize: function(args){
-		_.bindAll(this, "changeName", "changeDescription", "changeIndex", "changePoints","markChanged", "unmarkChanged", "changeCompleted");
+		_.bindAll(this, "changeName", "changeDescription", "changeIndex", "changePoints",/*"markChanged", "unmarkChanged",*/ "changeCompleted");
 		this.css =_.defaults({}, (this.options?this.options.css:{}), (this.css?this.css:{}), Statics.settings.css);
-		//_.extend(this.model, Backbone.Events);
 		this.model.bind('change:name', this.changeName);
 		this.model.bind('change:description', this.changeDescription);
 		this.model.bind('change:index', this.changeIndex);
 		this.model.bind('change:points', this.changePoints);
-		//this.model.bind('change', this.markChanged);
 		this.model.bind('change:completed', this.changeCompleted);
 		this.model.view = this;
 	},
@@ -427,31 +487,17 @@ var BaseView = Backbone.View.extend({
 			}
 		});
 	},
-	markChanged : function(){
-		this.model.set({'changed':true}, {silent:true});
-		if (this.$(".changed").length == 0 ){
-			$(".name", this.el).append($("<span>",{'class':"changed", 'css':{'display':'inline'}, text:'*'}));
-		}
-	},
-	unmarkChanged : function(){
-		this.model.set({'changed':false}, {silent:true});
-		$(".changed", this.el).remove();
-	},
 	changeCompleted : function(){
 		if (this.model.get("completed")){
-			$("." + this.css.incompleted, this.el)
-				.removeClass(this.css.incompleted)
-				.addClass(this.css.completed);
+			$("." + this.css.incompleted, this.el).removeClass(this.css.incompleted).addClass(this.css.completed);
 		}else {
-			$("." + this.css.completed, this.el)
-				.removeClass(this.css.completed)
-				.addClass(this.css.incompleted);
+			$("." + this.css.completed, this.el).removeClass(this.css.completed).addClass(this.css.incompleted);
 		}
 	},
 	markSelected : function(){ $(this.el).children(':first').children(':first').addClass(this.css.selected); this.selected = true;	},
 	unmarkSelected : function(){ $(this.el).children(':first').children(':first').removeClass(this.css.selected); this.selected = false;},
 	changeName : function(){$(".name", this.el).text(this.model.get('name'));},
-	changeDescription : function(){$(".description", this.el).html(this.model.get('description')); alert(this.model.get('description'));},
+	changeDescription : function(){$(".description", this.el).html(this.model.get('description'));},
 	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
 	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
 	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
@@ -474,7 +520,6 @@ var BaseView = Backbone.View.extend({
 	showChangeForm: function(){
 		var saveUpdateFunction = function(objectToChange){
 			this.model.set(objectToChange);
-			this.model.save();
 		};
 		saveUpdateFunction = _.bind(saveUpdateFunction, this);
 		form = this.getChangeForm(saveUpdateFunction);
@@ -513,21 +558,16 @@ TaskViewStatics.css = {
 var TaskView = BaseView.extend({
 	css: TaskViewStatics.css,
 	initialize: function(){
-		_.bindAll(this, "changeAssignee");
+		_.bindAll(this, "changeAssignee", "changeDoneBy");
 		if (!(this.model instanceof Task)){this.model = new Task(this.model);}
 		BaseView.prototype.initialize.call(this);
-		this.model.bind("change:assignee", this.changeAssignee)
+		this.model.bind("change:assignee", this.changeAssignee);
+		this.model.bind("change:doneBy", this.changeDoneBy);
+		this.template = _.template(taskTemplate);
 	},
 	render: function(){
-		html = Statics.getHtmlBlock(this.model, this.css);
-		$("<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil",html));
-		$("<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-user", html));
-		$("<span class='assignee'>" + ((this.model.get('assignee')) ? this.model.get('assignee') : "Not Assigned") + "</span>").insertAfter($(".priority", html));
+		html = $(this.template({object:this.model, css:this.css}));
 		$(".ui-icon-check, .ui-icon-user, .ui-icon-trash, .ui-icon-pencil",  html).button();
-		//mark changed
-		if (this.model.get('changed') == true){
-			$(".name", html).append($("<span>",{'class':"changed", 'css':{'display':'inline'}, text:'*'}));		
-		}
 		$(this.el).html(html);
 		$(this.el).data('model', this.model);
 		return this;
@@ -546,6 +586,7 @@ var TaskView = BaseView.extend({
 	getBlankFormBlock : TaskViewStatics.getBlankFormBlock,
 	showAddNewForm : TaskViewStatics.showAddNewForm,
 	changeAssignee: function(){ $(".assignee",this.el).text(this.model.get('assignee'));},
+	changeDoneBy: function(){ $(".doneBy",this.el).text(this.model.get('doneBy'));},
 	toggleCompleted: function(){this.model.set({completed: !this.model.get('completed')});}
 });
 
@@ -571,41 +612,49 @@ TaskViewStatics.factory = function(elements){
 
 var BaseList = Backbone.Collection.extend({
 	initialize: function(){
-		_(this).bindAll("updateIndex", "saveIndexes", "containsIndexChange","addChangeIndex");
-		this.changedIndexes = [];
-		this.bind("remove", this.updateIndex);
-		this.bind("change:index",this.addChangeIndex);
+		_(this).bindAll("updateIndexes", "save", "containsChanged", "addChanged", "startTimer");
+		this.changed = [];
+		this.bind("remove", this.updateIndexes);
+		this.bind("change",this.addChanged);
 	},
 	comparator : function(model) {
 	  return model.get("index");
 	},
-	updateIndex: function(model){
+	updateIndexes: function(model){
 		_(this.models).each(function(model, idx){model.set({index: idx})});
 	},
-	containsIndexChange:function(model){
-		return _(this.changedIndexes).contains(model.get('id'))
+	containsChanged: function(model){
+		return (_(model.get('id')).isUndefined()) || _(this.changed).contains(model.get('id'));
 	},
-	addChangeIndex:  function(model){
-		if (!this.containsIndexChange(model)){
-			this.changedIndexes.push(model.get('id'));
+	addChanged: function(model){
+		if (!this.containsChanged(model) && (!model.hasChanged('id'))){ // an id change is coming from the server so no need to resend it
+			this.changed.push(model.get('id'));
+			this.startTimer();
 		}
 	},
-	saveIndexes: function(){
+	startTimer: function(){
+		if (this.timer){
+			clearTimeout(this.timer);
+		}
+		this.timer = setTimeout(this.save, 3000);
+	},
+	save: function(){
 		var self = this;
-		var toSave = _(this.models).filter(this.containsIndexChange);
-		var idIndexArray = toSave.map(function(model){ return {id:model.get('id'), index:model.get('index')}});
+		var toSave = _(this.models).filter(this.containsChanged);
 		var params = {
 	      url:          this.url,
 	      type:         'PUT',
 	      contentType:  'application/json',
-	      data:         JSON.stringify(idIndexArray),
+	      data:         JSON.stringify(toSave),
 	      dataType:     'json',
 	      processData:  false,
-	      success:      function(){self.changedIndexes = [];},
+	      success:      function(){self.changed = [];},
 	      error:        Statics.errorAlert
 	    };
-		$.ajax(params);
-	}	
+		if (self.changed.length > 0){
+			$.ajax(params);
+		}
+	}
 });
 
 var TaskList = BaseList.extend({
@@ -645,11 +694,13 @@ var StoryView = BaseView.extend({
 	initialize: function(){
 		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
 		BaseView.prototype.initialize.call(this);
-		_.bindAll(this, 'changeTaskCompleted');
+		_.bindAll(this, 'changeTaskCompleted','setTasksUrl');
 		this.tasks = new TaskList();
-		this.tasks.url = Statics.settings.tasksUrl?Statics.settings.tasksUrl({storyId:this.model.get('id')}):"/stories/"+this.model.get('id')+"/tasks";
+		this.setTasksUrl();
 		this.tasks_el = this.options.tasks_el;
 		this.tasks.bind('change:completed', this.changeTaskCompleted);
+		this.model.bind('change:id', this.setTasksUrl);
+		this.template = _.template(storyTemplate); 
 	},
 	events : {
 		"click .ui-icon-plusthick": "showNewTaskForm",
@@ -660,18 +711,16 @@ var StoryView = BaseView.extend({
 		"dblclick":"showChangeForm"
 	},
 	render: function(){
-		html = Statics.getHtmlBlock(this.model, this.css);
+		html = $(this.template({object:this.model, css:this.css}));
 		//Adds story specific icons
-		//$("<span id='togglePinTasks' class='ui-icon ui-icon-pin-w' title='Pin this story\'s tasks' style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info", html));
-		$("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info",html));
-		$("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil", html));
 		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil, .ui-icon-pin-w",  html).button();
 		//mark changed
-		if (this.model.get('changed')){$(".name", this.el).append($("<span>",{'class':"changed", 'css':{'display':'inline'}, text:'*'}));		}
 		$(this.el).html(html);
+		//bind model for sorting events
 		$(this.el).data('model', this.model);
 		return this;
 	},
+	setTasksUrl: function(){this.tasks.url = Statics.settings.tasksUrl?Statics.settings.tasksUrl({storyId:this.model.get('id')}):"/stories/"+this.model.get('id')+"/tasks";},
 	getFormBlockId : StoryViewStatics.getFormBlockId,
 	getBlankFormBlock : StoryViewStatics.getBlankFormBlock,
 	showAddNewForm : StoryViewStatics.showAddNewForm,
@@ -764,8 +813,10 @@ var CollectionView = Backbone.View.extend({
 	 
 	    // Render each sub-view and append it to the parent view's element.
 	    _(this._modelViews).each(function(sv) {
-	      $(self.el).append(sv.render().el);
-	      sv.delegateEvents();
+	    	if (sv.visible !== false){
+		      $(self.el).append(sv.render().el);
+		      sv.delegateEvents();
+	    	}
 	    });
 	    return this;
 	},
@@ -839,19 +890,55 @@ var SortableView = CollectionView.extend({
 		}
 		model.set({'index': newIndex});
 		dataSet.sort();
-		this.save = setTimeout(dataSet.saveIndexes, 5000);
+		//this.save = setTimeout(dataSet.save, 5000);
 	},
 	onDragStart : function(event, ui){
-		if(this.save){
+		/*if(this.save){
 			clearTimeout(this.save);
-		}
+		}*/
 	}
 	
 });
 
 var StoryListView = SortableView.extend({
+	initialize: function (){
+		_.bindAll(this, "changeShowHideCompleted");
+		this.bind('change:showHideCompleted', this.changeShowHideCompleted);
+		SortableView.prototype.initialize.call(this);
+	},
 	viewFactory: function(model){
 		return new StoryView({model:model, tasks_el:this.options.tasks_el});
+	},
+	render:function(){
+		SortableView.prototype.render.call(this);
+		if (this.collection == null || this.collection.length == 0){
+			$(this.el).empty().append("<b>No stories</b>");
+		}else{
+			this.showHideCompleted();
+		}
+	},
+	changeShowHideCompleted: function(hideCompleted){
+		this.hideCompleted = hideCompleted;
+		this.showHideCompleted();
+	},
+	showHideCompleted: function(){
+		if (this.hideCompleted===true){
+			var self = this;
+			this.collection.each(function(model, index){
+				if (model.get('completed')){
+					model.view.setInvisible();
+					if (index === self.storyList.selected){
+						$('.right-panel', self.el).empty();
+					}
+				}
+			});
+		}else{
+			this.collection.each(function(model){
+				if (model.get('completed')){
+					model.view.setVisible();
+				}
+			});
+		}
 	}
 });
 
@@ -863,7 +950,6 @@ var TaskListView = SortableView.extend({
 		SortableView.prototype.render.call(this);
 		if (this.collection == null || this.collection.length == 0){
 			$(this.el).empty().append(TaskViewStatics.getNoTaskAvailableBlock());
-		}else{
 		}
 	}
 });
@@ -874,11 +960,12 @@ var SprintListView = CollectionView.extend({
 	}
 });
 
-var StoryContainerView = Backbone.View.extend({
+var SprintStoriesView = Backbone.View.extend({
 	initialize:function(){
 		_.bindAll(this, "addStory");
 		this.render();
 		this.collection = this.options.collection;
+		this.sprint = this.options.sprint;
 		this.storyList = new StoryListView({
 			collection: this.collection,
 			el: $('.left-panel', this.el),
@@ -908,20 +995,9 @@ var StoryContainerView = Backbone.View.extend({
 		var self = this;
 		checkbox = $("#hideCompleted", this.el);
 		if (checkbox.is(":checked")){
-			this.collection.each(function(model, index){
-				if (model.get('completed')){
-					model.view.setInvisible();
-					if (index === self.storyList.selected){
-						$('.right-panel', self.el).empty();
-					}
-				}
-			});
+			this.storyList.trigger('change:showHideCompleted', true);
 		}else{
-			this.collection.each(function(model){
-				if (model.get('completed')){
-					model.view.setVisible();
-				}
-			});
+			this.storyList.trigger('change:showHideCompleted', false);
 		}
 	} 
 });

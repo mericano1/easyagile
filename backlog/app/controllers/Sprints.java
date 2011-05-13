@@ -28,8 +28,8 @@ import com.google.gson.JsonObject;
 
 @With(Application.class)
 public class Sprints extends Controller{
-	private static final String DATE_FORMAT = Play.configuration.getProperty("date.format");
 	private static final Set<String> EXCLUDE_PROPS = Sets.newHashSet("id");
+	private static final String DATE_FORMAT = Play.configuration.getProperty("date.format");
 	private static final Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
 	static {
 		DateConverter dateConverter = new DateConverter();
@@ -86,23 +86,24 @@ public class Sprints extends Controller{
 	}
 	
 	/**
-	 * Updates a single or an array of tasks for a given story
-	 * @param storyId
-	 * @param taskId
-	 * @param body
+	 * Updates a single sprint
+	 * @param body the json object of the sprint
 	 */
 	public static void update(JsonObject body){
-		if (body.isJsonObject()){
-			updateElement(body);
+		updateElement(body);
+		renderJSON(body);
+	}
+	
+	
+	/**
+	 * Updates an array of sprints
+	 * @param jsonArray all the sprints to be updates
+	 */
+	public static void updateAll(JsonArray jsonArray){
+		for (JsonElement jsonElement : jsonArray) {
+			updateElement(jsonElement);
 		}
-		if (body.isJsonArray()){
-			JsonArray jsonArray = body.getAsJsonArray();
-			for (JsonElement jsonElement : jsonArray) {
-				updateElement(jsonElement);
-			}
-			
-		}
-		renderJSON(UserMessage.SUCCESSFUL);
+		renderJSON(jsonArray);
 	}
 	
 	
@@ -122,7 +123,6 @@ public class Sprints extends Controller{
 		if (toUpdate != null){
 			updateObject(toUpdate, body);
 			toUpdate.save();
-			renderText(new Gson().toJson(toUpdate));
 		}
 	}
 	

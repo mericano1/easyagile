@@ -19,6 +19,7 @@ public class Story extends ObjectifyModel<Story>{
     public String description;
     public Integer points;
     public Integer index;
+    public Boolean completed;
     public Key<Sprint> sprint;
     
     public static Story findById(Long storyId) {

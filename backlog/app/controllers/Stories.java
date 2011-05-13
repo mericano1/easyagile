@@ -6,9 +6,6 @@ import java.util.Set;
 
 import models.Sprint;
 import models.Story;
-import models.Task;
-import models.Task.TaskJsonDeserializer;
-import models.Task.TaskJsonSerializer;
 
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -19,7 +16,6 @@ import client.UserMessage;
 
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -91,49 +87,29 @@ public class Stories extends Controller{
 		doUpdate(storyId, body);
 	}
 	
-	/**
-	 * Updates a single task data
-	 * @param storyId
-	 * @param taskId
-	 * @param body
-	 */
-	public static void updateIndexes(JsonArray body){
-		//id:index
-		for (JsonElement jsonElement : body) {
-			if (jsonElement.isJsonObject()){
-				JsonObject jsonObject = jsonElement.getAsJsonObject();
-				long storyId = jsonObject.get("id").getAsLong();
-				int storyIndex = jsonObject.get("index").getAsInt();
-				Story story = Story.findById(storyId);
-				if (story != null){
-					story.index = storyIndex;
-					story.save();
-				}
-			} 
-		}
-	}
+	
 	
 
 	/**
-	 * Updates a single or an array of tasks for a given story
-	 * @param storyId
-	 * @param taskId
-	 * @param body
+	 * Updates a single story
+	 * @param body the json object message
 	 */
 	public static void update(JsonObject body){
-		if (body.isJsonObject()){
-			updateElement(body);
-		}
-		if (body.isJsonArray()){
-			JsonArray jsonArray = body.getAsJsonArray();
-			for (JsonElement jsonElement : jsonArray) {
-				updateElement(jsonElement);
-			}
-			
-		}
-		renderJSON(UserMessage.SUCCESSFUL);
+		updateElement(body);
+		renderJSON(body);
 	}
 	
+	
+	/**
+	 * Updates a single story
+	 * @param body the json object message
+	 */
+	public static void updateAll(JsonArray body){
+		for (JsonElement jsonElement : body) {
+			updateElement(jsonElement);
+		}
+		renderJSON(body);
+	}
 	
 	
 	private static void updateElement(JsonElement element){
@@ -151,7 +127,6 @@ public class Stories extends Controller{
 		if (toUpdate != null){
 			updateObject(toUpdate, body);
 			toUpdate.save();
-			renderText(getGson().toJson(toUpdate));
 		}
 	}
 	
@@ -164,22 +139,12 @@ public class Stories extends Controller{
 				try {
 					BeanUtils.copyProperty(toUpdate, key, value.getAsString());
 				} catch (Exception e) {
-					throw new UnexpectedException("The update failed. Some of the properties could not be persisted");
+					throw new UnexpectedException("The update failed. Some of the properties could not be persisted:" + key, e);
 				}
 			}
 		}
 	}
 	
-	
-	
-	
-	private static Gson getGson () {
-		Gson gson = new GsonBuilder()
-		.registerTypeAdapter(Task.class, new TaskJsonDeserializer())
-		.registerTypeAdapter(Task.class, new TaskJsonSerializer())
-		.create();
-		return gson;
-	}
 	
 	
 

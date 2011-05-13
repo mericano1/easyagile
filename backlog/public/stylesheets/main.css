@@ -146,6 +146,9 @@ ul#icons span.ui-icon {float: left; margin: 0 4px;}
 .card-info span.priority {
 	float:left;
 }
+.card-info span.doneBy {
+	margin-left:15px;
+}
 .card-info span.points {
 	float:right;
 }

@@ -12,6 +12,7 @@ GET     /public/                                		staticDir:public
 GET		/sprints										Sprints.all
 GET		/sprints/{<[0-9]+>sprintId}						Sprints.byId
 POST	/sprints										Sprints.save
+PUT		/sprints										Sprints.updateAll
 PUT		/sprints/{<[0-9]+>sprintId}						Sprints.update
 DELETE  /sprints/{<[0-9]+>sprintId}						Sprints.delete
 
@@ -23,9 +24,9 @@ GET		/stories														Stories.all
 GET		/stories/{<[0-9]+>storyId}										Stories.byId
 POST	/sprints/{<[0-9]+>sprintId}/stories								Stories.save
 PUT		/stories/{<[0-9]+>storyId}										Stories.update
-PUT		/stories														Stories.updateIndexes
-PUT		/sprints/{<[0-9]+>sprintId}/stories								Stories.updateIndexes
 PUT		/sprints/{<[0-9]+>sprintId}/stories/{<[0-9]+>storyId}			Stories.update
+PUT		/stories														Stories.updateAll
+PUT		/sprints/{<[0-9]+>sprintId}/stories								Stories.updateAll
 DELETE  /stories/{<[0-9]+>storyId}										Stories.delete
 DELETE  /sprints/{<[0-9]+>sprintId}/stories/{<[0-9]+>storyId}			Stories.delete
 
@@ -35,7 +36,7 @@ GET		/stories/{<[0-9]+>storyId}/tasks						Tasks.byStory
 GET		/stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.byId
 POST	/stories/{<[0-9]+>storyId}/tasks						Tasks.save
 PUT		/stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.update
-PUT		/stories/{<[0-9]+>storyId}/tasks						Tasks.updateIndexes
+PUT		/stories/{<[0-9]+>storyId}/tasks						Tasks.updateAll
 DELETE  /stories/{<[0-9]+>storyId}/tasks/{<[0-9]+>taskId}		Tasks.delete
 
 

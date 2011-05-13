@@ -1,6 +1,7 @@
 package models;
 
 import java.lang.reflect.Type;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ public class Task extends ObjectifyModel<Task> {
     public Integer index;
     public Integer points;
     public Boolean completed;
+    public Date doneBy;
     @Required @Parent public Key<Story> story;
     public Key<User> assignee;
     
@@ -69,51 +71,4 @@ public class Task extends ObjectifyModel<Task> {
 
     }
     
-    /**
-	 * Class used to serialize to json 
-	 * @author asalvadore
-	 *
-	 */
-	public static class TaskJsonSerializer implements JsonSerializer<Task>{
-		@Override
-		public JsonElement serialize(Task task, Type typeOf, JsonSerializationContext context) {
-			JsonElement jsonElement = new Gson().toJsonTree(task);
-			if (task.assignee != null){
-				User user = User.findByKey(task.assignee);
-				JsonObject jsonObject = jsonElement.getAsJsonObject();
-				jsonObject.remove("assignee");
-				jsonObject.addProperty("assignee", user.email);
-			}
-			return jsonElement;
-		}
-	}
-	
-	/**
-	 * Class used to deserialize from json 
-	 * @author asalvadore
-	 *
-	 */
-	public static class TaskJsonDeserializer implements JsonDeserializer<Task>{
-		@Override
-		public Task deserialize(JsonElement jsonElement, Type typeOf, JsonDeserializationContext context) throws JsonParseException {
-			
-			JsonObject jsonObject = jsonElement.getAsJsonObject();
-			JsonElement assigneeElement = jsonObject.get("assignee");
-			Key<User> key = null;
-			if(assigneeElement != null){
-				String userEmail = assigneeElement.getAsString();
-				User byEmail = User.findByEmail(userEmail);
-				if(byEmail != null){
-					key = byEmail.getKey();
-				}
-				jsonObject.remove("assignee");
-			}
-			Task fromJson = new Gson().fromJson(jsonObject, Task.class);
-			fromJson.assignee = key;
-			return fromJson;
-		}
-		
-	}
-    
-
 }
