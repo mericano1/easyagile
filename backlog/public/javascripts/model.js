@@ -1,13 +1,15 @@
 //-----------------------------------------------------------------------
-// BaseBlock
+// Statics
 //-----------------------------------------------------------------------
-BaseBlock.defaultSettings = {
+Statics = new Object();
+Statics.settings = {
 	convertJsonFields : ["id", "name", "description", "points", "index", "tasks", "deleted", "completed","assignee"],
 	css:{
 		completed:"taskSummary-completed",
 		incompleted:"taskSummary",
 		wrapper:"ui-widget",
-		summary: "ui-state-highlight"
+		summary: "ui-state-highlight",
+		selected: "selected"
 	},
 	dialog : {
 		autoOpen: false,
@@ -17,492 +19,882 @@ BaseBlock.defaultSettings = {
 		resizable: true
 	}
 };
+Statics.errorAlert = function(){
+	alert("Ups, something went wrong. Please report the issue and try again later.");
+}
 //sort function based on element index
-BaseBlock.sortFunction = function (a,b) {
+Statics.sortFunction = function (a,b) {
 	return  (a.info.index < b.info.index) ? -1 : (a.info.index > b.info.index) ? 1 : 0;
 };
 
-function BaseBlock(info, options){
-	this.info = (info == undefined || info == null) ? {} : info;
-	this.visible = true;
-	this.changed = false;
-	this.settings = $.extend(true, BaseBlock.defaultSettings, options?options:{});
-	this.isChanged = function(){return this.changed;}
-	this.isDeleted = function(){return this.info.deleted;}
-	this.markDeleted = function() {
-		this.info.deleted = true;
-	}
-	this.unmarkDeleted = function() {
-		this.info.deleted = false;
-	}
-	this.markChanged = function(){
-		this.changed = true;
-		this.addDisplayChangedBlock();
-	}
-	this.unmarkChanged = function(){
-		this.changed = false;
-		this.removeDisplayChangedBlock();
-	}
-	this.markComplete = function(){
-		this.info.completed = true;
-		$("." + this.settings.css.incompleted, this.block)
-			.removeClass(this.settings.css.incompleted)
-			.addClass(this.settings.css.completed);
-	}
-	this.unmarkComplete = function(){
-		this.info.completed = false;
-		$("." + this.settings.css.completed, this.block)
-			.removeClass(this.settings.css.completed)
-			.addClass(this.settings.css.incompleted);
-	}
-	//returns true if the object has the complete attribute (is it not undefined)
-	this.hasCompleteStatus = function(){
-		return (this.info.completed != undefined);
-	}
-	this.isComplete = function() {
-		return (this.hasCompleteStatus()) ? this.info.completed : undefined; 
-	}
-	this.addDisplayChangedBlock = function(){
-		$("<span class='changed'>").append("*").insertAfter(this.getDisplayNameBlock());
-	}
-	//returns true if this element can be completely removed ( it has never been saved in the backend)
-	//false otherwise
-	this.remove = function(){
-		this.block.remove();
-		if (this.getId()){
-			this.markDeleted();
-			this.markChanged();
-			return false;
-		}else {
-			return true;
-		}
-	}
-	this.removeDisplayChangedBlock = function(){$(".changed", this.block).remove();}
-	this.getDisplayNameBlock = function(){return $(".storyOrTask-name", this.block);}
-	this.getDisplayName = function(){return this.getDisplayNameBlock().text();}
-	this.setDisplayName = function(string){$(".storyOrTask-name", this.block).text(string);}
-	this.getDisplayDescription = function(){return $(".storyOrTask-description", this.block).html();}
-	this.setDisplayDescription = function(string){$(".storyOrTask-description", this.block).html(string);}
-	this.getDisplayIndex = function(){return $(".priority", this.block).text();}
-	this.setDisplayIndex = function(string){$(".priority", this.block).text(string);}
-	this.getDisplayPoints = function(){return $(".points", this.block).text();}
-	this.setDisplayPoints = function(string){$(".points", this.block).text(string);}
-	this.setVisible = function(){this.visible = true; this.block.show();}
-	this.setInvisible = function(){this.visible = false; this.block.hide();}
-	this.isVisible= function(){return this.visible ;}
-	this.getId = function() {return this.info.id;}
-	this.getName = function() {return this.info.name;}
-	this.getDescription = function() {return this.info.description;}
-	this.getPoints = function() {return this.info.points;}
-	this.getIndex = function() {return this.info.index;}
-	this.increaseIndex = function(num) {
-		this.setIndex(info.index + num);
-	}
-	this.decreaseIndex = function(num) {
-		this.setIndex(this.info.index -num);
-		
-	}
-	this.getFormDialog = BaseBlock.getFormDialog;
-	this.showAddNewForm = BaseBlock.showAddNewForm;
-	
-	this.setIndex = function(idx){
-		this.info.index = idx;
-		this.setDisplayIndex(idx + 1);
-	}
-	this.setName = function(string){
-		this.setDisplayName(string);
-		this.info.name = string;
-	}
-	this.setDescription = function(string){
-		this.setDisplayDescription(string);
-		this.info.description = string;
-	}
-	this.setPoints = function(points){
-		this.setDisplayPoints(points);
-		this.info.points = points;
-	}
-	
-	this.sortFunction = BaseBlock.sortFunction;
-	this.toJson = function(){return JSON.stringify(this.info, this.settings.convertJsonFields);}
-	
-	
-	
-	
-}
+Statics.closeDialog = function(){$( this ).dialog( "close" );}
 
-BaseBlock.closeDialog = function(){$( this ).dialog( "close" );}
 //reuse the dialog if it exists
-BaseBlock.getFormDialog= function(buttons){
+Statics.getFormDialog= function(buttons){
 	form = $(this.getFormBlockId());
 	if (form.length == 0){
 		form = this.getBlankFormBlock();
 	} else { //clear existing
 		$('form', form)[0].reset()
 	}
-	dialogOptions = this.settings.dialog;
+	dialogOptions = Statics.settings.dialog;
 	dialogOptions.buttons = buttons;
 	$(form).dialog(dialogOptions);
 	return $(form);
 }
 
+Statics.getFormObject = function(form){
+	obj = {
+		name:$( "#name", form ).val().trim(),
+		description:$( "#description", form  ).val().trim()
+	}
+	if ($( "#points", form ).val().trim() != ''){
+		obj.points = parseInt($( "#points", form ).val().trim());
+	}
+	return obj;
+}
 
 //shows the add new form. It takes 2 functions, onSave and onCancel.
 //The onSave will get the form object as json
-BaseBlock.showAddNewForm = function(onSave, onCancel){
-	var getFormObj = function(){
-		form = $(this);
-		var returnObj = {};
-		if ($( "#name", form ).val().trim() != ""){returnObj.name=$( "#name", form ).val().trim();}
-		if ($( "#description", form  ).val().trim() != ""){returnObj.description=$( "#description", form  ).val().trim();}
-		if ($( "#points", form ).val().trim() != ""){returnObj.points=$( "#points", form ).val().trim();}
-		return returnObj;
-	}
+Statics.showAddNewForm = function(onSave, onCancel){
+	var calling = this;
 	var buttons = {
-			"Save" : function(){
-				onSave(getFormObj.call(this));
-			},
-			"Cancel": onCancel,
-			"Save and Add another": function(){
-				onSave(getFormObj.call(this)); 
-				this.showAddNewForm(onSave, onCancel, display);
-			}
+		"Save" : function(){
+			onSave(Statics.getFormObject($(this)));
+			$(this).dialog("close");
+		},
+		"Cancel": onCancel,
+		"Save and Add another": function(){
+			onSave(Statics.getFormObject($(this)));
+			$(this).dialog("close");
+			calling.showAddNewForm(onSave, onCancel);
+		}
 	};
 	form = this.getFormDialog(buttons);
 	$(form).dialog('open');
 	return $(form);
 }
 
-//shows the edit current form
-BaseBlock.prototype.showEditForm = function(onSave, onCancel){
-	var buttons = {
-			"Save" : onSave,
-			"Cancel": onCancel
-		};
-	form = this.getFormDialog(buttons);
-	$( "#name", form ).val(this.info.name);
-	$( "#description", form  ).val(this.info.description);
-	$( "#points", form).val(this.info.points);
-	$(form).dialog('open');
-	return $(form);
+
+Statics.getFormBlock= function(){
+	return $(storyTaskFormTemplate);
 }
 
-//gets the html of the block itself
-BaseBlock.prototype.getHtmlBlock= function (object){
-	summaryClass = this.settings.css.summary;
-	if (this.hasCompleteStatus()){
-		summaryClass = this.isComplete() ? this.settings.css.completed : this.settings.css.incompleted;
+//-----------------------------------------------------------------------
+//Models
+//-----------------------------------------------------------------------
+
+//Base class for story and task
+var BaseModel = Backbone.Model.extend({
+	display:function(name){
+		value = this.get(name);
+		if (_(value).isDate()){return value.toString(Statics.settings.dateFormat)}
+		return (_(value).isUndefined() || _(value).isNaN())? "": value;
 	}
-	htmlCode = "<div class='" + this.settings.css.wrapper + "'>" +
-					"<div class='" + summaryClass + " ui-corner-all' style='padding: 0 .7em; '>" + 
-							"<p>" +
-								"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
-								"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
-								"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" + 
-								"<strong class='storyOrTask-name' style='display:block'>"+ (object.name?object.name:"") +"</strong>" +
-								"<div class='storyOrTask-description'>" + (object.description?object.description:"") +"</div>" +
-							"</p>" +
-						"<div class='card-info'>" +
-							"<span class='priority'>" + (isNaN(object.index)? "" : (object.index + 1) ) + "</span>" +
-							"<span class='points'>" + (object.points?object.points:"") + "</span>" + 
-								"<div style='clear:both;'/>" + 
-								"</div>" +
-						"</div>" +
-					"</div>" +
-				"</div>";
-	html = $(htmlCode)
-	return html;
-}
+}); 
+var WorkUnit = BaseModel.extend({
+	clear: function() {
+	       this.destroy();
+	       if (this.view){this.view.remove();}
+	},
+    increaseIndex : function(num) { this.set({'index' : this.get('index')+ num}); },
+	decreaseIndex : function(num) {	this.set({'index' : this.get('index')- num}); },
+	validate: function(attrs){
+		if (_(attrs.points).isNaN()){ alert("points have to be numeric");}
+	}
+});
+var Story = WorkUnit.extend({});
 
-BaseBlock.getFormBlock= function(){
-	html = "<div> " +
-		"<p class='validateTips'>All form fields are required.</p>" + 
-		"<form>" + 
-		"<fieldset>" + 
-			"<label for='name'>Name</label>" + 
-			"<input type='text' name='name' id='name' class='text ui-widget-content ui-corner-all' ></input>" + 
-			"<label for='description'>Description</label>" + 
-			"<textarea name='description' id='description' value='' class='text ui-widget-content ui-corner-all' rows='10' ></textarea>" + 
-			"<label for='points'>Points</label>" + 
-			"<input type='points' name='points' id='points' value='' class='text ui-widget-content ui-corner-all' ></input>" + 
-		"</fieldset>" + 
-		"</form>" + 
-	"</div>";
-	return $(html);
-}
+var Sprint = BaseModel.extend({});
+var SprintList = Backbone.Collection.extend({
+	model:Sprint
+});
 
+var Task = WorkUnit.extend({});
 
-BaseBlock.prototype.getValuedFormBlock = function(){
-	html = this.getBlankFormBlock();
-	$("#name", html).val(this.info?this.info.name:"");
-	$("#description", html).val(this.info?this.info.description:"");
-	$("#points", html).val(this.info?this.info.points:"");
-	return html;
-}
-
+var User = Backbone.Model.extend({});
+var UserList = Backbone.Collection.extend({
+	model:User,
+});
 
 //-----------------------------------------------------------------------
-//Stories
+//Views - TeamView
 //-----------------------------------------------------------------------
-Story.getFormDialog = BaseBlock.getFormDialog;
-Story.settings = BaseBlock.defaultSettings;
-Story.getFormBlockId = function(){return "dialog-form-story";}
-Story.getBlankFormBlock = function(){
-	html = BaseBlock.getFormBlock.call(this);
-	html.attr("id", Story.getFormBlockId());
-	html.attr("title", "Story details");
-	return html;
-}
-Story.showAddNewForm=function(onSave){
-	return BaseBlock.showAddNewForm.call(this,
-			onSave, 
-			BaseBlock.closeDialog
-		);
-}
-Story.prototype = new BaseBlock;
-function Story(info, taskBlock, options){
-	BaseBlock.call(this, info, $.extend(true, {css:{
-			summary:"storySummary",
-			completed:"storySummary-completed",
-			incompleted:"storySummary",
-			selected:"story-selected"
-		}},options));// Call super-class constructor
-	this.getHtmlBlock = function(object){
-		html = BaseBlock.prototype.getHtmlBlock.call(this, object);
-		$("<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-info",html));
-		$("<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil", html));
+var TeamView = Backbone.View.extend({
+	initialize: function(){
+		_.bindAll(this, "display");
+		this.users = this.options.users;
+		this.template = _.template(assignUserDialogTemplate);
+		this.users.fetch();
+	},
+	display: function(model){
+		var form = $(this.template({users:this.users.models, task:model}));
+		 $("<div/>").append(form).dialog({
+             autoOpen: true,
+             height: 180,
+             width: 250,
+             modal: true,
+             resizable: false,
+             open: function(){
+ 				var options = {dateFormat: Statics.settings.dateFormat};
+ 				$( "#doneBy", form).datepicker(options);
+ 			},
+             buttons: {
+                  Assign: function(){
+                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val()});
+                      $( this ).dialog( "close" );
+                  },
+                  Cancel: function() {$( this ).dialog( "close" );}
+                 }
+		 }
+     );
 		
-		//trigger events
-		$(".ui-icon-plusthick", html).button().click(function(){html.trigger("addTask");});
-		$(".ui-icon-triangle-1-e", html).button().click(function(){html.trigger("showTasks");});
-		$(".ui-icon-trash", html).button().click(function(){html.trigger("delete");});
-		$(".ui-icon-pencil", html).button().click(function(){html.trigger("edit");});
-		return html;
 	}
-	this.block = $(this.getHtmlBlock(this.info));
-	this.taskBlock = $(taskBlock);
-	this.tasks = null;
-	this.getFormBlockId = Story.getFormBlockId;
-	this.getBlankFormBlock = Story.getBlankFormBlock;
-	this.showAddNewForm = Story.showAddNewForm;
-	this.hasTasks = function(){return (this.tasks != undefined) && (this.tasks != null);}
-	this.markSelected = function(){
-		this.block.addClass("selected");
-	}
-	this.unmarkSelected = function(){
-		this.block.removeClass("selected");
-	}
-	this.addTask = function(task){
-		if(!this.hasTasks()){
-			this.tasks = new Container([]);
-		}
-		if (!(task instanceof Task)){
-			task = new Task(task);
-		}
-		this.tasks.addChild(task);
-		if (this.taskBlock){
-			this.taskBlock.append(task);
-		}
-	}
-	
-	this.showTasks = function(){
-		if (this.taskBlock){
-			var taskBlock = this.taskBlock.empty();
-			if (this.tasks.length > 0){
-				$(this.tasks).each(function(index, task){
-					taskBlock.append(task.block);
-				});
-			}else {
-				taskBlock.append(Task.getNoTaskAvailableBlock);
+});
+
+
+//-----------------------------------------------------------------------
+//Sprint form view
+//-----------------------------------------------------------------------
+var SprintFormView = Backbone.View.extend({
+	initialize: function(){
+		_.bindAll(this, "display");
+		this.template = _.template(sprintFormTemplate);
+		this.onSave = this.options.onSave;
+	},
+	display: function(){
+		var self = this;
+		var form =  $(this.template({sprint: this.model}));
+		validateForm = function(){
+			var toReturn = {
+				name:$( "#name", form ).val(),
+				startDate: $( "#startDate", form  ).val(),
+				endDate: $( "#endDate", form ).val()
+			};
+			if (toReturn.startDate.trim()== ""){delete toReturn['startDate']}
+			if (toReturn.endDate.trim()== ""){delete toReturn['endDate']}
+			if (toReturn.name.trim() == ""){
+				$( "#name", form ).addClass("ui-state-error");
+				return false;
 			}
+			return toReturn;
 		}
-	}
-	
-	//binds data to the html element
-	this.block.data("element", this);
-	this.block.data("type", "story");
-	
-	//binds functions
-	this.block.bind("addTask", this, function(event){
-		Task.showAddNewForm(function(toSave){
-			storyBlock = event.data;
-			storyBlock.addTask(toSave);
-			$(this).dialog("close");
+		
+		$(form).dialog({
+			autoOpen: true,
+			height: 380,
+			width: 380,
+			modal: true,
+			resizable: true,
+			open: function(){
+				var options = {dateFormat: Statics.settings.dateFormat};
+				$( "#startDate", form).datepicker(options);
+				$( "#endDate", form).datepicker(options);
+			},
+			buttons: {
+				Save: function() {
+					var toSave = validateForm();
+					if (!(toSave === false)){
+						self.onSave(toSave);
+						$( this ).dialog( "close" );
+					}
+				},
+				Cancel: function() {
+					$( this ).dialog( "close" );
+				}
+				
+			}
 		});
-	});
-	this.block.bind("showTasks", this.showTasks);
-	//this.block.bind("delete", this, onDelete);
-	//this.block.bind("edit", this, onEdit);
-	
-}
-
-//-------------------------------------------------------------------------
-// Factory class
-// elements 	-> array of story objects
-// options		-> Object with following properties 
-//		taskBlock 	-> jQuery object where the tasks will be displayed
-//		
-//
-//This function is used in the container and (this) is the container object
-Story.factory = function(elements, taskBlock){
-	var stories = [];
-	$(elements).each(function(index, child){
-		story = new Story(child, taskBlock);
-		stories.push(story);
-	});
-	return stories;
-}
-
+	}
+});
 
 
 
 //-----------------------------------------------------------------------
-// Tasks
+//Sprint view
 //-----------------------------------------------------------------------
-Task.getFormDialog = BaseBlock.getFormDialog;
-Task.settings = BaseBlock.defaultSettings;
-Task.getFormBlockId = function(){return "dialog-form-task";}
-Task.getBlankFormBlock =  function(){
-	html = BaseBlock.getFormBlock.call(this);
-	html.attr("id", Task.getFormBlockId());
+
+
+var SprintView = Backbone.View.extend({
+	initialize:function(){
+		_.bindAll(this, "changeId","changeName","changeStartDate", "changeEndDate");
+		this.model.bind('change:id', this.changeId);
+		this.model.bind('change:name', this.changeName);
+		this.model.bind('change:startDate', this.changeStartDate);
+		this.model.bind('change:endDate', this.changeEndDate);
+		this.template = _.template(sprintTemplate);
+		this.stories =  new StoryList;
+		this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
+	},
+	css:{
+		selected:"sprintSummary-selected"
+	},
+	className:"sprintSummary roundedBox",
+	tagName:"div",
+	events:{
+		"click" : "loadSprint",
+		"click .ui-icon-trash" : "remove",
+		"click .ui-icon-pencil" : "edit",
+		"drop" : "dropStory"
+	},
+	render: function(){
+		var toRender = $(this.template({sprint:this.model}));
+		$('.ui-icon-trash, .ui-icon-pencil',toRender).button();
+		$(this.el).html(toRender).droppable();
+		return this;
+	},
+	changeId: function(model){
+		$('.sprint-id',this.el).text(model.display('id'));
+		this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
+	},
+	changeName: function(model){$('.sprint-name',this.el).text(model.display('name'));},
+	changeStartDate:function(model){$('.sprint-from',this.el).text(model.display('startDate'));},
+	changeEndDate: function(model){$('.sprint-to',this.el).text(model.display('endDate'));},
+	markSelected : function(){ $(this.el).addClass(this.css.selected);	this.selected = true;},
+	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected); this.selected = false;},
+	loadSprint:function(){
+		if (_(this.model.get('id')).isNumber() && (!this.selected)){
+			$(Statics.settings.backlogEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
+			this.storyContainer = new SprintStoriesView({
+				el: Statics.settings.backlogEl,
+				collection : this.stories,
+				sprint: this
+			});
+			this.stories.fetch();
+			this.trigger('selected', this);
+		}
+	},
+	dropStory: function(event, ui){
+		var self = this;
+		story = $(ui.draggable).data('model');
+		if (story instanceof Story && (this.selected !== true)){
+			$(_.template(confirmAssignStoryToSprintTemplate,{})).dialog({
+        		resizable: false,
+    			height:140,
+    			modal: true,
+    			autoOpen:true,
+    			buttons: {
+    				"Yes move it": function() {
+    					$.ajax({
+    						url:Statics.settings.allocateToSprint({sprintId:self.model.get('id')}),
+    						type: 'POST',
+    						data: JSON.stringify(story), 
+    						success: function(){ story.view.removeFromView();},
+    						error: Statics.errorAlert
+    					});
+    					$(this).dialog( "close" );
+    				},
+    				Cancel: function() {
+    					$(this).dialog( "close" );
+    				}
+    			}
+
+        	});
+		}
+	},
+	remove: function(){
+		var self = this;
+		$(_.template(confirmDeleteDialogTemplate, {object:this.model})).dialog({modal: true,
+			buttons:{
+				Delete: function() {
+					var pCollection = self.model.collection;
+					self.model.destroy({success:function(model){
+						if (pCollection){
+							pCollection.remove(model);
+						}
+					},error:Statics.errorAlert});
+					$(this.el).remove();
+					$( this ).dialog( "close" );
+				},
+				Cancel: function() {;$( this ).dialog( "close" );}
+			}
+		});
+	},
+	edit: function(){
+		var self = this;
+		var view = new SprintFormView({model:self.model, onSave: function(toAdd){
+			self.model.set(toAdd);
+			//self.model.save({error:Statics.errorAlert});
+		}});
+		view.display();
+	}
+});
+
+//-----------------------------------------------------------------------
+//Views - BaseView
+//-----------------------------------------------------------------------
+var BaseView = Backbone.View.extend({
+	initialize: function(args){
+		_.bindAll(this, "changeName", "changeDescription", "changeIndex", "changePoints",/*"markChanged", "unmarkChanged",*/ "changeCompleted");
+		this.css =_.defaults({}, (this.options?this.options.css:{}), (this.css?this.css:{}), Statics.settings.css);
+		this.model.bind('change:name', this.changeName);
+		this.model.bind('change:description', this.changeDescription);
+		this.model.bind('change:index', this.changeIndex);
+		this.model.bind('change:points', this.changePoints);
+		this.model.bind('change:completed', this.changeCompleted);
+		this.model.view = this;
+	},
+	visible: true,
+	remove : function() {
+		var self = this;
+		$(_.template(confirmDeleteDialogTemplate, {object:this.model})).dialog({modal: true,
+			buttons:{
+				Delete: function() {
+					var pCollection = self.model.collection;
+					self.model.destroy({success:function(model){
+						if (pCollection){
+							pCollection.remove(model);
+						}
+					},error:Statics.errorAlert});
+					$(self.el).remove();
+					$( this ).dialog( "close" );
+				},
+				Cancel: function() {;$( this ).dialog( "close" );}
+			}
+		});
+	},
+	removeFromView : function(){
+		var pCollection = this.model.collection;
+		if (pCollection){
+			pCollection.remove(this.model);
+		}
+		$(this.el).remove();
+	},
+	changeCompleted : function(){
+		if (this.model.get("completed")){
+			$("." + this.css.incompleted, this.el).removeClass(this.css.incompleted).addClass(this.css.completed);
+		}else {
+			$("." + this.css.completed, this.el).removeClass(this.css.completed).addClass(this.css.incompleted);
+		}
+	},
+	markSelected : function(){ $(this.el).children(':first').children(':first').addClass(this.css.selected); this.selected = true;	},
+	unmarkSelected : function(){ $(this.el).children(':first').children(':first').removeClass(this.css.selected); this.selected = false;},
+	changeName : function(){$(".name", this.el).text(this.model.get('name'));},
+	changeDescription : function(){$(".description", this.el).html(this.model.get('description'));},
+	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
+	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
+	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
+	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide();},
+	isVisible : function(){return this.visible;},
+	getChangeForm: function(onSave){
+		var buttons = {
+				"Save" : function(){ 
+					onSave(Statics.getFormObject($(this)));
+					$(this).dialog("close");
+				},
+				"Cancel": Statics.closeDialog
+			};
+		form = Statics.getFormDialog.call(this, buttons);
+		$("#name", form).val(this.model.display('name'));
+		$("#description", form).val(this.model.display('description'));
+		$("#points", form).val(this.model.display('points'));
+		return $(form);
+	},
+	showChangeForm: function(){
+		var saveUpdateFunction = function(objectToChange){
+			this.model.set(objectToChange);
+		};
+		saveUpdateFunction = _.bind(saveUpdateFunction, this);
+		form = this.getChangeForm(saveUpdateFunction);
+		form.dialog('open');
+		return form;
+	}
+});
+
+
+
+//-----------------------------------------------------------------------
+//Tasks
+//-----------------------------------------------------------------------
+TaskViewStatics = new Object();
+TaskViewStatics.getFormDialog = Statics.getFormDialog;
+TaskViewStatics.getFormBlockId = function(){return "dialog-form-task";}
+TaskViewStatics.getBlankFormBlock =  function(){
+	html = Statics.getFormBlock();
+	html.attr("id", TaskViewStatics.getFormBlockId());
 	html.attr("title", "Task details");
 	return html;
 }
-Task.showAddNewForm=function(onSave){
-	return BaseBlock.showAddNewForm.call(this,
+TaskViewStatics.showAddNewForm=function(onSave){
+	return Statics.showAddNewForm.call(this,
 			onSave,
-			BaseBlock.closeDialog
+			Statics.closeDialog
 		);
 }
-Task.prototype = new BaseBlock;
-function Task(info, options){
-	BaseBlock.call(this, info, $.extend(true, {css:{
-			summary:"taskSummary",
-			completed:"taskSummary-completed",
-			incompleted:"taskSummary"
-			}
-	}, options));// Call super-class constructor
-	this.getHtmlBlock = function(object, index){
-		html = BaseBlock.prototype.getHtmlBlock.call(this,object, index);
-		$("<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-pencil",html));
-		$("<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'>").insertAfter($(".ui-icon-user", html));
-		$("<span class='assignee'>" + ((object.assignee) ? object.assignee : "Not Assigned") + "</span>").insertAfter($(".priority", html));
-		//trigger events
-		$(".ui-icon-user", html).button().click(function(){html.trigger("assignUser");});
-		$(".ui-icon-check", html).button().click(function(){html.trigger("markCompleted");});
-		$(".ui-icon-trash", html).button().click(function(){html.trigger("delete");});
-		$(".ui-icon-pencil", html).button().click(function(){html.trigger("edit");});
-		return html;
-	}
-	this.block = $(this.getHtmlBlock(this.info));
-	this.getFormBlockId = Task.getFormBlockId
-	this.getBlankFormBlock =Task.getBlankFormBlock;
-	this.getDisplayAssignee =function(){return $(".assignee", this.block).text();}
-	this.getAssignee =function(){return this.info.assignee;}
-	//binds data to the html element
-	this.block.data("element", this);
-	this.block.data("type", "task");
-	
-}
+TaskViewStatics.css = {
+		completed:"taskSummary-completed",
+		incompleted:"taskSummary",
+		wrapper:"ui-widget",
+		summary: "taskSummary",
+		selected: "taskSummary-selected"
+} 
+var TaskView = BaseView.extend({
+	css: TaskViewStatics.css,
+	initialize: function(){
+		_.bindAll(this, "changeAssignee", "changeDoneBy");
+		if (!(this.model instanceof Task)){this.model = new Task(this.model);}
+		BaseView.prototype.initialize.call(this);
+		this.model.bind("change:assignee", this.changeAssignee);
+		this.model.bind("change:doneBy", this.changeDoneBy);
+		this.template = _.template(taskTemplate);
+	},
+	render: function(){
+		html = $(this.template({object:this.model, css:this.css}));
+		$(".ui-icon-check, .ui-icon-user, .ui-icon-trash, .ui-icon-pencil",  html).button();
+		$(this.el).html(html);
+		$(this.el).data('model', this.model);
+		return this;
+	},
+	events :{
+		"click .ui-icon-user": "assignUser",
+		"click .ui-icon-check": "toggleCompleted",
+		"click .ui-icon-trash": "remove",
+		"click .ui-icon-pencil": "showChangeForm",
+		"dblclick":"showChangeForm"
+	},
+	assignUser: function(){
+		Statics.team.display(this.model);
+	},
+	getFormBlockId : TaskViewStatics.getFormBlockId,
+	getBlankFormBlock : TaskViewStatics.getBlankFormBlock,
+	showAddNewForm : TaskViewStatics.showAddNewForm,
+	changeAssignee: function(){ $(".assignee",this.el).text(this.model.get('assignee'));},
+	changeDoneBy: function(){ $(".doneBy",this.el).text(this.model.get('doneBy'));},
+	toggleCompleted: function(){this.model.set({completed: !this.model.get('completed')});}
+});
 
-Task.getNoTaskAvailableBlock = function(container){
-	html = new Task({name:"No Tasks are available", description:"Click on 'Add Task' to add one", points:""}, container);
-	$(".ui-icon, .points, .priority, .ui-icon-custom", html.block).remove();
+TaskViewStatics.getNoTaskAvailableBlock = function(){
+	myTask = new Task({name:"No Tasks are available", description:"Click on 'Add Task' to add one", points:""});
+	html = $(_.template(taskTemplate, {
+		object:myTask, 
+		css: TaskViewStatics.css
+	}));
+	$(".ui-icon, .points, .priority, .ui-icon-custom", html).remove();
 	return html;
 }
 
 //This is used to create task objects
-Task.factory = function(elements){
+TaskViewStatics.factory = function(elements){
 	var tasks = [];
 	$(elements).each(function(index, child){
-		tasks.push(new Task(child));
+		tasks.push(new TaskView(child));
 	});
 	return tasks;
 }
 
 
 //-----------------------------------------------------------------------
+//Task Collection 
+//-----------------------------------------------------------------------
+
+var BaseList = Backbone.Collection.extend({
+	initialize: function(){
+		_(this).bindAll("updateIndexes", "save", "containsChanged", "addChanged", "startTimer");
+		this.changed = [];
+		this.bind("remove", this.updateIndexes);
+		this.bind("change",this.addChanged);
+	},
+	comparator : function(model) {
+	  return model.get("index");
+	},
+	updateIndexes: function(model){
+		_(this.models).each(function(model, idx){model.set({index: idx})});
+	},
+	containsChanged: function(model){
+		return (_(model.get('id')).isUndefined()) || _(this.changed).contains(model.get('id'));
+	},
+	addChanged: function(model){
+		if (!this.containsChanged(model) && (!model.hasChanged('id'))){ // an id change is coming from the server so no need to resend it
+			this.changed.push(model.get('id'));
+			this.startTimer();
+		}
+	},
+	startTimer: function(){
+		if (this.timer){
+			clearTimeout(this.timer);
+		}
+		this.timer = setTimeout(this.save, 3000);
+	},
+	save: function(){
+		var self = this;
+		var toSave = _(this.models).filter(this.containsChanged);
+		var params = {
+	      url:          this.url,
+	      type:         'PUT',
+	      contentType:  'application/json',
+	      data:         JSON.stringify(toSave),
+	      dataType:     'json',
+	      processData:  false,
+	      success:      function(){self.changed = [];},
+	      error:        Statics.errorAlert
+	    };
+		if (self.changed.length > 0){
+			$.ajax(params);
+		}
+	}
+});
+
+var TaskList = BaseList.extend({
+	model:Task
+});
+
+
+//-----------------------------------------------------------------------
+//Stories
+//-----------------------------------------------------------------------
+StoryViewStatics = new Object();
+StoryViewStatics.getFormDialog = Statics.getFormDialog;
+StoryViewStatics.settings = Statics.settings;
+StoryViewStatics.getFormBlockId = function(){return "dialog-form-story";}
+StoryViewStatics.getBlankFormBlock = function(){
+	html = Statics.getFormBlock();
+	html.attr('id', StoryViewStatics.getFormBlockId());
+	html.attr('title', 'Story details');
+	return html;
+}
+StoryViewStatics.showAddNewForm=function(onSave){
+	return Statics.showAddNewForm.call(this,
+			onSave, 
+			Statics.closeDialog
+		);
+}
+StoryViewStatics.css = {
+		completed:"storySummary-completed",
+		incompleted:"storySummary",
+		wrapper:"ui-widget",
+		summary: "storySummary",
+		selected: "storySummary-selected"
+} 
+var StoryView = BaseView.extend({
+	css : StoryViewStatics.css,
+	tasks_el : $("div").insertAfter(this.el),
+	initialize: function(){
+		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
+		BaseView.prototype.initialize.call(this);
+		_.bindAll(this, 'changeTaskCompleted','setTasksUrl');
+		this.tasks = new TaskList();
+		this.setTasksUrl();
+		this.tasks_el = this.options.tasks_el;
+		this.tasks.bind('change:completed', this.changeTaskCompleted);
+		this.model.bind('change:id', this.setTasksUrl);
+		this.template = _.template(storyTemplate); 
+	},
+	events : {
+		"click .ui-icon-plusthick": "showNewTaskForm",
+		"click .ui-icon-triangle-1-e": "showTasks",
+		"click .ui-icon-trash": "remove",
+		"click .ui-icon-pencil": "showChangeForm",
+		"click .ui-icon-pin-w" : "togglePinTasks",
+		"dblclick":"showChangeForm"
+	},
+	render: function(){
+		html = $(this.template({object:this.model, css:this.css}));
+		//Adds story specific icons
+		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil, .ui-icon-pin-w",  html).button();
+		//mark changed
+		$(this.el).html(html);
+		//bind model for sorting events
+		$(this.el).data('model', this.model);
+		return this;
+	},
+	setTasksUrl: function(){this.tasks.url = Statics.settings.tasksUrl?Statics.settings.tasksUrl({storyId:this.model.get('id')}):"/stories/"+this.model.get('id')+"/tasks";},
+	getFormBlockId : StoryViewStatics.getFormBlockId,
+	getBlankFormBlock : StoryViewStatics.getBlankFormBlock,
+	showAddNewForm : StoryViewStatics.showAddNewForm,
+	addTask : function(task){
+		task.index = this.tasks.length;
+		var model = this.tasks._add(task);
+		model.save({error:Statics.errorAlert});
+	},
+	togglePinTasks: function(){
+		//$("#togglePinTasks",this.el).toggleClass('ui-icon-pin-s').toggleClass('ui-icon-pin-w');
+	},
+	showTasks : function(event){
+		if (_.isUndefined(this.taskContainer)){
+			this.taskContainer = new TaskListView({
+				collection: this.tasks,
+				el: this.tasks_el
+			});
+			//don't try to fetch if its a new model
+			if (!this.model.isNew()){
+				$(this.tasks_el).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
+				this.tasks.fetch();
+			}else { 
+				this.taskContainer.render();
+			}
+		} else {
+			this.taskContainer.render();
+		}
+		$(this.tasks_el).offset({top:$(this.el).position().top - 5});
+		this.trigger('selected', this);
+	},
+	showNewTaskForm : function(toSave){
+		var self = this;
+		TaskViewStatics.showAddNewForm(function(toSave){
+			self.addTask(toSave);
+			$(this).dialog("close");
+		});
+		this.showTasks();
+	},
+	changeTaskCompleted: function(){
+		for (var i = 0, l = this.tasks.length; i < l; i++) {
+			var task = this.tasks.at(i);
+			if (_(task.get('completed')).isUndefined() || task.get('completed') == false ){
+				this.model.set({'completed':false});
+				return;
+			}
+		}
+		this.model.set({'completed':true});
+	},
+	setInvisible: function(){		
+		BaseView.prototype.setInvisible.call(this);
+		if (this.selected){
+			$(this.options.tasks_el).empty();
+		}
+	},
+	setVisible: function(){
+		BaseView.prototype.setVisible.call(this);
+		if (this.selected){
+			this.showTasks();
+		}
+	}
+	
+});
+
+//-----------------------------------------------------------------------
+// Story Collection 
+//-----------------------------------------------------------------------
+var StoryList = BaseList.extend({
+	model:Story
+});
+
+
+
+//-----------------------------------------------------------------------
 // Container
-// data 		-> Array of elements of type BaseBlock
+// data 		-> Array of elements of type BaseView
 // block 		-> The jQuery html element the children will get 
 // loadFunction -> Type specific function on how to create elements and load them
 //-----------------------------------------------------------------------
-function Container(data, block, loadFunction){
-	this.children = data ? data : [];
-	this.block = block;
+var CollectionView = Backbone.View.extend({
+	initialize:function(){
+		_.bindAll(this, 'add', 'remove', 'render', 'addView', 'onSelected');
+		this.collection.bind('refresh', this.render);
+		this.collection.bind('add', this.add);
+		this.collection.bind('remove', this.remove);
+	},
+	render:function(){
+		//loads the views from the collection
+		this.loadViews();
+		var self = this;
+	    // Clear out this element.
+	    $(this.el).empty();
+	 
+	    // Render each sub-view and append it to the parent view's element.
+	    _(this._modelViews).each(function(sv) {
+	    	if (sv.visible !== false){
+		      $(self.el).append(sv.render().el);
+		      sv.delegateEvents();
+	    	}
+	    });
+	    return this;
+	},
+	add: function(model){
+		var view = this.addView(model);
+		if (this.collection.length ==1){$(this.el).empty();} // if its first element lets clear the div 
+		$(this.el).append(view.render().el);
+		view.delegateEvents();
+	},
+	remove:function(model){
+		var self = this;
+		var viewToRemove = _(self._modelViews).select(function(cv) { return cv.model === model; })[0];
+		self._modelViews = _(self._modelViews).without(viewToRemove);
+		$(viewToRemove.el).remove();
+	},
+	loadViews:function(){
+		var self = this;
+		this._modelViews = [];
+		this.collection.each(this.addView);
+	},
+	addView : function(model){
+		var curView = this.viewFactory(model);
+		curView.bind('selected', this.onSelected);
+		this._modelViews.push(curView);
+		return curView;
+	},
+	onSelected:function(view){
+		view.markSelected();
+		deselect = _(this._modelViews).without(view);
+		_(deselect).each(function(aView){
+			aView.unmarkSelected();
+		})
+	}
+});
 
-	function init(){
-		this.setBlock(block);
-		this.makeChildrenSortable();
-		if (loadFunction){
-			loadFunction.call(this);
+var SortableView = CollectionView.extend({
+	initialize: function (){
+		_.bindAll(this, "listSortable", "onDragStop", "onDragStart");
+		CollectionView.prototype.initialize.call(this);
+	},
+	listSortable : function(){
+		$(this.el).sortable({
+				stop: this.onDragStop,
+				start: this.onDragStart
+		});
+	},
+	render: function(){
+		this.listSortable();
+		CollectionView.prototype.render.call(this);
+	},
+	onDragStop:function(event, ui) {
+		dataSet = this.collection;
+		var item = ui.item;
+		var newIndex = $(item).parent().children().index(item);
+		var model = item.data("model");
+		var prevIndex = model.get('index');
+		//update element indexes
+		if (prevIndex == newIndex){return;}
+		if (prevIndex > newIndex ) { //drag up
+			for (i=newIndex; i < prevIndex; i++){
+				element = dataSet.at(i);
+				element.increaseIndex(1);
+			}
 		}
-	}
-	
-	//binds data to the html element
-	this.setBlock = function(block){
-		this.block = block;
-		if (block){
-			this.block.data("element", this);
-			this.block.data("type", "container");
-			$(this.children).each(function(index, child){
-				block.append(child.block);
-			});
+		//prevIndex is still the moved object
+		if (prevIndex < newIndex ) { //drag down
+			for (i= (prevIndex + 1); i <= newIndex; i++){
+				element = dataSet.at(i);
+				element.decreaseIndex(1);
+			}
 		}
-	}
-	this.get = function(index){
-		return this.children[index];
+		model.set({'index': newIndex});
+		dataSet.sort();
+		//this.save = setTimeout(dataSet.save, 5000);
+	},
+	onDragStart : function(event, ui){
+		/*if(this.save){
+			clearTimeout(this.save);
+		}*/
 	}
 	
-	
-	this.makeChildrenSortable = function(){
-		dataSet = this.children;
-		 $(block).sortable({
-				stop: function(event, ui) {
-					var item = ui.item;
-					var newIndex = $(item).parent().children().index(item);
-					var element = item.data("element");
-					var prevIndex = element.getIndex();
-					//update element indexes
-					if (prevIndex == newIndex){return;}
-					if (prevIndex > newIndex ) { //drag up
-						for (i=newIndex; i < prevIndex; i++){
-							dataSet[i].increaseIndex(1);
-						}
+});
+
+var StoryListView = SortableView.extend({
+	initialize: function (){
+		_.bindAll(this, "changeShowHideCompleted");
+		this.bind('change:showHideCompleted', this.changeShowHideCompleted);
+		SortableView.prototype.initialize.call(this);
+	},
+	viewFactory: function(model){
+		return new StoryView({model:model, tasks_el:this.options.tasks_el});
+	},
+	render:function(){
+		SortableView.prototype.render.call(this);
+		if (this.collection == null || this.collection.length == 0){
+			$(this.el).empty().append("<b>No stories</b>");
+		}else{
+			this.showHideCompleted();
+		}
+	},
+	changeShowHideCompleted: function(hideCompleted){
+		this.hideCompleted = hideCompleted;
+		this.showHideCompleted();
+	},
+	showHideCompleted: function(){
+		if (this.hideCompleted===true){
+			var self = this;
+			this.collection.each(function(model, index){
+				if (model.get('completed') === true){
+					model.view.setInvisible();
+					if (index === self.selected){
+						$('.right-panel', self.el).empty();
 					}
-					//prevIndex is still the moved object
-					if (prevIndex < newIndex ) { //drag down
-						for (i= (prevIndex + 1); i <= newIndex; i++){
-							dataSet[i].decreaseIndex(1);
-						}
-					}
-					element.setIndex(newIndex);
-					dataSet.sort(element.sortFunction);
-				},
-				start: function(event, ui){
-					
 				}
 			});
-	}
-	
-	this.addChild = function(child) {
-		this.children.push(child);
-	}
-	
-	this.removeChild = function(child) {
-		element = null;
-		if(typeof child == "number"){ //removes index
-			element = this.children[child];
-		}else if(typeof child == "object"){ //removes index
-			element = child;
-		}
-		if (element != null && element.remove()){
-			this.children.splice(child, 1);
+		}else{
+			this.collection.each(function(model){
+				if (model.get('completed')){
+					model.view.setVisible();
+				}
+			});
 		}
 	}
-	
-	this.showChildren = function(wrapperBlock){
-		
+});
+
+var TaskListView = SortableView.extend({
+	viewFactory: function(model){
+		return new TaskView({model:model});
+	},
+	render:function(){
+		SortableView.prototype.render.call(this);
+		if (this.collection == null || this.collection.length == 0){
+			$(this.el).empty().append(TaskViewStatics.getNoTaskAvailableBlock());
+		}
 	}
-	
-	init.call(this);
-}
+});
+
+var SprintListView = CollectionView.extend({
+	viewFactory: function(model){
+		return new SprintView({model:model});
+	}
+});
+
+var SprintStoriesView = Backbone.View.extend({
+	initialize:function(){
+		_.bindAll(this, "addStory");
+		this.render();
+		this.collection = this.options.collection;
+		this.sprint = this.options.sprint;
+		this.storyList = new StoryListView({
+			collection: this.collection,
+			el: $('.left-panel', this.el),
+			tasks_el : $('.right-panel', this.el),
+		});
+	},
+	events:{
+		"click #addStory" : "addStory",
+		"change #hideCompleted" : "toggleCompleted"
+	},
+	render: function(){
+		html = _.template(storiesHeaderTemplate,{});
+		$(this.el).empty().append(html);
+		//main header buttons
+		$("#addStory ,#saveStories").button();
+		return this;
+	},
+	addStory: function(){
+		var self = this;
+		StoryViewStatics.showAddNewForm(function(toSave){
+			toSave.index = self.collection.length;
+			var model = self.collection._add(toSave);
+			model.save({error:Statics.errorAlert});
+		});
+	},
+	toggleCompleted: function(){
+		var self = this;
+		checkbox = $("#hideCompleted", this.el);
+		if (checkbox.is(":checked")){
+			this.storyList.trigger('change:showHideCompleted', true);
+		}else{
+			this.storyList.trigger('change:showHideCompleted', false);
+		}
+	} 
+});
+
+
+var SprintsHeaderView = Backbone.View.extend({
+	events:{
+		"click #addSprint" : "addSprint"
+	},
+	render: function(){
+		var html = _.template(sprintsHeaderTemplate,{});
+		$(this.el).append(html);
+		return this;
+	},
+	addSprint: function(){
+		alert("not yet implemented");
+	},
+	saveStories:function(){
+		alert("not yet implemented");
+	} 
+});

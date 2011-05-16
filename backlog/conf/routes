@@ -22,6 +22,7 @@ GET		/sprints/0/stories												Stories.unassigned
 GET		/sprints/{<[0-9]+>sprintId}/stories								Stories.bySprint
 GET		/stories														Stories.all
 GET		/stories/{<[0-9]+>storyId}										Stories.byId
+POST	/sprints/{<[0-9]+>sprintId}/allocate							Stories.allocate
 POST	/sprints/{<[0-9]+>sprintId}/stories								Stories.save
 PUT		/stories/{<[0-9]+>storyId}										Stories.update
 PUT		/sprints/{<[0-9]+>sprintId}/stories/{<[0-9]+>storyId}			Stories.update

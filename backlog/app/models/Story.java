@@ -44,6 +44,19 @@ public class Story extends ObjectifyModel<Story>{
         return list;
     }
     
+    public static int countStoriesBySprint(Long sprintId) {
+    	Assert.notNull(sprintId, "Story id cannot be null");
+    	Key<Sprint> key = null;
+    	if (sprintId.equals(0L)){
+    		key = null;
+    	}else{
+    		key = Datastore.key(Sprint.class, sprintId);
+    	}
+    	return Datastore.query(Story.class)
+    		.filter("sprint", key)
+    		.countAll();
+    }
+    
     public static Story findById(Key<Story> key) {
         return Datastore.find(key, false);
     }

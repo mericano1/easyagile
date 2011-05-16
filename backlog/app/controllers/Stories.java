@@ -46,15 +46,15 @@ public class Stories extends Controller{
 		renderJSON(findAll);
 	}
 	
-	public static void assignStory(String json, Long sprintId){
-		Story story = new Gson().fromJson(json, Story.class);
-		if (sprintId == null){
+	public static void allocate(Long sprintId, JsonObject body){
+		Story story = new Gson().fromJson(body, Story.class);
+		if (sprintId == null || sprintId == 0){
 			story.sprint = null;
 		} else {
 			Key<Sprint> sprintKey = Sprint.findKey(sprintId);
 			story.sprint = sprintKey;
 		}
-	
+		story.index = Story.countStoriesBySprint(sprintId);
 		story.save();
 	}
 	

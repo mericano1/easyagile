@@ -1,6 +1,8 @@
 package controllers;
 
 import java.lang.reflect.Type;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import models.Task;
 import models.User;
@@ -32,10 +34,25 @@ public class TaskJsonDeserializer implements JsonDeserializer<Task>{
 			}
 			jsonObject.remove("assignee");
 		}
+		clearPropertyIfEmpty(jsonObject,"doneBy");
 		Task fromJson = Tasks.gsonDate.fromJson(jsonObject, Task.class);
 		jsonObject.add("assignee", assigneeElement);
 		fromJson.assignee = key;
 		return fromJson;
+	}
+	
+	
+	private void clearPropertyIfEmpty(JsonObject jsonObject, String propName){
+		if(jsonObject != null){
+			JsonElement jsonElement = jsonObject.get(propName);
+			if (jsonElement != null){
+				String asString = jsonElement.getAsString();
+				if (asString == null || asString.trim().equals("")){
+					jsonObject.remove(propName);
+				}
+			}
+		}
+		
 	}
 	
 }

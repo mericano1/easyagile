@@ -8,7 +8,8 @@
 		<script type="text/javascript" src="@{'/public/javascripts/jquery-ui-1.8.11.custom.min.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/underscore.js'}"></script>
 		<script type="text/javascript" src="@{'/public/javascripts/backbone.js'}"></script>
-		<script type="text/javascript" src="@{'/public/javascripts/modelBB.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/templates.js'}"></script>
+		<script type="text/javascript" src="@{'/public/javascripts/model.js'}"></script>
 		<script type="text/javascript">
 		
 			//function to get url variables
@@ -39,6 +40,7 @@
 			*/
 			(function(){
 				var storiesBySprintUrl = #{jsAction @Stories.bySprint(':sprintId') /}
+				var allocateToSprint = #{jsAction @Stories.allocate(':sprintId') /}
 				var tasksByStory = #{jsAction @Tasks.byStory(':storyId') /}
 				$.fn.sprintLine = function(){
 					var settings = {
@@ -49,66 +51,12 @@
                         storiesUnassigned: "@{Stories.unassigned()}",
                         saveSessionUrl:"@{Stories.save()}",
                         sprintSaveUrl:"@{Sprints.save()}",
-                        dateFormat: "dd-mm-yy"
+                        dateFormat: "dd-mm-yy",
+                        allocateToSprint: allocateToSprint
 					}
 					var self = this;
 					var sprints = null;
 					var currentBacklogBoard = null;
-					
-					
-					
-					
-					/**
-					* This class represents a sprint block
-					* @info : Object with sprint info
-					*/
-					function SprintBlock(info, container){
-						
-						
-						
-						// Event handler on drop
-						function onBlockDrop(event,ui){
-				            storyOrTask = $(ui.draggable).data('storyOrTask');
-				            sprint = this.info;
-				            block = this;
-				            if (!this.isCurrentSprint()){
-				            	$(getAssignToSprintConfirmationForm()).dialog({
-				            		resizable: false,
-				        			height:140,
-				        			modal: true,
-				        			autoOpen:true,
-				        			buttons: {
-				        				"Yes move it": function() {
-				        					$.post("@{Stories.assignStory}", {
-				        						json:storyOrTask.toJson(), 
-				        						sprintId: (sprint!=null)? sprint.id: null
-				        					})
-							            	.success(function(){
-							            		currentBacklogBoard = block.getCurrentSprintBoard();
-							            		data = currentBacklogBoard.getData();
-							            		data.splice(storyOrTask.index, 1);
-							            		storyOrTask.div.remove();
-							            	})
-							            	.error(function(){
-							            		alert("mannaggia!");
-							            	});
-				        					$( this ).dialog( "close" );
-				        				},
-				        				Cancel: function() {
-				        					$( this ).dialog( "close" );
-				        				}
-				        			}
-
-				            	});
-				            }
-				        }
-						
-						
-						
-					}// ---------- End SprintBlock class --------------
-					
-					
-					
 					var sprints = loadSprints();
 					
 					function loadSprints(){
@@ -172,26 +120,6 @@
 		</div>
 		
 		
-		<button style= "display: block;clear:both; margin-top:250px;" id="showDataButton">Show data</button>
-		<div id="data" style="display: none;" class="formitem">
-		    <label for="rules" id="ruleslabel">Data:</label>
-		    <div class="textwrapper">
-		    	<textarea class="data-textArea"cols="2" rows="10" id="data-textArea"></textarea>
-		    </div>
-		</div>
-		<script>
-			$('#showDataButton').button().click(function (){
-				if ($("#data").is(":visible")){
-	                $("#showDataButton").empty().append("Show data");
-	            }else{
-	            	$("#data-textArea").val($(".sprintWrapper").data("sprintBoard").getDataJson());
-	            	$("#showDataButton").empty().append("Hide data");
-	            }
-				$('#data').toggle();
-			})
-		</script>
-
-
 	</body>
 </html>
 
