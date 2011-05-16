@@ -374,7 +374,7 @@ var BaseView = Backbone.View.extend({
 	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
 	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
 	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
-	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide();},
+	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide('slow');},
 	isVisible : function(){return this.visible;},
 	getChangeForm: function(onSave){
 		var buttons = {
@@ -576,6 +576,7 @@ var StoryView = BaseView.extend({
 		this.setTasksUrl();
 		this.tasks_el = this.options.tasks_el;
 		this.tasks.bind('change:completed', this.changeTaskCompleted);
+		this.tasks.bind('remove', this.changeTaskCompleted);
 		this.model.bind('change:id', this.setTasksUrl);
 		this.template = _.template(storyTemplate); 
 	},
@@ -781,8 +782,9 @@ var SortableView = CollectionView.extend({
 
 var StoryListView = SortableView.extend({
 	initialize: function (){
-		_.bindAll(this, "changeShowHideCompleted");
+		_.bindAll(this, "changeShowHideCompleted","showHideCompleted");
 		this.bind('change:showHideCompleted', this.changeShowHideCompleted);
+		this.collection.bind('change:completed', this.showHideCompleted)
 		SortableView.prototype.initialize.call(this);
 	},
 	viewFactory: function(model){
