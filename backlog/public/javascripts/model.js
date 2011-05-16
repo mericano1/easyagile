@@ -223,8 +223,6 @@ var SprintView = Backbone.View.extend({
 		this.model.bind('change:startDate', this.changeStartDate);
 		this.model.bind('change:endDate', this.changeEndDate);
 		this.template = _.template(sprintTemplate);
-		this.stories =  new StoryList;
-		this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
 	},
 	css:{
 		selected:"sprintSummary-selected"
@@ -255,6 +253,8 @@ var SprintView = Backbone.View.extend({
 	loadSprint:function(){
 		if (_(this.model.get('id')).isNumber() && (!this.selected)){
 			$(Statics.settings.backlogEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
+			this.stories =  new StoryList;
+			this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
 			this.storyContainer = new SprintStoriesView({
 				el: Statics.settings.backlogEl,
 				collection : this.stories,
@@ -786,6 +786,7 @@ var StoryListView = SortableView.extend({
 		this.bind('change:showHideCompleted', this.changeShowHideCompleted);
 		this.collection.bind('change:completed', this.showHideCompleted)
 		SortableView.prototype.initialize.call(this);
+		this.hideCompletedStories = false;
 	},
 	viewFactory: function(model){
 		return new StoryView({model:model, tasks_el:this.options.tasks_el});
@@ -798,27 +799,28 @@ var StoryListView = SortableView.extend({
 			this.showHideCompleted();
 		}
 	},
-	changeShowHideCompleted: function(hideCompleted){
-		this.hideCompleted = hideCompleted;
+	changeShowHideCompleted: function(hide){
+		this.hideCompletedStories = hide;
 		this.showHideCompleted();
 	},
-	showHideCompleted: function(){
-		if (this.hideCompleted===true){
-			var self = this;
-			this.collection.each(function(model, index){
-				if (model.get('completed') === true){
-					model.view.setInvisible();
-					if (index === self.selected){
-						$('.right-panel', self.el).empty();
+	showHideCompleted: function(changedModel){
+		if (this.hideCompletedStories === true){
+			for (var i = 0, l = this.collection.length; i < l; i++) {
+				var story = this.collection.at(i);
+				if (story.get('completed') === true){
+					story.view.setInvisible();
+					if (story.view.selected === true){
+						$('.right-panel', this.el).empty();
 					}
 				}
-			});
-		}else{
-			this.collection.each(function(model){
-				if (model.get('completed')){
-					model.view.setVisible();
+			}
+		}else {
+			for (var i = 0, l = this.collection.length; i < l; i++) {
+				var story = this.collection.at(i);
+				if (story.get('completed')){
+					story.view.setVisible();
 				}
-			});
+			}
 		}
 	}
 });
