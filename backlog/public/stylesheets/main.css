@@ -168,4 +168,4 @@ ul#icons span.ui-icon {float: left; margin: 0 4px;}
 label, input, textarea { display:block; }
 input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
 fieldset { padding:0; border:0; margin-top:25px; }
-.ui-datepicker { z-index: 1003 !important; }
+.ui-datepicker { width: 17em; padding: .2em .2em 0; z-index: 9999 !important; }
