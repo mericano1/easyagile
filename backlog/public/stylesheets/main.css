@@ -169,3 +169,28 @@ label, input, textarea { display:block; }
 input.text, textarea { margin-bottom:12px; width:95%; padding: .4em; }
 fieldset { padding:0; border:0; margin-top:25px; }
 .ui-datepicker { width: 17em; padding: .2em .2em 0; z-index: 9999 !important; }
+.story-tasks-arrow-border {
+	border-color: transparent #52CCCC transparent transparent;
+    border-style: solid;
+    border-width: 10px 15px 10px 10px;
+    height: 0;
+    left: -26px;
+    position: absolute;
+    width: 0;
+}
+.story-tasks-arrow {
+	border-bottom: 10px solid transparent;
+    border-right: 15px solid #66FFFF;
+    border-top: 10px solid transparent;
+    height: 0;
+    left: -15px;
+    line-height: 0;
+    position: absolute;
+    width: 0;
+}
+.story-tasks {
+	background-color: #66FFFF;
+    border: 1px solid #52CCCC;
+    padding: 5px;
+    position: relative;
+}

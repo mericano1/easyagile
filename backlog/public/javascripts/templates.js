@@ -68,25 +68,23 @@ var taskTemplate =
 	"if (!_.isUndefined(object.get('completed'))){" +
 		"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
 	"}%>" +
-	"<div class='<%=css.wrapper%>'>" +
-		"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
-				"<p>" +
-					"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
-					"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
-					"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
-					"<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>" +
-					"<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>"+
-					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
-					"<div class='description'><%=object.display('description')%></div>" +
-				"</p>" +
-			"<div class='card-info'>" +
-				"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
-				"<span class='assignee'><%=((object.get('assignee')) ? object.display('assignee') : 'Not Assigned')%></span>" +
-				"<span class='doneBy'><%=object.display('doneBy')%></span>" +
-				"<span class='points'><%=object.display('points')%></span>" + 
-					"<div style='clear:both;'/>" + 
-					"</div>" +
-			"</div>" +
+	"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
+		"<p>" +
+			"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+			"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+			"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
+			"<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>" +
+			"<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>"+
+			"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
+			"<div class='description'><%=object.display('description')%></div>" +
+		"</p>" +
+		"<div class='card-info'>" +
+			"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
+			"<span class='assignee'><%=((object.get('assignee')) ? object.display('assignee') : 'Not Assigned')%></span>" +
+			"<span class='doneBy'><%=object.display('doneBy')%></span>" +
+			"<span class='points'><%=object.display('points')%></span>" + 
+				"<div style='clear:both;'/>" + 
+				"</div>" +
 		"</div>" +
 	"</div>";
 var storiesHeaderTemplate = 
@@ -132,4 +130,12 @@ var assignUserDialogTemplate =
 var confirmAssignStoryToSprintTemplate = 
 	"<div id='dialog-confirm' title='Move the story to another sprint?'>" +
 	"<p><span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>All the tasks will also be moved. Are you sure?</p>" +
+	"</div>";
+
+var storyTasksContainerTemplate = 
+	"<div class='story-tasks' id='story<%=object.get('id')%>'>" +
+		"<div class='story-tasks-arrow-border'></div>" +
+		"<div class='story-tasks-arrow'></div>" +
+		"<div class='task-list'>" +
+		"</div>" +
 	"</div>";

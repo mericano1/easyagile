@@ -125,7 +125,7 @@ var TeamView = Backbone.View.extend({
 		_.bindAll(this, "display");
 		this.users = this.options.users;
 		this.template = _.template(assignUserDialogTemplate);
-		this.users.fetch();
+		this.users.fetch({error:Statics.errorAlert});
 	},
 	display: function(model){
 		var form = $(this.template({users:this.users.models, task:model}));
@@ -252,7 +252,7 @@ var SprintView = Backbone.View.extend({
 	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected); this.selected = false;},
 	loadSprint:function(){
 		if (_(this.model.get('id')).isNumber() && (!this.selected)){
-			$(Statics.settings.backlogEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
+			$(Statics.settings.backlogEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading stories'}));
 			this.stories =  new StoryList;
 			this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
 			this.storyContainer = new SprintStoriesView({
@@ -260,7 +260,7 @@ var SprintView = Backbone.View.extend({
 				collection : this.stories,
 				sprint: this
 			});
-			this.stories.fetch();
+			this.stories.fetch({error:Statics.errorAlert});
 			this.trigger('selected', this);
 		}
 	},
@@ -430,6 +430,8 @@ TaskViewStatics.css = {
 } 
 var TaskView = BaseView.extend({
 	css: TaskViewStatics.css,
+	tagName : 'div',
+	className : TaskViewStatics.css.wrapper,
 	initialize: function(){
 		_.bindAll(this, "changeAssignee", "changeDoneBy");
 		if (!(this.model instanceof Task)){this.model = new Task(this.model);}
@@ -567,7 +569,6 @@ StoryViewStatics.css = {
 } 
 var StoryView = BaseView.extend({
 	css : StoryViewStatics.css,
-	tasks_el : $("div").insertAfter(this.el),
 	initialize: function(){
 		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
 		BaseView.prototype.initialize.call(this);
@@ -612,21 +613,24 @@ var StoryView = BaseView.extend({
 	},
 	showTasks : function(event){
 		if (_.isUndefined(this.taskContainer)){
+			var tasksEl = $(_.template(storyTasksContainerTemplate,{object:this.model}));
+			$(this.tasks_el).append(tasksEl);
+			var taskListEl = $('.task-list',tasksEl);
 			this.taskContainer = new TaskListView({
 				collection: this.tasks,
-				el: this.tasks_el
+				el: taskListEl
 			});
 			//don't try to fetch if its a new model
 			if (!this.model.isNew()){
-				$(this.tasks_el).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
-				this.tasks.fetch();
+				$(taskListEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading tasks'}));
+				this.tasks.fetch({error:Statics.errorAlert});
 			}else { 
 				this.taskContainer.render();
 			}
 		} else {
 			this.taskContainer.render();
 		}
-		$(this.tasks_el).offset({top:$(this.el).position().top - 5});
+		$(tasksEl).offset({top:$(this.el).position().top - 5});
 		this.trigger('selected', this);
 	},
 	showNewTaskForm : function(toSave){
