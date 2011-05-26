@@ -17,7 +17,8 @@ Statics.settings = {
 		width: 380,
 		modal: true,
 		resizable: true
-	}
+	},
+	hideCompleted: false
 };
 Statics.errorAlert = function(){
 	alert("Ups, something went wrong. Please report the issue and try again later.");
@@ -131,7 +132,7 @@ var TeamView = Backbone.View.extend({
 		var form = $(this.template({users:this.users.models, task:model}));
 		 $("<div/>").append(form).dialog({
              autoOpen: true,
-             height: 180,
+             height: 250,
              width: 250,
              modal: true,
              resizable: false,
@@ -141,7 +142,7 @@ var TeamView = Backbone.View.extend({
  			},
              buttons: {
                   Assign: function(){
-                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val()});
+                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val(), notify:$('#notify',form).is(':checked')});
                       $( this ).dialog( "close" );
                   },
                   Cancel: function() {$( this ).dialog( "close" );}
@@ -230,7 +231,7 @@ var SprintView = Backbone.View.extend({
 	className:"sprintSummary roundedBox",
 	tagName:"div",
 	events:{
-		"click" : "loadSprint",
+		"click" : "showStories",
 		"click .ui-icon-trash" : "remove",
 		"click .ui-icon-pencil" : "edit",
 		"drop" : "dropStory"
@@ -250,7 +251,7 @@ var SprintView = Backbone.View.extend({
 	changeEndDate: function(model){$('.sprint-to',this.el).text(model.display('endDate'));},
 	markSelected : function(){ $(this.el).addClass(this.css.selected);	this.selected = true;},
 	unmarkSelected : function(){ $(this.el).removeClass(this.css.selected); this.selected = false;},
-	loadSprint:function(){
+	showStories:function(){
 		if (_(this.model.get('id')).isNumber() && (!this.selected)){
 			$(Statics.settings.backlogEl).html($('<img>',{src:'/public/images/loadingTxt.gif',alt:'Loading stories'}));
 			this.stories =  new StoryList;
@@ -374,7 +375,7 @@ var BaseView = Backbone.View.extend({
 	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
 	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
 	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
-	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide('slow');},
+	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide();},
 	isVisible : function(){return this.visible;},
 	getChangeForm: function(onSave){
 		var buttons = {
@@ -441,9 +442,10 @@ var TaskView = BaseView.extend({
 		this.template = _.template(taskTemplate);
 	},
 	render: function(){
-		html = $(this.template({object:this.model, css:this.css}));
+		html = $(this.template({object:this.model, css:this.css, settings:Statics.settings}));
 		$(".ui-icon-check, .ui-icon-user, .ui-icon-trash, .ui-icon-pencil",  html).button();
 		$(this.el).html(html);
+		if (Statics.settings.hideCompleted && this.model.get('completed') === true) {this.setInvisible();}
 		$(this.el).data('model', this.model);
 		return this;
 	},
@@ -569,32 +571,38 @@ StoryViewStatics.css = {
 } 
 var StoryView = BaseView.extend({
 	css : StoryViewStatics.css,
+	className: 'story',
 	initialize: function(){
 		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
 		BaseView.prototype.initialize.call(this);
-		_.bindAll(this, 'changeTaskCompleted','setTasksUrl');
+		_.bindAll(this, 'changeTaskCompleted','setTasksUrl', 'filterCompleted');
 		this.tasks = new TaskList();
 		this.setTasksUrl();
-		this.tasks_el = this.options.tasks_el;
 		this.tasks.bind('change:completed', this.changeTaskCompleted);
 		this.tasks.bind('remove', this.changeTaskCompleted);
 		this.model.bind('change:id', this.setTasksUrl);
-		this.template = _.template(storyTemplate); 
+		this.model.bind('filter:completed', this.filterCompleted);
+		
 	},
 	events : {
 		"click .ui-icon-plusthick": "showNewTaskForm",
-		"click .ui-icon-triangle-1-e": "showTasks",
+		"click .ui-icon-triangle-1-e": "toggleTasks",
 		"click .ui-icon-trash": "remove",
 		"click .ui-icon-pencil": "showChangeForm",
-		"click .ui-icon-pin-w" : "togglePinTasks",
 		"dblclick":"showChangeForm"
 	},
 	render: function(){
-		html = $(this.template({object:this.model, css:this.css}));
+		this.html = $(_.template(storyTemplate,{object:this.model, css:this.css}));
+		
 		//Adds story specific icons
-		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil, .ui-icon-pin-w",  html).button();
-		//mark changed
-		$(this.el).html(html);
+		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil",  this.html).button();
+		$(this.el).html(this.html);
+		//tasks
+		this.allTasksEl = $("<div class='tasks'></div>").insertAfter(this.html);
+		this.tasksEl = $(_.template(storyTasksContainerTemplate,{}));
+		$(this.allTasksEl).append(this.tasksEl);
+		$(this.allTasksEl).hide();
+		
 		//bind model for sorting events
 		$(this.el).data('model', this.model);
 		return this;
@@ -608,14 +616,17 @@ var StoryView = BaseView.extend({
 		var model = this.tasks._add(task);
 		model.save({error:Statics.errorAlert});
 	},
-	togglePinTasks: function(){
-		//$("#togglePinTasks",this.el).toggleClass('ui-icon-pin-s').toggleClass('ui-icon-pin-w');
+	toggleTasks: function(){
+		if($(this.allTasksEl).is(':visible')){
+			$(this.allTasksEl).hide();
+		} else {
+			this.showTasks();
+		}
 	},
 	showTasks : function(event){
+		$(this.allTasksEl).show();
 		if (_.isUndefined(this.taskContainer)){
-			var tasksEl = $(_.template(storyTasksContainerTemplate,{object:this.model}));
-			$(this.tasks_el).append(tasksEl);
-			var taskListEl = $('.task-list',tasksEl);
+			var taskListEl = $('.task-list', this.allTasksEl);
 			this.taskContainer = new TaskListView({
 				collection: this.tasks,
 				el: taskListEl
@@ -630,7 +641,6 @@ var StoryView = BaseView.extend({
 		} else {
 			this.taskContainer.render();
 		}
-		$(tasksEl).offset({top:$(this.el).position().top - 5});
 		this.trigger('selected', this);
 	},
 	showNewTaskForm : function(toSave){
@@ -651,16 +661,20 @@ var StoryView = BaseView.extend({
 		}
 		this.model.set({'completed':true});
 	},
-	setInvisible: function(){		
-		BaseView.prototype.setInvisible.call(this);
-		if (this.selected){
-			$(this.options.tasks_el).empty();
+	filterCompleted: function(){
+		//reusing the loop function to set visible or invisible
+		var loopOnTasks = function(collection, methodToCall){
+			for (var i = 0, l = collection.length; i < l; i++) {
+				var task = collection.at(i);
+				if (task.get('completed') === true){
+					task.view[methodToCall]();
+				}
+			}
 		}
-	},
-	setVisible: function(){
-		BaseView.prototype.setVisible.call(this);
-		if (this.selected){
-			this.showTasks();
+		if (Statics.settings.hideCompleted === true ){
+			loopOnTasks(this.tasks,'setInvisible');
+		}else {
+			loopOnTasks(this.tasks,'setVisible');
 		}
 	}
 	
@@ -786,14 +800,13 @@ var SortableView = CollectionView.extend({
 
 var StoryListView = SortableView.extend({
 	initialize: function (){
-		_.bindAll(this, "changeShowHideCompleted","showHideCompleted");
-		this.bind('change:showHideCompleted', this.changeShowHideCompleted);
+		_.bindAll(this, "filterCompleted","showHideCompleted");
+		this.bind('filter:completed', this.filterCompleted);
 		this.collection.bind('change:completed', this.showHideCompleted)
 		SortableView.prototype.initialize.call(this);
-		this.hideCompletedStories = false;
 	},
 	viewFactory: function(model){
-		return new StoryView({model:model, tasks_el:this.options.tasks_el});
+		return new StoryView({model:model});
 	},
 	render:function(){
 		SortableView.prototype.render.call(this);
@@ -803,28 +816,24 @@ var StoryListView = SortableView.extend({
 			this.showHideCompleted();
 		}
 	},
-	changeShowHideCompleted: function(hide){
-		this.hideCompletedStories = hide;
+	filterCompleted: function(){
 		this.showHideCompleted();
 	},
 	showHideCompleted: function(changedModel){
-		if (this.hideCompletedStories === true){
-			for (var i = 0, l = this.collection.length; i < l; i++) {
-				var story = this.collection.at(i);
+		//reusing the loop function to set visible or invisible
+		var loopOnStories = function(collection, methodToCall){
+			for (var i = 0, l = collection.length; i < l; i++) {
+				var story = collection.at(i);
 				if (story.get('completed') === true){
-					story.view.setInvisible();
-					if (story.view.selected === true){
-						$('.right-panel', this.el).empty();
-					}
+					story.view[methodToCall]();
 				}
+				story.trigger('filter:completed');
 			}
+		}
+		if (Statics.settings.hideCompleted === true){
+			loopOnStories(this.collection,'setInvisible');
 		}else {
-			for (var i = 0, l = this.collection.length; i < l; i++) {
-				var story = this.collection.at(i);
-				if (story.get('completed')){
-					story.view.setVisible();
-				}
-			}
+			loopOnStories(this.collection,'setVisible');
 		}
 	}
 });
@@ -855,8 +864,7 @@ var SprintStoriesView = Backbone.View.extend({
 		this.sprint = this.options.sprint;
 		this.storyList = new StoryListView({
 			collection: this.collection,
-			el: $('.left-panel', this.el),
-			tasks_el : $('.right-panel', this.el),
+			el: $('.stories', this.el)
 		});
 	},
 	events:{
@@ -864,7 +872,7 @@ var SprintStoriesView = Backbone.View.extend({
 		"change #hideCompleted" : "toggleCompleted"
 	},
 	render: function(){
-		html = _.template(storiesHeaderTemplate,{});
+		html = _.template(storiesHeaderTemplate,{settings:Statics.settings});
 		$(this.el).empty().append(html);
 		//main header buttons
 		$("#addStory ,#saveStories").button();
@@ -882,10 +890,11 @@ var SprintStoriesView = Backbone.View.extend({
 		var self = this;
 		checkbox = $("#hideCompleted", this.el);
 		if (checkbox.is(":checked")){
-			this.storyList.trigger('change:showHideCompleted', true);
+			Statics.settings.hideCompleted=true;
 		}else{
-			this.storyList.trigger('change:showHideCompleted', false);
+			Statics.settings.hideCompleted=false;
 		}
+		this.storyList.trigger('filter:completed');
 	} 
 });
 

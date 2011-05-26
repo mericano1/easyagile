@@ -43,7 +43,7 @@ public class Sprints extends Controller{
 	public static void all(){
 		List<Sprint> findAll = Sprint.findAll();
 		findAll.add(0, new Sprint(0L, "Unassigned"));
-		renderJSON(findAll);
+		renderJSON(gson.toJson(findAll));
 	}
 	
 	/**
@@ -51,7 +51,7 @@ public class Sprints extends Controller{
 	 */
 	public static void byId(Long sprintId){
 		Sprint byId = Sprint.findById(sprintId);
-		renderJSON(byId);
+		renderJSON(gson.toJson(byId));
 	}
 	
 	/**
@@ -59,7 +59,7 @@ public class Sprints extends Controller{
 	 */
 	public static void getCurrent(){
 		Sprint currentSprint = Sprint.findCurrentSprint();
-		renderJSON(currentSprint);
+		renderJSON(gson.toJson(currentSprint));
 	}
 	
 	
@@ -70,7 +70,7 @@ public class Sprints extends Controller{
 	public static void save(JsonObject body){
 		Sprint sprint = gson.fromJson(body, Sprint.class);
 		sprint.save();
-		renderJSON(sprint);
+		renderJSON(gson.toJson(sprint));
 	}
 	
 	

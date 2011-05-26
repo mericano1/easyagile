@@ -26,7 +26,7 @@ import utils.TestHelper;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 
-public class StoriesTest extends FunctionalTest {
+public class StoriesTest extends LoggedIn {
 	String story1Json = "{\"name\":\"story1\",\"description\":\"story1 desc\",\"points\":4,\"index\":0}",
 	story2Json = "{\"id\":19,\"name\":\"story2\",\"description\":\"story2 desc\",\"points\":6,\"index\":1}" ,
 	story3Json = "{\"id\":20,\"name\":\"story3\",\"description\":\"story3 desc\",\"points\":8,\"index\":2}" ,
@@ -34,7 +34,6 @@ public class StoriesTest extends FunctionalTest {
 	task1Json = "{\"id\":155,\"name\":\"hi there task\",\"description\":\"task desc\",\"index\":0,\"points\":23,\"story\":{\"kindClassName\":\"models.Story\",\"id\":153},\"div\":{\"0\":{\"jQuery1510011107923171946976\":26},\"length\":1}}",
 	task2Json = "{\"id\":156,\"name\":\"story3 - task1\",\"description\":\"tesk1\",\"index\":1,\"points\":23,\"story\":{\"kindClassName\":\"models.Story\",\"id\":152},\"div\":{\"0\":{},\"length\":1}}";
 	
-	private static Map<String, Http.Cookie> lastCookies;
 	@Before
 	public void setup(){
 		ObjectifyFixtures.deleteAll();
@@ -42,16 +41,6 @@ public class StoriesTest extends FunctionalTest {
 		login();
 	}
 	
-	public void login(){
-		String postUrl = Router.reverse("GAEActions.doLogin").url;
-		Map<String, String> map = Maps.newHashMap();
-		map.put("email", "andrea.salvadore@gmail.com");
-		map.put("url", "/");
-		map.put("isAdmin", "true");
-		Map<String, File> fileMap = Maps.newHashMap();
-		Response post = POST(postUrl, map, fileMap);
-		lastCookies = post.cookies;
-	}
 	
 	public Map<String, Object> getArgsMap(String name, Long value){
 		Map<String, Object> map = Maps.newHashMap();
@@ -88,7 +77,7 @@ public class StoriesTest extends FunctionalTest {
 		fromJson[1].index = 0;
 		String updateIdxUrl = "/stories";
 		Request request = newRequest();
-		request.cookies = lastCookies;
+		request.cookies = lastCookies();
 		String json = String.format("[{id: %d, index:%d},{id: %d, index:%d}]",fromJson[0].id, fromJson[0].index, fromJson[1].id, fromJson[1].index);
 		Response post = PUT(request, updateIdxUrl, "application/json", json);
 		assertIsOk(post);
@@ -138,7 +127,7 @@ public class StoriesTest extends FunctionalTest {
 		Gson gson = new Gson();
 		String jsonUpdated = gson.toJson(firstStory);
 		Request request = newRequest();
-		request.cookies = lastCookies;
+		request.cookies = lastCookies();
 		Response response = PUT(request, "/stories/" + firstStory.id, "application/json", jsonUpdated);
 		assertIsOk(response);
 		Story retrieved = Story.findById(firstStory.key());

@@ -99,7 +99,7 @@ public class Tasks extends Controller{
 	public static void update(Long storyId, Long taskId, JsonObject body){
 		Task toUpdate = Task.findById(storyId, taskId);
 		doUpdate(toUpdate, body);
-		renderJSON(body);
+		renderJSON(toUpdate);
 	}
 	
 	
@@ -112,17 +112,6 @@ public class Tasks extends Controller{
 	}
 	
 
-	/**
-	 * Updates a single tasks for a given story
-	 * @param body
-	 */
-	public static void update(Long storyId, JsonObject body){
-			updateElement(storyId, body);
-		if (body.isJsonArray()){
-		}
-		renderError("storyId:" + storyId, body);
-	}
-	
 	
 	/**
 	 * Updates an array of tasks for a given story
@@ -133,7 +122,7 @@ public class Tasks extends Controller{
 		for (JsonElement jsonElement : jsonArray) {
 			updateElement(storyId, jsonElement);
 		}
-		renderJSON(body);
+		renderJSON(UserMessage.SUCCESSFUL);
 	}
 
 	

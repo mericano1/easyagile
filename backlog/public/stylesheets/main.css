@@ -29,17 +29,23 @@ ul#icons span.ui-icon {float: left; margin: 0 4px;}
 .ui-icon-user {
      background-image: url('ui-lightness/images/user.png');
 }
-.left-panel{
-	width: 49.5%;
-	display:inline-block;
-	vertical-align: top;
-	float: left;
+.story{
+	width: 99%;
 }
-.right-panel{
+.storyCard{
 	width: 49.5%;
-	display:inline-block;
 	vertical-align: top;
-	float: right;
+	display:inline-block;
+}
+.tasks{
+	width: 48%;
+	vertical-align: top;
+	display:inline-block;
+	margin: 5px 0 0 15px;	
+	background-color: #66FFFF;
+    border: 1px solid #52CCCC;
+    padding: 0 5px;
+    position: relative;
 }
 .headerButtons input, label {
 	display: inline;
@@ -172,25 +178,27 @@ fieldset { padding:0; border:0; margin-top:25px; }
 .story-tasks-arrow-border {
 	border-color: transparent #52CCCC transparent transparent;
     border-style: solid;
-    border-width: 10px 15px 10px 10px;
+    border-width: 11px 13px 11px 10px;
     height: 0;
-    left: -26px;
+    left: -23px;
     position: absolute;
     width: 0;
+    top: 4px;
 }
 .story-tasks-arrow {
 	border-bottom: 10px solid transparent;
-    border-right: 15px solid #66FFFF;
+    border-right: 12px solid #66FFFF;
     border-top: 10px solid transparent;
     height: 0;
-    left: -15px;
+    left: -12px;
     line-height: 0;
     position: absolute;
     width: 0;
+    top: 5px;
 }
-.story-tasks {
+/* .story-tasks {
 	background-color: #66FFFF;
     border: 1px solid #52CCCC;
     padding: 5px;
     position: relative;
-}
+} */

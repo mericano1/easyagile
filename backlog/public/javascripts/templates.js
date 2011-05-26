@@ -38,12 +38,37 @@ var confirmDeleteDialogTemplate =
 	"</div>";
 
 var storyTemplate =
+		"<%if (_(css).isUndefined()){css = Statics.settings.css;}" +
+			"summaryClass = css.summary;" +
+		"if (!_.isUndefined(object.get('completed'))){" +
+			"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
+		"}%>" +
+		"<div class='<%=css.wrapper%> storyCard'>" +
+			"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
+					"<p>" +
+						"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+						"<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'></span>" +
+						"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
+						"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
+						"<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>" +
+						"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
+						"<div class='description'><%=object.display('description')%></div>" +
+					"</p>" +
+					"<div class='card-info'>" +
+						"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
+						"<span class='points'><%=object.display('points')%></span>" + 
+							"<div style='clear:both;'/>" + 
+							"</div>" +
+					"</div>" +
+			"</div>" +
+		"</div>";
+var bugTemplate =
 	"<%if (_(css).isUndefined()){css = Statics.settings.css;}" +
 		"summaryClass = css.summary;" +
 	"if (!_.isUndefined(object.get('completed'))){" +
 		"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
 	"}%>" +
-	"<div class='<%=css.wrapper%>'>" +
+	"<div class='<%=css.wrapper%> storyCard'>" +
 		"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
 				"<p>" +
 					"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
@@ -54,12 +79,12 @@ var storyTemplate =
 					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
 					"<div class='description'><%=object.display('description')%></div>" +
 				"</p>" +
-			"<div class='card-info'>" +
-				"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
-				"<span class='points'><%=object.display('points')%></span>" + 
-					"<div style='clear:both;'/>" + 
-					"</div>" +
-			"</div>" +
+				"<div class='card-info'>" +
+					"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
+					"<span class='points'><%=object.display('points')%></span>" + 
+						"<div style='clear:both;'/>" + 
+						"</div>" +
+				"</div>" +
 		"</div>" +
 	"</div>";
 var taskTemplate = 
@@ -68,7 +93,7 @@ var taskTemplate =
 	"if (!_.isUndefined(object.get('completed'))){" +
 		"summaryClass = object.get('completed') ? css.completed : css.incompleted;" +
 	"}%>" +
-	"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
+	"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em;'>" + 
 		"<p>" +
 			"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
 			"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
@@ -90,12 +115,11 @@ var taskTemplate =
 var storiesHeaderTemplate = 
 		"<div class='headerButtons'>" +
 			"<button id='addStory'>Add Story</button>" +
-			"<input type='checkbox' id='hideCompleted'>Hide Completed</input>" +
+			/*"<button id='addBug'>Add Bug</button>" +*/
+			"<input type='checkbox' id='hideCompleted' <%=settings.hideCompleted?'checked=checked':''%>>Hide Completed</input>" +
 			"<p id='userMessages' style='display:inline; margin-left:20px;'>" +
 		"</div>" + 
-		"<div class='left-panel'></div>" +
-		"<div class='right-panel'></div>" ;
-
+		"<div class='stories'></div>" ;
 var sprintsHeaderTemplate = 
 		"<span>Sprints</span> <button id='addSprint'>Add Sprint</button>" +
 		"<div class='sprintWrapper'>" +
@@ -122,7 +146,11 @@ var assignUserDialogTemplate =
 			"<option name=<%=user.get('email')%> value=<%=user.get('email')%>><%=user.get('email')%></option>" +
 			"<% }); %>" +
 		"</select>" +
-		"<label for='doneBy'>Will have it done by</label>" + 
+		"<br/>"+
+		"<label for='notify' style='display:inline;margin-top:10px;'>Notify</label>" + 
+		"<input type='checkbox' name='notify' id='notify' style='display:inline;'>" +
+		"<br/>"+
+		"<label for='doneBy'style='margin-top:10px;'>Will have it done by</label>" + 
 		"<input type='text' name='doneBy' id='doneBy' class='text ui-widget-content ui-corner-all' value='<%=task?task.display('doneBy'):''%>' >" +
 	"</form>" + 	
 	"</div>";
@@ -133,9 +161,7 @@ var confirmAssignStoryToSprintTemplate =
 	"</div>";
 
 var storyTasksContainerTemplate = 
-	"<div class='story-tasks' id='story<%=object.get('id')%>'>" +
-		"<div class='story-tasks-arrow-border'></div>" +
-		"<div class='story-tasks-arrow'></div>" +
-		"<div class='task-list'>" +
-		"</div>" +
+	"<div class='story-tasks-arrow-border'></div>" +
+	"<div class='story-tasks-arrow'></div>" +
+	"<div class='task-list'>" +
 	"</div>";
