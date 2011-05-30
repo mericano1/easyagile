@@ -1,15 +1,21 @@
-<!-- Indices written at Sun, 29 May 2011 22:54:06 IST -->
+<!-- Indices written at Mon, 30 May 2011 17:10:26 BST -->
 
 <datastore-indexes>
 
-    <!-- Used 43 times in query history -->
-    <datastore-index kind="Story" ancestor="false" source="auto">
-        <property name="sprint" direction="asc"/>
+    <!-- Used 268 times in query history -->
+    <datastore-index kind="Task" ancestor="true" source="auto">
         <property name="index" direction="asc"/>
     </datastore-index>
 
-    <!-- Used 10 times in query history -->
-    <datastore-index kind="Task" ancestor="true" source="auto">
+    <!-- Used 7 times in query history -->
+    <datastore-index kind="Story" ancestor="false" source="auto">
+        <property name="name" direction="asc"/>
+        <property name="index" direction="asc"/>
+    </datastore-index>
+
+    <!-- Used 222 times in query history -->
+    <datastore-index kind="Story" ancestor="false" source="auto">
+        <property name="sprint" direction="asc"/>
         <property name="index" direction="asc"/>
     </datastore-index>
 

@@ -710,14 +710,29 @@ BugViewStatics.css = {
 var BugView = StoryView.extend({
 	css:BugViewStatics.css,
 	templateVarName : 'bugTemplate',
+	initialize: function(){
+		_.bindAll(this, "changeAssignee", "changeDoneBy");
+		StoryView.prototype.initialize.call(this);
+		this.model.bind("change:assignee", this.changeAssignee);
+		this.model.bind("change:doneBy", this.changeDoneBy);
+	},
 	events: $.extend (StoryView.events,{
-		"click .ui-icon-check" : "toggleCompleted"
+		"click .ui-icon-check" : "toggleCompleted",
+		"click .ui-icon-user": "assignUser",
+		"click .ui-icon-trash": "remove",
+		"click .ui-icon-pencil": "showChangeForm",
+		"dblclick":"showChangeForm"
 	}),
 	render: function(){
 		StoryView.prototype.render.call(this);
-		$(".ui-icon-check",  this.html).button();
+		$(".ui-icon-check, .ui-icon-user",  this.html).button();
 		return this;
-	}
+	},
+	assignUser: function(){
+		Statics.team.display(this.model);
+	},
+	changeAssignee: function(){ $(".assignee", this.el).text(this.model.get('assignee'));},
+	changeDoneBy: function(){ $(".doneBy", this.el).text(this.model.get('doneBy'));}
 });
 
 //-----------------------------------------------------------------------

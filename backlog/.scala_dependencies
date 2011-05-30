@@ -3,12 +3,22 @@ C:\Workspace\easyagile\backlog\eclipse\classes;C:\eclipse-scala\eclipse\configur
 C:\Workspace\easyagile\backlog\test\controllers\SprintTest.scala -> C:\Workspace\easyagile\backlog\test\controllers\SprintTest.scala
 C:\Workspace\easyagile\backlog\test\controllers\SprintTest.scala -> C:\Workspace\easyagile\backlog\app\models\Sprint.java
 C:\Workspace\easyagile\backlog\test\controllers\SprintTest.scala -> C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala
-C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala -> C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala
+C:\Workspace\easyagile\backlog\app\models\Story.java -> C:\Workspace\easyagile\backlog\app\models\Story.java
 C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala -> C:\Workspace\easyagile\backlog\app\models\Story.java
 C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala -> C:\Workspace\easyagile\backlog\app\models\Task.java
 C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala -> C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala
 C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala -> C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\app\models\Story.java
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\test\models\TestModelBuilder.java
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\app\models\Sprint.java
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala
+C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala -> C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala
+C:\Workspace\easyagile\backlog\app\models\Task.java -> C:\Workspace\easyagile\backlog\app\models\Task.java
+C:\Workspace\easyagile\backlog\test\models\TestModelBuilder.java -> C:\Workspace\easyagile\backlog\app\models\Sprint.java
+C:\Workspace\easyagile\backlog\app\models\Sprint.java -> C:\Workspace\easyagile\backlog\app\models\Sprint.java
 -------
 C:\Workspace\easyagile\backlog\test\controllers\SprintTest.scala -> C:\Workspace\easyagile\backlog\eclipse\classes\controllers\SprintTest.class
+C:\Workspace\easyagile\backlog\test\controllers\StoriesTest.scala -> C:\Workspace\easyagile\backlog\eclipse\classes\controllers\StoriesTest.class
 C:\Workspace\easyagile\backlog\test\controllers\LoggedIn.scala -> C:\Workspace\easyagile\backlog\eclipse\classes\controllers\LoggedIn.class
 C:\Workspace\easyagile\backlog\test\controllers\TasksTest2.scala -> C:\Workspace\easyagile\backlog\eclipse\classes\controllers\TasksTest2.class
