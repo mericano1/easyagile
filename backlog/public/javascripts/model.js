@@ -142,7 +142,7 @@ var TeamView = Backbone.View.extend({
  			},
              buttons: {
                   Assign: function(){
-                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val(), notify:$('#notify',form).is(':checked')});
+                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val()/*, notify:$('#notify',form).is(':checked')*/});
                       $( this ).dialog( "close" );
                   },
                   Cancel: function() {$( this ).dialog( "close" );}
@@ -244,7 +244,9 @@ var SprintView = Backbone.View.extend({
 	},
 	changeId: function(model){
 		$('.sprint-id',this.el).text(model.display('id'));
-		this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
+		if (this.stories){
+			this.stories.url = Statics.settings.storiesBySprintUrl({sprintId:this.model.get('id')});
+		}
 	},
 	changeName: function(model){$('.sprint-name',this.el).text(model.display('name'));},
 	changeStartDate:function(model){$('.sprint-from',this.el).text(model.display('startDate'));},
@@ -377,6 +379,7 @@ var BaseView = Backbone.View.extend({
 	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
 	setInvisible : function(){this.visible = false; this.trigger('change:visible', this.visible); $(this.el).hide();},
 	isVisible : function(){return this.visible;},
+	toggleCompleted: function(){this.model.set({completed: !this.model.get('completed')});},
 	getChangeForm: function(onSave){
 		var buttons = {
 				"Save" : function(){ 
@@ -463,8 +466,7 @@ var TaskView = BaseView.extend({
 	getBlankFormBlock : TaskViewStatics.getBlankFormBlock,
 	showAddNewForm : TaskViewStatics.showAddNewForm,
 	changeAssignee: function(){ $(".assignee",this.el).text(this.model.get('assignee'));},
-	changeDoneBy: function(){ $(".doneBy",this.el).text(this.model.get('doneBy'));},
-	toggleCompleted: function(){this.model.set({completed: !this.model.get('completed')});}
+	changeDoneBy: function(){ $(".doneBy",this.el).text(this.model.get('doneBy'));}
 });
 
 TaskViewStatics.getNoTaskAvailableBlock = function(){
@@ -572,6 +574,7 @@ StoryViewStatics.css = {
 var StoryView = BaseView.extend({
 	css : StoryViewStatics.css,
 	className: 'story',
+	templateVarName : 'storyTemplate',
 	initialize: function(){
 		if (!(this.model instanceof Story)){this.model = new Story(this.model);}
 		BaseView.prototype.initialize.call(this);
@@ -592,7 +595,7 @@ var StoryView = BaseView.extend({
 		"dblclick":"showChangeForm"
 	},
 	render: function(){
-		this.html = $(_.template(storyTemplate,{object:this.model, css:this.css}));
+		this.html = $(_.template(window[this.templateVarName],{object:this.model, css:this.css}));
 		
 		//Adds story specific icons
 		$(".ui-icon-plusthick, .ui-icon-triangle-1-e, .ui-icon-trash, .ui-icon-pencil",  this.html).button();
@@ -678,6 +681,43 @@ var StoryView = BaseView.extend({
 		}
 	}
 	
+});
+
+//-----------------------------------------------------------------------
+//Bug view
+//-----------------------------------------------------------------------
+var BugViewStatics = {};
+BugViewStatics.getFormDialog = Statics.getFormDialog;
+BugViewStatics.settings = Statics.settings;
+BugViewStatics.getFormBlockId = function(){return "dialog-form-bug";}
+BugViewStatics.getBlankFormBlock = function(){
+	html = Statics.getFormBlock();
+	html.attr('id', BugViewStatics.getFormBlockId());
+	html.attr('title', 'Bug details');
+	return html;
+}
+BugViewStatics.showAddNewForm=function(onSave){
+	return Statics.showAddNewForm.call(this,
+			onSave, 
+			Statics.closeDialog
+		);
+}
+BugViewStatics.css = {
+		incompleted:"bugSummary",
+		summary: "bugSummary",
+		selected: "storySummary-selected"
+}
+var BugView = StoryView.extend({
+	css:BugViewStatics.css,
+	templateVarName : 'bugTemplate',
+	events: $.extend (StoryView.events,{
+		"click .ui-icon-check" : "toggleCompleted"
+	}),
+	render: function(){
+		StoryView.prototype.render.call(this);
+		$(".ui-icon-check",  this.html).button();
+		return this;
+	}
 });
 
 //-----------------------------------------------------------------------
@@ -806,7 +846,7 @@ var StoryListView = SortableView.extend({
 		SortableView.prototype.initialize.call(this);
 	},
 	viewFactory: function(model){
-		return new StoryView({model:model});
+		return _.isUndefined(model.get('type')) ? new StoryView({model:model}) : new BugView({model:model});
 	},
 	render:function(){
 		SortableView.prototype.render.call(this);
@@ -858,7 +898,7 @@ var SprintListView = CollectionView.extend({
 
 var SprintStoriesView = Backbone.View.extend({
 	initialize:function(){
-		_.bindAll(this, "addStory");
+		_.bindAll(this, "addStory", "addBug");
 		this.render();
 		this.collection = this.options.collection;
 		this.sprint = this.options.sprint;
@@ -869,19 +909,29 @@ var SprintStoriesView = Backbone.View.extend({
 	},
 	events:{
 		"click #addStory" : "addStory",
+		"click #addBug" : "addBug",
 		"change #hideCompleted" : "toggleCompleted"
 	},
 	render: function(){
 		html = _.template(storiesHeaderTemplate,{settings:Statics.settings});
 		$(this.el).empty().append(html);
 		//main header buttons
-		$("#addStory ,#saveStories").button();
+		$("#addStory ,#saveStories, #addBug").button();
 		return this;
 	},
 	addStory: function(){
 		var self = this;
 		StoryViewStatics.showAddNewForm(function(toSave){
 			toSave.index = self.collection.length;
+			var model = self.collection._add(toSave);
+			model.save({error:Statics.errorAlert});
+		});
+	},
+	addBug: function(){
+		var self = this;
+		BugViewStatics.showAddNewForm(function(toSave){
+			toSave.index = self.collection.length;
+			toSave.type = 'bug';
 			var model = self.collection._add(toSave);
 			model.save({error:Statics.errorAlert});
 		});

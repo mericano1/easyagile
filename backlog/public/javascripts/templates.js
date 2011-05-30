@@ -76,6 +76,7 @@ var bugTemplate =
 					"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
 					"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
 					"<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-check ' title='Mark Fixed' style='float: right; margin-left: .3em;'></span>"+
 					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
 					"<div class='description'><%=object.display('description')%></div>" +
 				"</p>" +
@@ -115,7 +116,7 @@ var taskTemplate =
 var storiesHeaderTemplate = 
 		"<div class='headerButtons'>" +
 			"<button id='addStory'>Add Story</button>" +
-			/*"<button id='addBug'>Add Bug</button>" +*/
+			"<button id='addBug'>Add Bug</button>" +
 			"<input type='checkbox' id='hideCompleted' <%=settings.hideCompleted?'checked=checked':''%>>Hide Completed</input>" +
 			"<p id='userMessages' style='display:inline; margin-left:20px;'>" +
 		"</div>" + 
@@ -146,9 +147,9 @@ var assignUserDialogTemplate =
 			"<option name=<%=user.get('email')%> value=<%=user.get('email')%>><%=user.get('email')%></option>" +
 			"<% }); %>" +
 		"</select>" +
-		"<br/>"+
+		/*"<br/>"+
 		"<label for='notify' style='display:inline;margin-top:10px;'>Notify</label>" + 
-		"<input type='checkbox' name='notify' id='notify' style='display:inline;'>" +
+		"<input type='checkbox' name='notify' id='notify' style='display:inline;'>" +*/
 		"<br/>"+
 		"<label for='doneBy'style='margin-top:10px;'>Will have it done by</label>" + 
 		"<input type='text' name='doneBy' id='doneBy' class='text ui-widget-content ui-corner-all' value='<%=task?task.display('doneBy'):''%>' >" +

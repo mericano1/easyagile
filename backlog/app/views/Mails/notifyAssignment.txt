@@ -1,0 +1,12 @@
+A task has been assigned to you:
+
+name: ${task.name}
+description: ${task.description}
+
+Please check this url
+@@{Application.index()}/${taskUrl}
+and set the date you think you can have it done!
+
+Thanks!
+
+easyagile notifier 

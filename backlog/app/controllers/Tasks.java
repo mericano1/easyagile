@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import models.Story;
 import models.Task;
+import notifiers.Mails;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.ConvertUtils;
@@ -147,10 +148,15 @@ public class Tasks extends Controller{
 		Set<Entry<String, JsonElement>> entrySet = body.entrySet();
 		for (Entry<String, JsonElement> entry : entrySet) {
 			String key = entry.getKey();
+			if (key.equals("notify") && entry.getValue() != null && entry.getValue().getAsBoolean()){
+				Mails.notifyAssignment(source);
+			}
 			if (!EXCLUDE_PROPS.contains(key)){
 				try {
 					BeanUtils.copyProperty(toUpdate, key, PropertyUtils.getProperty(source, key));
-				} catch (Exception e) {
+				}catch (NoSuchMethodException e1){
+					play.Logger.warn("Trying to set a property not found: [%s]" , key);
+				}catch (Exception e) {
 					throw new UnexpectedException("The update failed. Some of the properties could not be persisted:" + key, e);
 				}
 			}
