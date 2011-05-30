@@ -9,3 +9,4 @@ tmp/
 backlog/precompiled/
 backlog/.settings/
 easyagile-war/
+backlog/.scala_dependencies
