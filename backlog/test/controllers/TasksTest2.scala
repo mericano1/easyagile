@@ -22,7 +22,7 @@ class TasksTest2 extends LoggedIn with ShouldMatchers with Matchers{
     
     val request = newRequest();
 	request.cookies = lastCookies
-	val json = "[{\"id\":%d, \"notify\":%s}]".format(storyId,true)
+	val json = "[{\"id\":%d, \"abcdefg\":%s}]".format(storyId,true)
 	val response = PUT(request, "/stories/%d/tasks".format(storyId), "application/json", json);
     response shouldBeOk()
   }
