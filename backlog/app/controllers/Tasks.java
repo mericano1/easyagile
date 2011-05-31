@@ -15,7 +15,6 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.beanutils.converters.DateConverter;
 
-import play.Play;
 import play.exceptions.UnexpectedException;
 import play.mvc.Controller;
 import play.mvc.With;
@@ -32,20 +31,17 @@ import com.googlecode.objectify.Key;
 @With(Application.class)
 public class Tasks extends Controller{
 	private static final Set<String> EXCLUDE_PROPS = Sets.newHashSet("id", "story");
-	private static final String DATE_FORMAT = Play.configuration.getProperty("date.format");
 	static {
 		DateConverter dateConverter = new DateConverter();
-		dateConverter.setPattern(DATE_FORMAT);
+		dateConverter.setPattern(Application.DATE_FORMAT);
 		ConvertUtils.register(dateConverter, Date.class);
 	}
 	private static final Gson gson = new GsonBuilder()
-		.setDateFormat(DATE_FORMAT)
-		.registerTypeAdapter(Task.class, new TaskJsonDeserializer())
-		.registerTypeAdapter(Task.class, new TaskJsonSerializer())
+		.setDateFormat(Application.DATE_FORMAT)
+		.registerTypeAdapter(Task.class, new UserJsonDeserializer())
+		.registerTypeAdapter(Task.class, new UserJsonSerializer())
 		.create();
-	static final Gson gsonDate = new GsonBuilder()
-		.setDateFormat(DATE_FORMAT)
-		.create();
+
 	
 	/**
 	 * gets all the tasks for a story
@@ -100,7 +96,7 @@ public class Tasks extends Controller{
 	public static void update(Long storyId, Long taskId, JsonObject body){
 		Task toUpdate = Task.findById(storyId, taskId);
 		doUpdate(toUpdate, body);
-		renderJSON(toUpdate);
+		renderText(gson.toJson(toUpdate));
 	}
 	
 	

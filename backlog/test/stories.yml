@@ -33,3 +33,9 @@ Story(story4):
    description: story4 desc
    points: 31
    sprint: sprint1
+User(bob):
+   email: bob@gmail.com
+   name: bob
+User(me):
+   email: me@gmail.com
+   name: me

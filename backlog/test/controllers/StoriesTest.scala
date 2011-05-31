@@ -12,6 +12,8 @@ import com.google.gson.Gson
 import models.Story
 import models.TestModelBuilder
 import java.util.Date
+import com.google.gson.JsonObject
+import scala.util.parsing.json.JSON
 
 class StoriesTest extends LoggedIn with ShouldMatchers with Matchers {
 	val story1Json = """{"name":"story1","description":"story1 desc","points":4,"index":0}"""
@@ -102,9 +104,7 @@ class StoriesTest extends LoggedIn with ShouldMatchers with Matchers {
 		firstStory.name = "story1 updated";
 		firstStory.points = 10;
 		val jsonUpdated = gson.toJson(firstStory);
-		val request = newRequest();
-		request.cookies = lastCookies;
-		val response = PUT(request, "/stories/" + firstStory.id, "application/json", jsonUpdated);
+		val response = PUTJson("/stories/" + firstStory.id, jsonUpdated);
 		response shouldBeOk()
 		val retrieved = Story.findById(firstStory.key());
 		retrieved.name should be("story1 updated")
@@ -133,4 +133,27 @@ class StoriesTest extends LoggedIn with ShouldMatchers with Matchers {
 		retrieved should be(null)
 		Story.findAll().size() should be(3)
 	}
+	
+	@Test
+	def testAssignToUser(){
+		ObjectifyFixtures.load("stories.yml");
+		val firstStory = Story.findAll().get(0);
+		val jsonElement = gson.toJsonTree(firstStory)
+		jsonElement.asInstanceOf[JsonObject].addProperty("assignee", "bob@gmail.com");
+		val response = PUTJson("/stories/" + firstStory.id, jsonElement.toString);
+		response shouldBeOk()
+		
+		val byId = GET("/stories/" + firstStory.id);
+		
+		val assignee = JSON.parseFull(byId.out.toString) match {
+		  case Some(x) => {
+		    val obj = x.asInstanceOf[Map[String, Any]]
+		    obj("assignee")
+		  }
+		  case None => Nil
+		}
+		
+		assignee should not be(Nil)
+	}
+	
 }

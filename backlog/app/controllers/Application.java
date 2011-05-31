@@ -4,8 +4,11 @@ import java.util.Date;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import models.User;
+import play.Play;
 import play.modules.gae.GAE;
 import play.mvc.Before;
 import play.mvc.Controller;
@@ -17,6 +20,11 @@ public class Application extends Controller {
 			"mdenieffe@gmail.com",
 			"michael.k.baxter@gmail.com",
 			"ftrilnik@gmail.com");
+	static final String DATE_FORMAT = Play.configuration.getProperty("date.format");
+	
+	public static final Gson gsonDate = new GsonBuilder()
+		.setDateFormat(DATE_FORMAT)
+		.create();
 	
 	@Before
     static void checkConnected() {

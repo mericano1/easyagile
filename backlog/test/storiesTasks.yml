@@ -1,6 +1,11 @@
 # you describe your data using the YAML notation here
 # and then load them using Fixtures.load("data.yml")
-
+User(bob):
+   email: bob@gmail.com
+   name: bob
+User(me):
+   email: me@gmail.com
+   name: me
 Sprint(first):
    name: sprint1
    startDate: 2010-11-23 15:03:17 -5

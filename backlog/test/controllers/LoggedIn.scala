@@ -7,6 +7,7 @@ import scala.collection.mutable.HashMap
 import scalaj.collection.Imports._
 import play.Play
 import com.google.gson.GsonBuilder
+import play.mvc.Http.Response
 
 abstract class LoggedIn extends FunctionalTestCase {
   
@@ -22,6 +23,12 @@ abstract class LoggedIn extends FunctionalTestCase {
 		val fileMap = new HashMap[String, File];
 		val post = POST(postUrl, map.asJava, fileMap.asJava);
 		lastCookies = post.cookies;
+  }
+  
+  def PUTJson (url:String, body:String) :Response = {
+    val request = newRequest();
+	request.cookies = lastCookies;
+	PUT(request, url, "application/json", body);
   }
 
 }

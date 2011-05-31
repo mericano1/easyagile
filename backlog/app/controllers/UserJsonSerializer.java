@@ -15,10 +15,10 @@ import com.google.gson.JsonSerializer;
  * @author asalvadore
  *
  */
-public class TaskJsonSerializer implements JsonSerializer<Task>{
+public class UserJsonSerializer implements JsonSerializer<Task>{
 	@Override
 	public JsonElement serialize(Task task, Type typeOf, JsonSerializationContext context) {
-		JsonElement jsonElement = Tasks.gsonDate.toJsonTree(task);
+		JsonElement jsonElement = Application.gsonDate.toJsonTree(task);
 		if (task.assignee != null){
 			User user = User.findByKey(task.assignee);
 			JsonObject jsonObject = jsonElement.getAsJsonObject();

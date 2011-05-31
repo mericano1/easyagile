@@ -1,5 +1,6 @@
 package models;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Id;
@@ -22,6 +23,8 @@ public class Story extends ObjectifyModel<Story>{
     public Boolean completed;
     public String type;
     public Key<Sprint> sprint;
+    public Date doneBy;
+    public Key<User> assignee;
     
     public static Story findById(Long storyId) {
     	Assert.notNull(storyId, "Story id cannot be null");

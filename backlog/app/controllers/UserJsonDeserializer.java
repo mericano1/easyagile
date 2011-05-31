@@ -1,8 +1,6 @@
 package controllers;
 
 import java.lang.reflect.Type;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import models.Task;
 import models.User;
@@ -19,7 +17,8 @@ import com.googlecode.objectify.Key;
  * @author asalvadore
  *
  */
-public class TaskJsonDeserializer implements JsonDeserializer<Task>{
+public class UserJsonDeserializer implements JsonDeserializer<Task>{
+	
 	@Override
 	public Task deserialize(JsonElement jsonElement, Type typeOf, JsonDeserializationContext context) throws JsonParseException {
 		
@@ -35,7 +34,7 @@ public class TaskJsonDeserializer implements JsonDeserializer<Task>{
 			jsonObject.remove("assignee");
 		}
 		clearPropertyIfEmpty(jsonObject,"doneBy");
-		Task fromJson = Tasks.gsonDate.fromJson(jsonObject, Task.class);
+		Task fromJson = Application.gsonDate.fromJson(jsonObject, Task.class);
 		jsonObject.add("assignee", assigneeElement);
 		fromJson.assignee = key;
 		return fromJson;
