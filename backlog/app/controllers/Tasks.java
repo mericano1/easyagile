@@ -2,17 +2,13 @@ package controllers;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
 import models.Story;
 import models.Task;
-import notifiers.Mails;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.beanutils.converters.DateConverter;
 
 import play.exceptions.UnexpectedException;
@@ -41,6 +37,11 @@ public class Tasks extends Controller{
 		.registerTypeAdapter(Task.class, new UserJsonDeserializer())
 		.registerTypeAdapter(Task.class, new UserJsonSerializer())
 		.create();
+	
+	private static WorkUnit<Task> workUnit = new WorkUnit<Task>(gson, EXCLUDE_PROPS, Task.class);
+	
+	
+	
 
 	
 	/**
@@ -103,7 +104,7 @@ public class Tasks extends Controller{
 	//This is actually performing the update and save the object
 	private static void doUpdate(Task toUpdate, JsonObject body){
 		if (toUpdate != null){
-			updateObject(toUpdate, body);
+			workUnit.updateObject(toUpdate, body);
 			toUpdate.save();
 		}
 	}
@@ -135,29 +136,6 @@ public class Tasks extends Controller{
 		}
 	}
 	
-	
-	
-
-	
-	private static void updateObject(Task toUpdate, JsonObject body){
-		Task source = gson.fromJson(body, Task.class);
-		Set<Entry<String, JsonElement>> entrySet = body.entrySet();
-		for (Entry<String, JsonElement> entry : entrySet) {
-			String key = entry.getKey();
-			if (key.equals("notify") && entry.getValue() != null && entry.getValue().getAsBoolean()){
-				Mails.notifyAssignment(source);
-			}
-			if (!EXCLUDE_PROPS.contains(key)){
-				try {
-					BeanUtils.copyProperty(toUpdate, key, PropertyUtils.getProperty(source, key));
-				}catch (NoSuchMethodException e1){
-					play.Logger.warn("Trying to set a property not found: [%s]" , key);
-				}catch (Exception e) {
-					throw new UnexpectedException("The update failed. Some of the properties could not be persisted:" + key, e);
-				}
-			}
-		}
-	}
 	
 	
 	

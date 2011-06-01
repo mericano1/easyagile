@@ -1,8 +1,12 @@
 package controllers;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 
-import models.Task;
+import org.apache.commons.beanutils.PropertyUtils;
+
+import play.modules.objectify.ObjectifyModel;
+
 import models.User;
 
 import com.google.gson.JsonDeserializationContext;
@@ -17,10 +21,10 @@ import com.googlecode.objectify.Key;
  * @author asalvadore
  *
  */
-public class UserJsonDeserializer implements JsonDeserializer<Task>{
+public class UserJsonDeserializer<T extends ObjectifyModel<T>> implements JsonDeserializer<T>{
 	
 	@Override
-	public Task deserialize(JsonElement jsonElement, Type typeOf, JsonDeserializationContext context) throws JsonParseException {
+	public T deserialize(JsonElement jsonElement, Type typeOf, JsonDeserializationContext context) throws JsonParseException {
 		
 		JsonObject jsonObject = jsonElement.getAsJsonObject();
 		JsonElement assigneeElement = jsonObject.get("assignee");
@@ -33,10 +37,17 @@ public class UserJsonDeserializer implements JsonDeserializer<Task>{
 			}
 			jsonObject.remove("assignee");
 		}
+		// Need to remove the doneBy or it'll blow trying to convert to date
 		clearPropertyIfEmpty(jsonObject,"doneBy");
-		Task fromJson = Application.gsonDate.fromJson(jsonObject, Task.class);
-		jsonObject.add("assignee", assigneeElement);
-		fromJson.assignee = key;
+		T fromJson = Application.gsonDate.fromJson(jsonObject, typeOf);
+		if(assigneeElement != null){
+			jsonObject.add("assignee", assigneeElement);
+			try {
+				PropertyUtils.setProperty(fromJson, "assignee", key);
+			} catch (Exception e) {
+				play.Logger.error("Error while setting the assignee back to the story / task objecy", assigneeElement);
+			}
+		}
 		return fromJson;
 	}
 	

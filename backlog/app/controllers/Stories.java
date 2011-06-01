@@ -2,19 +2,15 @@ package controllers;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import models.Sprint;
 import models.Story;
-import models.Task;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.converters.DateConverter;
 
 import play.Play;
-import play.exceptions.UnexpectedException;
 import play.mvc.Controller;
 import play.mvc.With;
 import client.UserMessage;
@@ -39,13 +35,13 @@ public class Stories extends Controller{
 	}
 	private static final Gson gson = new GsonBuilder()
 		.setDateFormat(DATE_FORMAT)
-		.registerTypeAdapter(Task.class, new UserJsonDeserializer())
-		.registerTypeAdapter(Task.class, new UserJsonSerializer())
+		.registerTypeAdapter(Story.class, new UserJsonDeserializer())
+		.registerTypeAdapter(Story.class, new UserJsonSerializer())
 		.create();
 	static final Gson gsonDate = new GsonBuilder()
 		.setDateFormat(DATE_FORMAT)
 		.create();
-	
+	private static WorkUnit<Story> workUnit = new WorkUnit<Story>(gson, EXCLUDE_PROPS, Story.class);
 	
 	public static void getAll(){
 		List<Story> findAll = Story.findAll();
@@ -153,26 +149,13 @@ public class Stories extends Controller{
 	private static JsonElement doUpdate(Long storyId, JsonObject body){
 		Story toUpdate = Story.findById(storyId);
 		if (toUpdate != null){
-			updateObject(toUpdate, body);
+			workUnit.updateObject(toUpdate, body);
 			toUpdate.save();
 		}
 		return gson.toJsonTree(toUpdate);
 	}
 	
-	private static void updateObject(Story toUpdate, JsonObject body){
-		Set<Entry<String, JsonElement>> entrySet = body.entrySet();
-		for (Entry<String, JsonElement> entry : entrySet) {
-			String key = entry.getKey();
-			JsonElement value = entry.getValue();
-			if (!EXCLUDE_PROPS.contains(key)){
-				try {
-					BeanUtils.copyProperty(toUpdate, key, value.getAsString());
-				} catch (Exception e) {
-					throw new UnexpectedException("The update failed. Some of the properties could not be persisted:" + key, e);
-				}
-			}
-		}
-	}
+	
 	
 	
 	
