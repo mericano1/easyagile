@@ -3,6 +3,8 @@ package controllers;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import notifiers.Mails;
+
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -34,7 +36,7 @@ public class  WorkUnit <T extends ObjectifyModel<T>> {
 		for (Entry<String, JsonElement> entry : entrySet) {
 			String key = entry.getKey();
 			if (key.equals("notify") && entry.getValue() != null && entry.getValue().getAsBoolean()){
-				//Mails.notifyAssignment(source);
+				Mails.notifyAssignment(source);
 			}
 			if (!getExcludeProperties().contains(key)){
 				try {

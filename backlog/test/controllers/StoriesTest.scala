@@ -14,6 +14,7 @@ import models.TestModelBuilder
 import java.util.Date
 import com.google.gson.JsonObject
 import scala.util.parsing.json.JSON
+import play.libs.Mail.Mock
 
 class StoriesTest extends LoggedIn with ShouldMatchers with Matchers {
 	val story1Json = """{"name":"story1","description":"story1 desc","points":4,"index":0}"""
@@ -145,15 +146,33 @@ class StoriesTest extends LoggedIn with ShouldMatchers with Matchers {
 		
 		val byId = GET("/stories/" + firstStory.id);
 		
-		val assignee = JSON.parseFull(byId.out.toString) match {
-		  case Some(x) => {
-		    val obj = x.asInstanceOf[Map[String, Any]]
-		    obj("assignee")
-		  }
-		  case None => Nil
-		}
+		val assignee = JSON.parseFull(byId.out.toString).get;
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should not be(Nil)
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should be("bob@gmail.com")
 		
-		assignee should not be(Nil)
+		//no email sent
+		val email = Mock.getLastMessageReceivedBy("bob@gmail.com");
+		email should not be null
+	}
+	
+	
+	 @Test
+	def testNotify(){
+		ObjectifyFixtures.load("stories.yml");
+		val firstStory = Story.findAll().get(0);
+		val jsonElement = gson.toJsonTree(firstStory)
+		jsonElement.asInstanceOf[JsonObject].addProperty("assignee", "jack@gmail.com");
+		jsonElement.asInstanceOf[JsonObject].addProperty("notify", "true");
+		val response = PUTJson("/stories/" + firstStory.id, jsonElement.toString);
+		response shouldBeOk()
+		
+		val byId = GET("/stories/" + firstStory.id);
+		
+		val assignee = JSON.parseFull(byId.out.toString).get;
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should not be(Nil)
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should be("jack@gmail.com")
+		val email = Mock.getLastMessageReceivedBy("jack@gmail.com");
+		email should not be null
 	}
 	
 }

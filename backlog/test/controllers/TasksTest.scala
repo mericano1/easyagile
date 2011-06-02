@@ -8,6 +8,7 @@ import play.modules.objectify.ObjectifyFixtures
 import play.test.Matchers
 import scala.util.parsing.json.JSON
 import scalaj.collection.Imports._
+import play.libs.Mail.Mock
 
 
 
@@ -45,6 +46,28 @@ class TasksTest extends LoggedIn with ShouldMatchers with Matchers {
 		
 		val assignee = JSON.parseFull(byId.out.toString).get;
 		assignee.asInstanceOf[Map[String, Any]]("assignee") should not be(Nil)
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should be("bob@gmail.com")
+	}
+  
+  @Test
+	def testNotify(){
+		ObjectifyFixtures.load("storiesTasks.yml");
+		val storyId = Story.findAll().get(0).id
+		val task = Task.findAllByStory(storyId).get(0)
+    
+		val jsonElement = gson.toJsonTree(task)
+		jsonElement.asInstanceOf[JsonObject].addProperty("assignee", "bob@gmail.com");
+		jsonElement.asInstanceOf[JsonObject].addProperty("notify", "true");
+		val response = PUTJson("/stories/%d/tasks/%d".format(storyId, task.id), jsonElement.toString());
+		response shouldBeOk()
+		
+		val byId = GET( "/stories/%d/tasks/%d".format(storyId, task.id));
+		
+		val assignee = JSON.parseFull(byId.out.toString).get;
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should not be(Nil)
+		assignee.asInstanceOf[Map[String, Any]]("assignee") should be("bob@gmail.com")
+		val email = Mock.getLastMessageReceivedBy("bob@gmail.com");
+		email should not be null
 	}
   
   @Test

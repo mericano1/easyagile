@@ -138,11 +138,11 @@ var TeamView = Backbone.View.extend({
              resizable: false,
              open: function(){
  				var options = {dateFormat: Statics.settings.dateFormat};
- 				$( "#doneBy", form).datepicker(options);
+ 				$( ".doneBy", form).datepicker(options);
  			},
              buttons: {
                   Assign: function(){
-                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('#doneBy',form).val()/*, notify:$('#notify',form).is(':checked')*/});
+                	  model.set({assignee: $('.userSelect',form).val(), doneBy:$('.doneBy',form).val()/*, notify:$('#notify',form).is(':checked')*/});
                       $( this ).dialog( "close" );
                   },
                   Cancel: function() {$( this ).dialog( "close" );}
@@ -373,7 +373,9 @@ var BaseView = Backbone.View.extend({
 	markSelected : function(){ $(this.el).children(':first').children(':first').addClass(this.css.selected); this.selected = true;	},
 	unmarkSelected : function(){ $(this.el).children(':first').children(':first').removeClass(this.css.selected); this.selected = false;},
 	changeName : function(){$(".name", this.el).text(this.model.get('name'));},
-	changeDescription : function(){$(".description", this.el).html(this.model.get('description'));},
+	changeDescription : function(){$(".description", this.el).html(Wiky.toHtml(this.model.get('description')));},
+	expand : function(){$(".storyCard .description", this.el).show(); $('.ui-icon-circle-triangle-e', this.el).toggleClass('ui-icon-circle-triangle-e').toggleClass('ui-icon-circle-triangle-s');},
+	contract : function(){$(".storyCard .description", this.el).hide(); $('.ui-icon-circle-triangle-s', this.el).toggleClass('ui-icon-circle-triangle-s').toggleClass('ui-icon-circle-triangle-e');},
 	changeIndex : function(){$(".priority", this.el).text(this.model.get('index') + 1);},
 	changePoints : function(){$(".points", this.el).text(this.model.get('points'));},
 	setVisible : function(){this.visible = true; this.trigger('change:visible', this.visible); $(this.el).show();},
@@ -592,6 +594,8 @@ var StoryView = BaseView.extend({
 		"click .ui-icon-triangle-1-e": "toggleTasks",
 		"click .ui-icon-trash": "remove",
 		"click .ui-icon-pencil": "showChangeForm",
+		"click .ui-icon-circle-triangle-e" : "expand",
+		"click .ui-icon-circle-triangle-s" : "contract",
 		"dblclick":"showChangeForm"
 	},
 	render: function(){

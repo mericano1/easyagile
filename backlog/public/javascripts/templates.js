@@ -46,13 +46,13 @@ var storyTemplate =
 		"<div class='<%=css.wrapper%> storyCard'>" +
 			"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
 					"<p>" +
-						"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+						"<span class='ui-icon ui-icon-circle-triangle-e' title='Click to expand' style='float: left; margin-right: .3em;'></span>" +
 						"<span class='ui-icon ui-icon-triangle-1-e' title='Show tasks'style='float: right; margin-left: .3em;'></span>" +
 						"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
-						"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
+						"<span class='ui-icon ui-icon-pencil' title='edit' style='float: right; margin-left: .3em;'></span>" +
 						"<span class='ui-icon ui-icon-plusthick' title='Add task'style='float: right; margin-left: .3em;'></span>" +
 						"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
-						"<div class='description'><%=object.display('description')%></div>" +
+						"<div class='description' style='display:none;'><%=Wiky.toHtml(object.display('description'))%></div>" +
 					"</p>" +
 					"<div class='card-info'>" +
 						"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
@@ -71,13 +71,13 @@ var bugTemplate =
 	"<div class='<%=css.wrapper%> storyCard'>" +
 		"<div class='<%=summaryClass%> ui-corner-all' style='padding: 0 .7em; '>" + 
 				"<p>" +
-					"<span class='ui-icon ui-icon-info' style='float: left; margin-right: .3em;'></span>" +
+					"<span class='ui-icon ui-icon-circle-triangle-e' title='Click to expand' style='float: left; margin-right: .3em;'></span>" +
 					"<span class='ui-icon ui-icon-trash' title='delete' style='float: right; margin-left: .3em;'></span>" + 
 					"<span class='ui-icon ui-icon-pencil' title='edit'style='float: right; margin-left: .3em;'></span>" +
-					"<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>" +
+					"<span class='ui-icon-custom ui-icon-user' title='Assign Task' style='float: right; margin-left: .3em;'></span>" +
 					"<span class='ui-icon ui-icon-check ' title='Mark Fixed' style='float: right; margin-left: .3em;'></span>"+
 					"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
-					"<div class='description'><%=object.display('description')%></div>" +
+					"<div class='description' style='display:none;'><%=Wiky.toHtml(object.display('description'))%></div>" +
 				"</p>" +
 				"<div class='card-info'>" +
 					"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
@@ -103,7 +103,7 @@ var taskTemplate =
 			"<span class='ui-icon-custom ui-icon-user' title='Assign Task'style='float: right; margin-left: .3em;'></span>" +
 			"<span class='ui-icon ui-icon-check ' title='Mark Completed'style='float: right; margin-left: .3em;'></span>"+
 			"<strong class='name' style='display:block'><%=object.display('name')%></strong>" +
-			"<div class='description'><%=object.display('description')%></div>" +
+			"<div class='description'><%=Wiky.toHtml(object.display('description'))%></div>" +
 		"</p>" +
 		"<div class='card-info'>" +
 			"<span class='priority'><%=(object.display('index')+ 1)%></span>" +
@@ -153,7 +153,7 @@ var assignUserDialogTemplate =
 		"<input type='checkbox' name='notify' id='notify' style='display:inline;'>" +*/
 		"<br/>"+
 		"<label for='doneBy'style='margin-top:10px;'>Will have it done by</label>" + 
-		"<input type='text' name='doneBy' id='doneBy' class='text ui-widget-content ui-corner-all' value='<%=task?task.display('doneBy'):''%>' >" +
+		"<input type='text' name='doneBy' class='doneBy text ui-widget-content ui-corner-all' value='<%=task?task.display('doneBy'):''%>' >" +
 	"</form>" + 	
 	"</div>";
 

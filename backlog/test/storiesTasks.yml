@@ -39,6 +39,13 @@ Story(story4):
    description: story4 desc
    points: 31
    sprint: first
+Story(bug1):
+   name: bug1
+   index: 4
+   type: bug
+   description: bug1 desc
+   points: 31
+   sprint: first
 
 #tasks story 1
 Task(task1):
