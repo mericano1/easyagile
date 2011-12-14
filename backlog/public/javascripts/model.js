@@ -403,7 +403,7 @@ var BaseView = Backbone.View.extend({
 		saveUpdateFunction = _.bind(saveUpdateFunction, this);
 		form = this.getChangeForm(saveUpdateFunction);
 		form.dialog('open');
-		return form;
+		return false; //avoid the event bubbling up
 	}
 });
 
