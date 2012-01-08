@@ -355,6 +355,7 @@ var BaseView = Backbone.View.extend({
 				Cancel: function() {;$( this ).dialog( "close" );}
 			}
 		});
+		return false; //avoid the event bubbling up
 	},
 	removeFromView : function(){
 		var pCollection = this.model.collection;
