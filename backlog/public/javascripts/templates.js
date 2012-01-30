@@ -36,6 +36,14 @@ var confirmDeleteDialogTemplate =
 		"The item <%=object.display('name')%> will be permanently deleted and cannot be recovered. Are you sure?" +
 	"</p>" +
 	"</div>";
+	
+var confirmMoveTaskToAnotherStoryTemplate =
+	"<div id='dialog-confirm' title='Do you want move this task ?'>" +
+	"<p>" +
+		"<span class='ui-icon ui-icon-alert' style='float:left; margin:0 7px 20px 0;'></span>" +
+		"The task <%=task.display('name')%> will be move to the story <%=story.display('name')%>. Are you sure?" +
+	"</p>" +
+	"</div>";
 
 var storyTemplate =
 		"<%if (_(css).isUndefined()){css = Statics.settings.css;}" +
