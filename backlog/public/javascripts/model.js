@@ -317,7 +317,7 @@ var SprintView = Backbone.View.extend({
 		var self = this;
 		var view = new SprintFormView({model:self.model, onSave: function(toAdd){
 			self.model.set(toAdd);
-			//self.model.save({error:Statics.errorAlert});
+			self.model.save({error:Statics.errorAlert});
 		}});
 		view.display();
 	}
@@ -355,7 +355,11 @@ var BaseView = Backbone.View.extend({
 				Cancel: function() {;$( this ).dialog( "close" );}
 			}
 		});
+<<<<<<< HEAD
 		return false; //avoid the event bubbling up
+=======
+		return false;
+>>>>>>> 45f1eaeb955f91aa43d565cef78d4890672f44dc
 	},
 	removeFromView : function(){
 		var pCollection = this.model.collection;
@@ -597,7 +601,39 @@ var StoryView = BaseView.extend({
 		"click .ui-icon-pencil": "showChangeForm",
 		"click .ui-icon-circle-triangle-e" : "expand",
 		"click .ui-icon-circle-triangle-s" : "contract",
-		"dblclick":"showChangeForm"
+		"dblclick":"showChangeForm",
+		"drop" : "onDrop"
+	},
+	onDrop: function(event, ui){
+		var task = $(ui.draggable).data('model');
+		var self = this;
+		if (task instanceof Task && this.model.get('id')!==task.get("story").id){
+			$(_.template(confirmMoveTaskToAnotherStoryTemplate,{task: task, story: this.model})).dialog({
+        		resizable: false,
+    			height:140,
+    			modal: true,
+    			autoOpen:true,
+    			buttons: {
+    				"Yes move it": function() {
+						var taskCopy = $.extend(true, {}, task.attributes);
+						delete taskCopy.id; delete taskCopy.story; delete taskCopy.index; //cleans up the object
+						self.addTask(taskCopy);
+						var pCollection = task.get("story").collection;
+						task.destroy({success:function(model){
+							if (pCollection){
+								pCollection.remove(model);
+							}
+						},error:Statics.errorAlert});
+						$(this).dialog( "close" );
+    				},
+    				Cancel: function() {
+    					$(this).dialog( "close" );
+    				}
+    			}
+
+        	});
+			return false;
+		}
 	},
 	render: function(){
 		this.html = $(_.template(window[this.templateVarName],{object:this.model, css:this.css}));
@@ -789,6 +825,7 @@ var CollectionView = Backbone.View.extend({
 		var viewToRemove = _(self._modelViews).select(function(cv) { return cv.model === model; })[0];
 		self._modelViews = _(self._modelViews).without(viewToRemove);
 		$(viewToRemove.el).remove();
+		return false;
 	},
 	loadViews:function(){
 		var self = this;
@@ -904,6 +941,7 @@ var TaskListView = SortableView.extend({
 	},
 	render:function(){
 		SortableView.prototype.render.call(this);
+		$(this.el).droppable();
 		if (this.collection == null || this.collection.length == 0){
 			$(this.el).empty().append(TaskViewStatics.getNoTaskAvailableBlock());
 		}
