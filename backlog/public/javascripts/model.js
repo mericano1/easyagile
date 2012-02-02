@@ -355,11 +355,7 @@ var BaseView = Backbone.View.extend({
 				Cancel: function() {;$( this ).dialog( "close" );}
 			}
 		});
-<<<<<<< HEAD
 		return false; //avoid the event bubbling up
-=======
-		return false;
->>>>>>> 45f1eaeb955f91aa43d565cef78d4890672f44dc
 	},
 	removeFromView : function(){
 		var pCollection = this.model.collection;

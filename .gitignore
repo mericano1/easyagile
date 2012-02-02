@@ -10,3 +10,5 @@ backlog/precompiled/
 backlog/.settings/
 easyagile-war/
 backlog/.scala_dependencies
+backlog/modules/objectify-1.0.4/
+backlog/modules/objectify-1.0.4
