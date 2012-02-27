@@ -2,14 +2,3 @@
 
 # Example below:
 # ~~~~
-if play_command == 'objectify:hello':
-	try:
-		print "~ Hello from objectify"
-		sys.exit(0)
-				
-	except getopt.GetoptError, err:
-		print "~ %s" % str(err)
-		print "~ "
-		sys.exit(-1)
-		
-	sys.exit(0)

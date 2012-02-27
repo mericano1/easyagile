@@ -33,11 +33,11 @@ public class Task extends ObjectifyModel<Task> {
     public Integer points;
     public Boolean completed;
     public Date doneBy;
-    @Required @Parent public Key<Story> story;
+    @Required public Key<Story> story;
     public Key<User> assignee;
     
-    public static Task findById(Long storyId, Long taskId) {
-    	Key<Task> key = Datastore.key(Story.class, storyId, Task.class, taskId);
+    public static Task findById(Long taskId) {
+    	Key<Task> key = Datastore.key(Task.class, taskId);
         return Datastore.find(key);
     }
     
@@ -62,7 +62,7 @@ public class Task extends ObjectifyModel<Task> {
     public static List<Task> findAllByStory(Long storyId) {
     	if (storyId != null) {
             return Datastore.query(Task.class)
-                    .ancestor(Datastore.key(Story.class, storyId))
+                    .filter("story", Datastore.key(Story.class, storyId))
                     .order("index").list();
         }
         else {

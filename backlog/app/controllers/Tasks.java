@@ -58,7 +58,7 @@ public class Tasks extends Controller{
 	 * @param storyId
 	 */
 	public static void byId(long storyId, long taskId){
-		Task byId = Task.findById(storyId, taskId);
+		Task byId = Task.findById(taskId);
 		renderText(gson.toJson(byId));
 	}
 	
@@ -79,7 +79,7 @@ public class Tasks extends Controller{
 	 * @param taskId
 	 */
 	public static void delete(Long storyId,long taskId){
-		Task toDelete = Task.findById(storyId, taskId);
+		Task toDelete = Task.findById(taskId);
 		if (toDelete != null){
 			toDelete.delete();
 		}
@@ -95,7 +95,7 @@ public class Tasks extends Controller{
 	 * @param body
 	 */
 	public static void update(Long storyId, Long taskId, JsonObject body){
-		Task toUpdate = Task.findById(storyId, taskId);
+		Task toUpdate = Task.findById(taskId);
 		doUpdate(toUpdate, body);
 		renderText(gson.toJson(toUpdate));
 	}
@@ -130,7 +130,7 @@ public class Tasks extends Controller{
 			JsonObject jsonObject = element.getAsJsonObject();
 			JsonElement jsonElement = jsonObject.get("id");
 			if (jsonElement != null){
-				Task toUpdate = Task.findById(storyId, jsonElement.getAsLong());
+				Task toUpdate = Task.findById(jsonElement.getAsLong());
 				doUpdate(toUpdate, jsonObject);
 			}
 		}
