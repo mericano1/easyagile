@@ -33,7 +33,7 @@ public class TaskTest extends UnitTest {
 		Task task = TestModelBuilder.createSimpleTask("task1", "task desc", 5,0, story.key());
 		task.save();
 		assertNotNull("Task id is null", task.id);
-		Task retrievedTask = Task.findById(story.id,task.id);
+		Task retrievedTask = Task.findById(task.id);
 		assertNotNull("Task is null" + task.id, retrievedTask);
 		assertNotNull("Task id is null", retrievedTask.id);
 		assertEquals("Task id not correct", task.id, retrievedTask.id);

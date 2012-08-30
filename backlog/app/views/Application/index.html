@@ -72,10 +72,17 @@
 						sprintList = new SprintList;
 						sprintList.url = settings.sprintsUrl;
 						var sprintContainer = new SprintListView({
-								collection: sprintList,
-								el:  $(".sprintWrapper")
-							});
-						sprintList.fetch();
+							collection: sprintList,
+							el:  $(".sprintWrapper")
+						});
+						
+						sprintList.fetch({success: function() {
+								var select = sprintContainer.findView({id:sprintId});
+								if (select){
+									select.el.trigger("click");
+								}
+							}
+						});
 						
 						var users = new UserList;
 						users.url = settings.usersUrl;
@@ -83,8 +90,8 @@
 							users : users
 						});
 						Statics.team = team;
-						return sprintContainer;
 						
+						return sprintContainer;
 					}
 					
 					

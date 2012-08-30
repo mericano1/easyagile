@@ -789,7 +789,7 @@ var StoryList = BaseList.extend({
 //-----------------------------------------------------------------------
 var CollectionView = Backbone.View.extend({
 	initialize:function(){
-		_.bindAll(this, 'add', 'remove', 'render', 'addView', 'onSelected');
+		_.bindAll(this, 'add', 'remove', 'render', 'addView', 'onSelected', 'findView');
 		this.collection.bind('refresh', this.render);
 		this.collection.bind('add', this.add);
 		this.collection.bind('remove', this.remove);
@@ -809,6 +809,17 @@ var CollectionView = Backbone.View.extend({
 	    	}
 	    });
 	    return this;
+	},
+	findView: function(model){
+		if (!model) {return null;}
+		return _(this._modelViews).find(function(v){
+			for (var property in model){
+				if (v.model && (v.model.get(property) != model[property])){
+					return false;
+				}
+			}
+			return true;
+		});
 	},
 	add: function(model){
 		var view = this.addView(model);
